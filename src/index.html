@@ -1,0 +1,32 @@
+<html>
+ <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Only way I found to override styles not used by top-level components in fine-uploader -->
+  <title>GIS App</title>
+  <%= htmlWebpackPlugin.options.topLevelScripts %>
+ </head>
+ <body>
+  <div id="player"></div>
+<script>
+var classNames = [];
+if (navigator.userAgent.match(/(iPad|iPhone|iPod)/i)) classNames.push('device-ios');
+if (navigator.userAgent.match(/android/i)) classNames.push('device-android');
+
+var html = document.getElementsByTagName('html')[0];
+
+if (classNames.length) {
+ classNames.push('on-device');
+} else {
+ classNames.push('on-desktop');
+}
+console.log('CLASSNAMES', classNames)
+if (html.classList) html.classList.add.apply(html.classList, classNames);
+</script>
+
+ </body>
+</html>
+
