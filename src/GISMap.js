@@ -2,9 +2,14 @@ import React from 'react'
 
 import { withStyles } from 'material-ui/styles'
 
-import { GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl } from 'react-leaflet'
+import { GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-  
+import L from 'leaflet'
+
+import GISGeoJSON from './GISGeoJSON'
+import LeafletPolylineDecorator from './LeafletPolylineDecorator'
+import X32_png from './images/X-32.png'
+
 const colorList = [
   '#FF3333', '#FF6666', '#FF9999', '#FFCCCC',
   '#FFFF33', '#FFFF66', '#FFFF99', '#FFFFCC',
@@ -38,17 +43,93 @@ function buildListFetcher(list) {
   }
 }
 
-const geoserver = window.location.href.replace(/(https?:\/\/)(.*\.)?gis(\.[^:\/]+(:\d+)?).*/, '$1geoserver.gis$3/geoserver')
-const servers = {
-  'app': {
-    url: geoserver,
-    username: 'admin',
-    password: 'geoserver',
-  },
+function swap(a) {
+  return [a[1], a[0]]
 }
+
+class GeoServerUtil {
+  constructor(props) {
+    this.servers = props.servers
+  }
+
+  loginBuilder(serverName) {
+    const serverDef = this.servers[serverName]
+    if (serverDef.loggedIn) {
+      return serverDef.loggedIn
+    }
+    const form = new URLSearchParams()
+    form.set('username', serverDef.username)
+    form.set('password', serverDef.password)
+    return serverDef.loggedIn = fetch(`${serverDef.url}/j_spring_security_check`, {credentials: 'include', method: 'POST', mode: 'no-cors', body: form})
+  }
+
+  async fetch({server, typeName, workspace}) {
+    const parameters = {
+      ...defaultGeoJSONParamters,
+      typeName,
+      maxFeatures: 15000,
+    }
+    const url = new URL(`${this.servers[server].url}/${workspace}/ows`)
+    url.search = new URLSearchParams(parameters)
+
+    const data = await this.loginBuilder(server).then(() => fetch(url, {credentials: 'include', datatype: 'json'}).then(data => data.json()))
+
+    let totalLength = 0
+    const allSegments = []
+    const allPoints = []
+    const processSegment = (segmentDef) => {
+      const segmentPoints = []
+      let a = swap(segmentDef[0])
+      segmentPoints.push(a)
+      for (let i = 1; i < segmentDef.length; i++) {
+        const b = swap(segmentDef[i])
+        segmentPoints.push(b)
+        const lineLength = Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2))
+        const segment = [a, b]
+        segment.totalLength = totalLength
+        segment.lineLength = lineLength
+        allSegments.push(segment)
+        totalLength += lineLength
+        a = b
+      }
+      allPoints.push(segmentPoints)
+    }
+    for (const feature of data.features) {
+      switch (feature.geometry.type) {
+        case 'MultiLineString':
+          for (const piece of feature.geometry.coordinates) {
+            processSegment(piece)
+          }
+          break
+        case 'LineString':
+          processSegment(feature.geometry.coordinates)
+          break
+        case 'MultiPolygon':
+        case 'Polygon':
+          break
+        default:
+          throw new Error('foo')
+      }
+    }
+    return {data, allSegments, allPoints, totalLength}
+  }
+}
+
+
+const geoserver = window.location.href.replace(/(https?:\/\/)(.*\.)?gis(\.[^:\/]+(:\d+)?).*/, '$1geoserver.gis$3/geoserver')
+const geoserverUtil = new GeoServerUtil({
+  servers: {
+    'app': {
+      url: geoserver,
+      username: 'admin',
+      password: 'geoserver',
+    },
+  },
+})
 const baseLayers = [
   {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile'},
 ]
+
 const overlayLayers = [
   {name: 'US States', workspace: 'gis', layers: 'gis:tl_2017_us_state', type: 'wms'},
   {name: 'Las Vegas Water', workspace: 'gis', layers: 'gis:tl_2017_06037_areawater', type: 'wms'},
@@ -61,13 +142,22 @@ const overlayLayers = [
   {name: 'lariac_buildings-tms', workspace: 'gis', layers: 'gis:lariac_buildings', type: 'geotile'},
   {name: 'sunset_road-tms', workspace: 'gis', layers: 'gis:sunset_road', type: 'geotile'},
   {name: 'sunset_buildings-tms', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'geotile'},
-  {name: 'sunset_buildings-json', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'geojson'},
+  {name: 'sunset_buildings-json', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'geojson', checked: true},
   {name: 'sunset_road-json', workspace: 'gis', layers: 'gis:sunset_road', type: 'geojson'},
-  {name: 'sunset_road_merged-json', workspace: 'gis', layers: 'gis:sunset_road_merged', type: 'geojson'},
+  {name: 'sunset_road_reduced-json', workspace: 'gis', layers: 'gis:sunset_road_reduced', type: 'geojson', checked: false},
+  {name: 'sunset_road_problems-json', workspace: 'gis', layers: 'gis:sunset_road_problems', type: 'geojson', checked: false},
+//  {name: 'sunset_road_debug-json', workspace: 'gis', layers: 'gis:sunset_road_debug', type: 'geojson', checked: false, positioned: false},
+//  {name: 'sunset_road_merged-json', workspace: 'gis', layers: 'gis:sunset_road_merged', type: 'geojson', future: roadLine, checked: true,},
 //  {name: 'sunset_taxdata_2017-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017', type: 'geojson'},
-  {name: 'sunset_taxdata_2017_buildings-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017_buildings', type: 'geojson'},
+//  {name: 'sunset_taxdata_2017_buildings-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017_buildings', type: 'geojson'},
 ]
-function renderLayer(layerDefOrig) {
+
+const colorFetcher = buildListFetcher(colorList)
+const styleFeature = feature => {
+  return {color: colorFetcher()}
+}
+
+function renderLayer(Control, layerDefOrig, onSegment) {
   const {
     layers,
     name,
@@ -75,34 +165,41 @@ function renderLayer(layerDefOrig) {
     type,
     workspace,
     url: url,
+    checked,
     ...layerDef
   } = layerDefOrig
+  let layer
   switch (type) {
     case 'tile':
-      return <TileLayer
+      layer = <TileLayer
         attribution='foo'
         url={url}
       />
+      break
     case 'geotile':
-      return <TileLayer
+      layer = <TileLayer
         attribution='foo'
-        url={`${servers[server].url}/gwc/service/tms/1.0.0/${layers}@EPSG:900913@png/{z}/{x}/{-y}.png`}
+        url={`${geoserverUtil.servers[server].url}/gwc/service/tms/1.0.0/${layers}@EPSG:900913@png/{z}/{x}/{-y}.png`}
       />
+      break
     case 'geojson':
-      const colorFetcher = buildListFetcher(colorList)
-      return <DelayedGeoJSON server={server} typeName={layers} workspace={workspace} style={(feature) => {
-        return {color: colorFetcher()}
-      }}/>
+      //layer = <DelayedGeoJSON server={server} typeName={layers} workspace={workspace} position={layerDef.positioned ? position : undefined}/>
+      layer = <DelayedGeoJSON server={server} workspace={workspace} layers={layers} future={layerDef.future}/>
+      break
     case 'wms':
-      return <WMSTileLayer
+      layer = <WMSTileLayer
         attribution='foo'
         layers={layers}
         transparent={true}
         opacity={0.5}
         format='image/png'
-        url={`${servers[server].url}/ows?tile=true`}
+        url={`${geoserverUtil.servers[server].url}/ows?tile=true`}
       />
+      break
+    default:
+      return
   }
+  return <Control key={name} name={name} checked={checked}>{layer}</Control>
 }
 const defaultGeoJSONParamters = {
   service: 'WFS',
@@ -130,10 +227,11 @@ class DelayedGeoJSON extends GeoJSON {
     onEachFeature: (feature, layer) => {
       const {properties} = feature
       layer.bindPopup(Object.keys(properties).map(key => `${key}: ${properties[key]}`).join('<br />'))
+      layer.setStyle(styleFeature(feature))
     },
   }
 
-	constructor(props) {
+  constructor(props) {
     super(props)
     this.state = {data: null}
   }
@@ -144,28 +242,22 @@ class DelayedGeoJSON extends GeoJSON {
   }
 
   processProps(props) {
-    const {server, typeName, workspace} = props
-    const parameters = {
-      ...defaultGeoJSONParamters,
-      typeName,
-      maxFeatures: 15000,
+    const {server, workspace, layers} = props
+    if (this.state.data !== undefined && server === this.props.server && workspace === this.props.workspace && layers === this.props.layers) {
+      if (props !== this.props) {
+        return
+      }
     }
-    const url = new URL(`${servers[server].url}/${workspace}/ows`)
-    url.search = new URLSearchParams(parameters)
-    loginBuilder(server).then(() => {
-      fetch(url, {credentials: 'include', datatype: 'json'}).then(data => data.json()).then(json => {
-        if (this.props.server !== server) {
-          return
-        }
-        if (this.props.typeName !== typeName) {
-          return
-        }
-        if (this.leafletElement) {
-          this.leafletElement.clearLayers()
-          this.leafletElement.addData(json)
-        }
-        this.setState({data: json})
-      })
+    geoserverUtil.fetch({server, workspace, typeName: layers}).then(result => {
+      if (server !== this.props.server || workspace !== this.props.workspace || layers != this.props.layers) {
+        return
+      }
+      const {data} = result
+      if (this.leafletElement) {
+        this.leafletElement.clearLayers()
+        this.leafletElement.addData(data)
+      }
+      this.setState({data})
     })
   }
 
@@ -187,21 +279,101 @@ const styles = {
 }
 
 class GISMap extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      zoom: 11,
+      ...this.processProps(props, {zoom: 11}),
+    }
+    this.roadLine = geoserverUtil.fetch({server: 'app', workspace: 'gis', typeName: 'gis:sunset_road_merged'})
+    this.roadLine.then(({data, allSegments, allPoints, totalLength}) => {
+      this.setState({data, allSegments, allPoints, totalLength})
+    })
+  }
+
+  buildPatterns(position, zoom) {
+    let size;
+    if (zoom < 14) {
+      size = 15
+    } else {
+      size = Math.pow(2, (zoom - 14)) * 30
+    }
+    console.log('buildPatterns', {position, zoom, size})
+    return [
+      /*
+      {
+        offset: props.position !== undefined ? `${props.position}%` : undefined,
+        repeat: 0,
+        symbol: LeafletPolylineDecorator.Symbol.marker({
+          rotate: true,
+          markerOptions: {
+            icon: L.icon({
+              iconUrl: X32_png,
+              iconAnchor: [16, 16],
+              shadowUrl: null,
+              shadowRetinaUrl: null,
+            }),
+          },
+          //pixelSize: 15,
+          //polygon: false,
+          //pathOptions: {stroke: true},
+        }),
+      },
+      */
+      {
+        offset: position !== undefined ? `${position}%` : undefined,
+        repeat: 0,
+        symbol: LeafletPolylineDecorator.Symbol.arrowHead({
+          pixelSize: size,
+          polygon: true,
+          pathOptions: {
+            stroke: true,
+          },
+        }),
+      },
+    ]
+
+  }
+
+  processProps(props, prevState) {
+    const {position} = props
+    const {zoom} = prevState
+    const nextState = {}
+    if (prevState.position !== position) {
+      nextState.patterns = this.buildPatterns(position, zoom)
+    }
+    return nextState
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.processProps(nextProps, this.state))
+  }
+
+  onViewportChange = ({center, zoom}) => {
+    console.log('zoom', zoom)
+    this.setState({zoom, patterns: this.buildPatterns(this.props.position, zoom)})
+    // 14 = 26
+    // 15 = 35
+    // 16 = 50
+  }
+
   render() {
-    const {classes} = this.props
+    const {classes, position} = this.props
+    const {data, allPoints, patterns} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
+
     return <div className={classes.root}>
-      <Map className={classes.map} center={la_center} zoom={11}>
+      <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange}>
 			 	<LayersControl>
-          {baseLayers.map(({name, ...layerDef}) =>
-            <LayersControl.BaseLayer key={name} name={name}>{renderLayer(layerDef)}</LayersControl.BaseLayer>
-          )}
-          {overlayLayers.map(({name, ...layerDef}) =>
-            <LayersControl.Overlay key={name} name={name}>{renderLayer(layerDef)}</LayersControl.Overlay>
-          )}
+          {baseLayers.map(layerDef => renderLayer(LayersControl.BaseLayer, layerDef))}
+          {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef, this.onSegment))}
+          <LayersControl.Overlay name='sunset-road' checked={true}>
+            <GISGeoJSON data={data}/>
+          </LayersControl.Overlay>
 			 	</LayersControl>
+        <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>
       </Map>
     </div>
   }

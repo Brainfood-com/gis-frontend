@@ -46,18 +46,30 @@ const styles = {
   },
 }
 class GISControl extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      position: 50,
+    }
+  }
+
+  handleOnPositionChange = (position) => {
+    this.setState({position})
+  }
+
   render() {
     const {children, classes} = this.props
+    const {position} = this.state
     return <div className={classes.root}>
       <div className={classes.left}>
         <Typography variant='title'>left</Typography>
       </div>
       <div className={classes.mapViewRoot}>
         <div className={classes.mapViewTop}>
-          <GISMap/>
+          <GISMap position={position}/>
           <GISPicView/>
         </div>
-        <GISPosition/>
+        <GISPosition position={position} onPositionChange={this.handleOnPositionChange}/>
       </div>
     </div>
   }

@@ -13,16 +13,31 @@ const styles = {
   },
 }
 class GISPosition extends React.Component {
+  static defaultProps = {
+    onPositionChange: function(position) {},
+  }
+
   constructor(props) {
     super(props)
-    this.state = {
+    this.state = this.processProps(props, {
       position: 0,
-    }
+    })
+  }
+
+  processProps(nextProps, state) {
+    const {position} = nextProps
+    return {...state, position}
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.processProps(nextProps, this.state))
   }
 
 	handleOnChange = (handles) => {
-    const position = handles[0]
+    const {onPositionChange} = this.props
+    const position = handles[0].value
     this.setState({position})
+    onPositionChange(position)
   }
 
   render() {
@@ -40,7 +55,7 @@ class GISPosition extends React.Component {
             max={100}
             step={1}
             handles={[
-              {position}
+              {value: position}
             ]}
             onChange={this.handleOnChange}
           />
