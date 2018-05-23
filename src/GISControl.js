@@ -1,12 +1,15 @@
 import React from 'react'
 
-import { withStyles } from 'material-ui/styles'
+import { withStyles } from '@material-ui/core/styles'
 
-import Typography from 'material-ui/Typography'
+import Typography from '@material-ui/core/Typography'
 
 import GISMap from './GISMap'
 import GISPicView from './GISPicView'
 import GISPosition from './GISPosition'
+
+import {IIIFTree, CanvasList} from './IIIF'
+import {makeUrl} from './api'
 
 /*
  *  /---------------+--------\
@@ -15,26 +18,41 @@ import GISPosition from './GISPosition'
  *  |    |timeline           |
  *  \----+-------------------/
  */
+
 const styles = {
   root: {
-    display: 'flex',
-    flexDirection: 'row',
-    '& > *': {
-      flex: 1,
-      flexBasis: 'auto',
-    },
-    height: '100%',
-  },
-  left: {
-    maxWidth: 200,
-  },
-  mapViewRoot: {
     display: 'flex',
     flexDirection: 'column',
     '& > *': {
       flex: 1,
       flexBasis: 'auto',
     },
+    height: '100%',
+  },
+  mapViewLeft: {
+    width: '20%',
+    maxWidth: '20%',
+    height: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  mapViewMiddle: {
+    display: 'flex',
+    flexDirection: 'column',
+    '& > *': {
+      flex: 1,
+      flexBasis: 'auto',
+    },
+    width: '100%',
+  },
+  mapViewRight: {
+    maxWidth: '25%',
+    minWidth: 100,
+  },
+  mapViewBottom: {
+    width: '100%',
+    minHeight: '10%',
+    maxHeight: '15%',
   },
   mapViewTop: {
     display: 'flex',
@@ -57,19 +75,28 @@ class GISControl extends React.Component {
     this.setState({position})
   }
 
+  handleOnCanvasList = canvasList => {
+    this.setState({canvasList})
+  }
+
   render() {
     const {children, classes} = this.props
-    const {position} = this.state
+    const {canvasList, position} = this.state
     return <div className={classes.root}>
-      <div className={classes.left}>
-        <Typography variant='title'>left</Typography>
-      </div>
-      <div className={classes.mapViewRoot}>
-        <div className={classes.mapViewTop}>
-          <GISMap position={position}/>
+      <div className={classes.mapViewTop}>
+        <div className={classes.mapViewLeft}>
+          <IIIFTree onCanvasList={this.handleOnCanvasList}/>
+        </div>
+        <div className={classes.mapViewMiddle}>
+          <GISMap position={position} canvasList={canvasList}/>
+        </div>
+        <div className={classes.mapViewRight}>
           <GISPicView/>
         </div>
+      </div>
+      <div className={classes.mapViewBottom}>
         <GISPosition position={position} onPositionChange={this.handleOnPositionChange}/>
+        <CanvasList canvasList={canvasList}/>
       </div>
     </div>
   }

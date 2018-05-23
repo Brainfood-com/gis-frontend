@@ -1,15 +1,15 @@
 import React from 'react'
 
-import { withStyles } from 'material-ui/styles'
+import { withStyles } from '@material-ui/core/styles'
 
-import Paper from 'material-ui/Paper'
-import Typography from 'material-ui/Typography'
+import Paper from '@material-ui/core/Paper'
+import Typography from '@material-ui/core/Typography'
 
 import Relider from 'relider'
 
 const styles = {
   root: {
-    maxHeight: 200,
+    maxHeight: 50,
   },
 }
 class GISPosition extends React.Component {

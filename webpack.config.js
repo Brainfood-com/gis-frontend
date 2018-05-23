@@ -217,7 +217,7 @@ module.exports = {
     },
     devtool: 'sourcemap',
     watchOptions: {
-      poll: true,
+      //poll: true,
     },
     devServer: {
       headers: {

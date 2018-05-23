@@ -1,11 +1,23 @@
 import React from 'react'
 
-import { withStyles } from 'material-ui/styles'
+import { withStyles } from '@material-ui/core/styles'
 
 import { GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
+import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
+import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
+import leafletMarkerIconShadow from 'leaflet/dist/images/marker-shadow.png'
+
+L.Marker.prototype.options.icon = L.icon({
+  ...L.Icon.Default.prototype.options,
+  iconUrl: leafletMarkerIcon,
+  iconRetinalUrl: leafletMarkerIconRetina,
+  shadowUrl: leafletMarkerIconShadow,
+})
+
+import {makeUrl} from './api'
 import GISGeoJSON from './GISGeoJSON'
 import LeafletPolylineDecorator from './LeafletPolylineDecorator'
 import X32_png from './images/X-32.png'
@@ -116,7 +128,8 @@ class GeoServerUtil {
 }
 
 
-const geoserver = window.location.href.replace(/(https?:\/\/)(.*\.)?gis(\.[^:\/]+(:\d+)?).*/, '$1geoserver.gis$3/geoserver')
+const geoserver = makeUrl('geoserver', 'geoserver')
+//window.location.href.replace(/(https?:\/\/)(.*\.)?gis(?:-app)?(\.[^:\/]+(:\d+)?).*/, '$1geoserver.gis$3/geoserver')
 const geoserverUtil = new GeoServerUtil({
   servers: {
     'app': {
@@ -127,7 +140,7 @@ const geoserverUtil = new GeoServerUtil({
   },
 })
 const baseLayers = [
-  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile'},
+  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile', checked: true},
 ]
 
 const overlayLayers = [
@@ -291,15 +304,14 @@ class GISMap extends React.Component {
     })
   }
 
-  buildPatterns(position, zoom) {
+  buildPatterns(position, zoom, canvasList) {
     let size;
     if (zoom < 14) {
       size = 15
     } else {
       size = Math.pow(2, (zoom - 14)) * 30
     }
-    console.log('buildPatterns', {position, zoom, size})
-    return [
+    const patterns = []
       /*
       {
         offset: props.position !== undefined ? `${props.position}%` : undefined,
@@ -320,27 +332,46 @@ class GISMap extends React.Component {
         }),
       },
       */
-      {
-        offset: position !== undefined ? `${position}%` : undefined,
-        repeat: 0,
-        symbol: LeafletPolylineDecorator.Symbol.arrowHead({
-          pixelSize: size,
-          polygon: true,
-          pathOptions: {
-            stroke: true,
+    if (canvasList) {
+      const readArrowHeadBuilder = LeafletPolylineDecorator.Symbol.marker({
+        pixelSize: 25,
+        polygon: true,
+        pathOptions: {
+          stroke: true,
+          color: 'red',
+        },
+      })
+      patterns.push({
+        offset: 0,
+        repeat: `${100 / canvasList.length}%`,
+        symbol: {
+          buildSymbol: (directionPoint, latLngs, map, i, length) => {
+            return readArrowHeadBuilder.buildSymbol(directionPoint, latLngs, map, i, length)
           },
-        }),
-      },
-    ]
+        },
+      })
+    }
+    patterns.push({
+      offset: position !== undefined ? `${position}%` : undefined,
+      repeat: 0,
+      symbol: LeafletPolylineDecorator.Symbol.arrowHead({
+        pixelSize: size,
+        polygon: true,
+        pathOptions: {
+          stroke: true,
+        },
+      }),
+    })
+    return patterns
 
   }
 
   processProps(props, prevState) {
-    const {position} = props
+    const {position, canvasList} = props
     const {zoom} = prevState
     const nextState = {}
     if (prevState.position !== position) {
-      nextState.patterns = this.buildPatterns(position, zoom)
+      nextState.patterns = this.buildPatterns(position, zoom, canvasList)
     }
     return nextState
   }
@@ -350,8 +381,7 @@ class GISMap extends React.Component {
   }
 
   onViewportChange = ({center, zoom}) => {
-    console.log('zoom', zoom)
-    this.setState({zoom, patterns: this.buildPatterns(this.props.position, zoom)})
+    this.setState({zoom, patterns: this.buildPatterns(this.props.position, zoom, this.props.canvasList)})
     // 14 = 26
     // 15 = 35
     // 16 = 50
