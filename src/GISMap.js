@@ -2,9 +2,10 @@ import React from 'react'
 
 import { withStyles } from '@material-ui/core/styles'
 
-import { GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker } from 'react-leaflet'
+import { Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import 'leaflet-geometryutil'
 
 import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
 import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
@@ -280,6 +281,100 @@ class DelayedGeoJSON extends GeoJSON {
   }
 }
 
+class IIIFGeoJSON extends GeoJSON {
+  static defaultProps = {
+    data: [],
+    onEachFeature: (feature, layer) => {
+      const {properties} = feature
+      layer.bindPopup(Object.keys(properties).map(key => `${key}: ${properties[key]}`).join('<br />'))
+      layer.setStyle(styleFeature(feature))
+    },
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = {data: null}
+  }
+
+  componentWillMount() {
+    super.componentWillMount()
+    this.processProps(this.props)
+  }
+
+  processProps(props) {
+    const {server, workspace, layers} = props
+    if (this.state.data !== undefined && server === this.props.server && workspace === this.props.workspace && layers === this.props.layers) {
+      if (props !== this.props) {
+        return
+      }
+    }
+    geoserverUtil.fetch({server, workspace, typeName: layers}).then(result => {
+      if (server !== this.props.server || workspace !== this.props.workspace || layers != this.props.layers) {
+        return
+      }
+      const {data} = result
+      if (this.leafletElement) {
+        this.leafletElement.clearLayers()
+        this.leafletElement.addData(data)
+      }
+      this.setState({data})
+    })
+  }
+
+  componentWillReceiveProps(nextProps) {
+    super.componentWillReceiveProps(nextProps)
+    this.processProps(nextProps)
+  }
+}
+
+
+class DraggableCanvasPosition extends React.Component {
+  handleOnEachFeature = (feature, layer) => {
+    layer.options.draggable = true
+  }
+
+  handlePointToLayer = (geoJson, latlng) => {
+    const layer = L.marker(latlng)
+    layer.on('dragstart', this.handleOnDragStart)
+    layer.on('drag', this.handleOnDrag)
+    layer.on('dragend', this.handleOnDragEnd)
+    console.log('layer', layer)
+    return layer
+  }
+
+  handleOnDragStart = (event) => {
+    console.log('dragstart')
+  }
+
+  handleOnDrag = (event) => {
+    const {allPoints} = this.props
+    //console.log('drag', event)
+    const {latlng, target} = event
+    const {_map: map} = target
+
+    const fixedLatlng = L.GeometryUtil.closest(map, allPoints, latlng)
+    target.setLatLng(fixedLatlng)
+  }
+
+  handleOnDragEnd = (event) => {
+    console.log('dragend')
+  }
+
+  render() {
+    const {canvas} = this.props
+    const {point, thumbnail, image, ...canvasData} = canvas
+
+    return <GeoJSON data={point} draggable={true} pointToLayer={this.handlePointToLayer} onEachFeature={this.handleOnEachFeature}>
+      <Popup>
+        <div style={{width: 400}}>
+          {Object.keys(canvasData).map(key => <React.Fragment key={key}>{key}: {canvasData[key]} <br/></React.Fragment>)}
+          <img width="100%" src={`${thumbnail}/full/full/0/default.jpg`}/>
+        </div>
+      </Popup>
+    </GeoJSON>
+  }
+}
+
 const styles = {
   root: {
     position: 'relative',
@@ -302,6 +397,22 @@ class GISMap extends React.Component {
     this.roadLine.then(({data, allSegments, allPoints, totalLength}) => {
       this.setState({data, allSegments, allPoints, totalLength})
     })
+    this.iiifCanvasListLayer = L.geoJSON([], {
+    })
+  }
+
+  onEachCanvasListFeature = (feature, layer) => {
+    const {
+      properties: {
+        thumbnail,
+        image,
+        ...properties
+      },
+    } = feature
+    const lines = [].concat(Object.keys(properties).map(key => `${key}: ${properties[key]}`))
+    lines.push(`<img width="400" height="225" src=${thumbnail}/full/full/0/default.jpg/>`)
+    layer.bindPopup(lines.join('<br />'))
+    //layer.setStyle(styleFeature(feature))
   }
 
   buildPatterns(position, zoom, canvasList) {
@@ -332,7 +443,7 @@ class GISMap extends React.Component {
         }),
       },
       */
-    if (canvasList) {
+    if (false && canvasList) {
       const readArrowHeadBuilder = LeafletPolylineDecorator.Symbol.marker({
         pixelSize: 25,
         polygon: true,
@@ -366,12 +477,21 @@ class GISMap extends React.Component {
 
   }
 
+  buildCanvasListGeoJSON(canvasList) {
+    return canvasList.map(({point, ...canvasData}) => ({...point, properties: canvasData}))
+  }
+
   processProps(props, prevState) {
     const {position, canvasList} = props
     const {zoom} = prevState
     const nextState = {}
     if (prevState.position !== position) {
+      nextState.position = position
       nextState.patterns = this.buildPatterns(position, zoom, canvasList)
+    }
+    if (prevState.canvasList !== canvasList) {
+      nextState.canvasList = canvasList
+      nextState.canvasGeoJSON = this.buildCanvasListGeoJSON(canvasList)
     }
     return nextState
   }
@@ -389,7 +509,7 @@ class GISMap extends React.Component {
 
   render() {
     const {classes, position} = this.props
-    const {data, allPoints, patterns} = this.state
+    const {data, allPoints, patterns, canvasList = []} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
@@ -401,6 +521,11 @@ class GISMap extends React.Component {
           {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef, this.onSegment))}
           <LayersControl.Overlay name='sunset-road' checked={true}>
             <GISGeoJSON data={data}/>
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
+            <FeatureGroup>
+              {canvasList.map(canvasItem => <DraggableCanvasPosition key={canvasItem.id} canvas={canvasItem} allPoints={allPoints} />)}
+            </FeatureGroup>
           </LayersControl.Overlay>
 			 	</LayersControl>
         <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>

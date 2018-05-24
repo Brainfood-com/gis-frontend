@@ -112,7 +112,7 @@ export const ExpandoList = withStyles(expandoListStyles)(class ExpandoList exten
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleOnMenuClose}>
         {items.map((item, index) => {
           const {id, label} = item
-          return <MenuItem key={id} value={index} onClick={this.handleOnMenuClose}>{label}[{index}]</MenuItem>
+          return <MenuItem key={id} value={index} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]</MenuItem>
         })}
       </Menu>
       <Collapse in={isOpen} unmountOnExit>
@@ -239,19 +239,21 @@ const StructureDetail = withStyles(structureStyles)(class StructureDetail extend
   processProps(nextProps) {
     const {
       onCanvasList,
+      manifestId,
       item: {
         id,
         canvases,
       } = {}
     } = nextProps
-    if (id !== this.state.id) {
-      this.setState({id, canvases: []})
+    if (manifestId != this.state.manifestId || id !== this.state.id) {
+      this.setState({id, manifestId, canvases: []})
       onCanvasList([])
     } else {
       return
     }
     if (!canvases) return
-    fetch(makeUrl('api', `manifest/${id}/canvas?${canvases.map(canvasId => `id=${canvasId}`).join('&')}`)).then(data => data.json()).then(this.processCanvasResult)
+    //fetch(makeUrl('api', `manifest/${id}/canvas?${canvases.map(canvasId => `id=${canvasId}`).join('&')}`)).then(data => data.json()).then(this.processCanvasResult)
+    fetch(makeUrl('api', `manifest/${manifestId}/range/${id}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
   }
 
   render() {
@@ -298,7 +300,7 @@ class ManifestDetail extends React.Component {
     const {className, item: manifest, onCanvasList} = this.props
     if (!manifest) return <div/>
     const {structures, structuresWithCanvases} = manifest
-    return <ExpandoList className={className} items={structures} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail onCanvasList={onCanvasList}/>}/>
+    return <ExpandoList className={className} items={structures} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail manifestId={manifest.id} onCanvasList={onCanvasList}/>}/>
   }
 }
 
