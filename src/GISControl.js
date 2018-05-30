@@ -8,7 +8,7 @@ import GISMap from './GISMap'
 import GISPicView from './GISPicView'
 import GISPosition from './GISPosition'
 
-import {IIIFTree, CanvasList} from './IIIF'
+import {IIIFTree, CanvasGrid, CanvasList} from './IIIF'
 import {makeUrl} from './api'
 
 /*
@@ -35,6 +35,7 @@ const styles = {
     height: 'auto',
     display: 'flex',
     flexDirection: 'column',
+    overflowY: 'scroll',
   },
   mapViewMiddle: {
     display: 'flex',
@@ -68,6 +69,7 @@ class GISControl extends React.Component {
     super(props)
     this.state = {
       position: 50,
+      canvases: [],
     }
   }
 
@@ -75,20 +77,82 @@ class GISControl extends React.Component {
     this.setState({position})
   }
 
-  handleOnCanvasList = canvasList => {
-    this.setState({canvasList})
+  handleOnItemPicked = (type, item = {}) => {
+    const {id} = item
+    switch (type) {
+      case 'collection':
+        if (this.state.collection !== item) {
+          this.setState({collection: item, manifest: null, structure: null, canvases: []})
+        }
+        break
+      case 'manifest':
+        if (this.state.manifest !== item) {
+          this.setState({manifest: item, structure: null, canvases: []})
+        }
+        break
+      case 'structure':
+        if (this.state.structure !== item) {
+          this.setState({structure: item, canvases: []})
+          this.fetchCanvasPoints()
+        }
+        break
+    }
+  }
+
+  fetchCanvasPoints = () => {
+    this.setState((prevState, props) => {
+      const {manifest, structure} = prevState
+      if (!manifest || !structure) {
+        return
+      }
+      fetch(makeUrl('api', `manifest/${manifest.id}/range/${structure.id}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
+    })
+  }
+
+  processCanvasResult = canvasesDetail => {
+    const {structure} = this.state
+    const {onCanvasList} = this.props
+    const canvasesById = {}
+    canvasesDetail.forEach(canvasDetail => {
+      canvasesById[canvasDetail.id] = canvasDetail
+    })
+    const canvases = structure.canvases.map(canvasId => canvasesById[canvasId]).filter(canvas => canvas && canvas.thumbnail)
+    this.setState({canvases})
+  }
+
+  handleOnUpdatePoint = (id, point) => {
+    const {manfiest, canvases} = this.state
+    console.log('handleOnUpdatePoint', id, point)
+    const canvasItem = canvases.find(canvasItem => canvasItem.id === id)
+    fetch(makeUrl('api', `manifest/${this.state.manifest.id}/canvas/${id}/point/web`), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        priority: 1,
+        notes: 'foo',
+        point: {
+          type: 'Point',
+          coordinates: [point.lng, point.lat],
+        },
+      }),
+    }).then(data => data.json()).then(result => {
+      this.fetchCanvasPoints()
+    })
   }
 
   render() {
     const {children, classes} = this.props
-    const {canvasList, position} = this.state
+    const {canvases, position} = this.state
     return <div className={classes.root}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>
-          <IIIFTree onCanvasList={this.handleOnCanvasList}/>
+          <IIIFTree onCanvasList={this.handleOnCanvasList} onItemPicked={this.handleOnItemPicked}/>
+          <CanvasGrid canvases={canvases}/>
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap position={position} canvasList={canvasList}/>
+          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint}/>
         </div>
         <div className={classes.mapViewRight}>
           <GISPicView/>
@@ -96,7 +160,7 @@ class GISControl extends React.Component {
       </div>
       <div className={classes.mapViewBottom}>
         <GISPosition position={position} onPositionChange={this.handleOnPositionChange}/>
-        <CanvasList canvasList={canvasList}/>
+        <CanvasList canvases={canvases}/>
       </div>
     </div>
   }

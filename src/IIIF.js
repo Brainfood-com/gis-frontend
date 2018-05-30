@@ -211,62 +211,48 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
   }
 })
 
-const StructureDetail = withStyles(structureStyles)(class StructureDetail extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {canvases: []}
+class AbstractDetail extends React.Component {
+  static defaultProps = {
+    onItemPicked(type, item) {},
   }
 
-  componentWillMount() {
-    this.processProps(this.props)
+  componentDidMount() {
+    const {item, onItemPicked} = this.props
+    onItemPicked(this._type, item)
   }
 
   componentWillReceiveProps(nextProps) {
-    this.processProps(nextProps)
-  }
-
-  processCanvasResult = canvasesDetail => {
-    const {onCanvasList} = this.props
-    const canvasesById = {}
-    canvasesDetail.forEach(canvasDetail => {
-      canvasesById[canvasDetail.id] = canvasDetail
-    })
-    const canvases = this.props.item.canvases.map(canvasId => canvasesById[canvasId]).filter(canvas => canvas && canvas.thumbnail)
-    this.setState({canvases})
-    onCanvasList(canvases)
-  }
-
-  processProps(nextProps) {
-    const {
-      onCanvasList,
-      manifestId,
-      item: {
-        id,
-        canvases,
-      } = {}
-    } = nextProps
-    if (manifestId != this.state.manifestId || id !== this.state.id) {
-      this.setState({id, manifestId, canvases: []})
-      onCanvasList([])
-    } else {
-      return
+    const {item, onItemPicked} = nextProps
+    if (item !== this.props.item || onItemPicked !== this.props.onItemPicked) {
+      onItemPicked(this._type, item)
     }
-    if (!canvases) return
-    //fetch(makeUrl('api', `manifest/${id}/canvas?${canvases.map(canvasId => `id=${canvasId}`).join('&')}`)).then(data => data.json()).then(this.processCanvasResult)
-    fetch(makeUrl('api', `manifest/${manifestId}/range/${id}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
   }
+}
+
+const StructureDetail = withStyles(structureStyles)(class StructureDetail extends AbstractDetail {
+  _type = 'structure'
 
   render() {
     const {classes, className, item: structure} = this.props
     if (!structure) return <div/>
-    const {canvases} = this.state
     const {label} = structure
     return <div className={classnames(classes.root, className)}>
       <Typography className={classes.header}>{label}</Typography>
-      <GISGrid>
-        {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas}/>)}
-      </GISGrid>
     </div>
+  }
+})
+
+const canvasGridStyles = {
+  root: {
+  },
+}
+
+export const CanvasGrid = withStyles(canvasGridStyles)(class CanvasGrid extends React.Component {
+  render() {
+    const {classes, className, canvases} = this.props
+    return <GISGrid className={classnames(classes.root, className)}>
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas}/>)}
+    </GISGrid>
   }
 })
 
@@ -282,47 +268,45 @@ const canvasListStyles = {
   },
 }
 export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends React.Component {
-  static defaultProps = {
-    canvasList: [],
-  }
-
   render() {
-    const {className, classes, canvasList} = this.props
+    const {className, classes, canvases} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvasList.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card}/>)}
     </div>
   }
 })
 
-class ManifestDetail extends React.Component {
+class ManifestDetail extends AbstractDetail {
+  _type = 'manifest'
+
   render() {
-    const {className, item: manifest, onCanvasList} = this.props
+    const {className, item: manifest, onItemPicked} = this.props
     if (!manifest) return <div/>
     const {structures, structuresWithCanvases} = manifest
-    return <ExpandoList className={className} items={structures} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail manifestId={manifest.id} onCanvasList={onCanvasList}/>}/>
+    return <ExpandoList className={className} items={structures} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail manifestId={manifest.id} onItemPicked={onItemPicked}/>}/>
   }
 }
 
-class CollectionMembers extends React.Component {
+class CollectionMembers extends AbstractDetail {
+  _type = 'collection'
+
   render() {
-		const {className, item: collection, onCanvasList} = this.props
+		const {className, item: collection, onItemPicked} = this.props
     if (!collection) return <div/>
     const {members} = collection
-    return <ExpandoList className={className} items={members} Icon={<div/>} IconLabel='Manifest' ItemDetail={<ManifestDetail onCanvasList={onCanvasList}/>}/>
+    return <ExpandoList className={className} items={members} Icon={<div/>} IconLabel='Manifest' ItemDetail={<ManifestDetail onItemPicked={onItemPicked}/>}/>
   }
 }
 
 const iiifTreeStyles = {
   root: {
-    height: '100%',
-    overflowY: 'scroll',
   },
 }
 
 export const IIIFTree = withStyles(iiifTreeStyles)(class IIIFTree extends React.Component {
   static defaultProps = {
-    onCanvasList: function() {},
+    onItemPicked(type, item) {},
   }
 
   constructor(props) {
@@ -336,16 +320,11 @@ export const IIIFTree = withStyles(iiifTreeStyles)(class IIIFTree extends React.
     })
   }
 
-  handleOnCanvasList = canvasList => {
-    const {onCanvasList} = this.props
-    onCanvasList(canvasList)
-  }
-
   render() {
-		const {classes} = this.props
+		const {classes, onItemPicked} = this.props
     const {collections, expanded} = this.state
     return <List className={classes.root} dense={true}>
-      <ExpandoList items={collections} Icon={<CollectionsIcon/>} IconLabel='Collection' ItemDetail={<CollectionMembers onCanvasList={this.handleOnCanvasList}/>}/>
+      <ExpandoList items={collections} Icon={<CollectionsIcon/>} IconLabel='Collection' ItemDetail={<CollectionMembers onItemPicked={onItemPicked}/>}/>
     </List>
   }
 })

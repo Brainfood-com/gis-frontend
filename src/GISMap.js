@@ -329,6 +329,10 @@ class IIIFGeoJSON extends GeoJSON {
 
 
 class DraggableCanvasPosition extends React.Component {
+  static defaultProps = {
+    onUpdatePoint(point) { }
+  }
+
   handleOnEachFeature = (feature, layer) => {
     layer.options.draggable = true
   }
@@ -338,7 +342,6 @@ class DraggableCanvasPosition extends React.Component {
     layer.on('dragstart', this.handleOnDragStart)
     layer.on('drag', this.handleOnDrag)
     layer.on('dragend', this.handleOnDragEnd)
-    console.log('layer', layer)
     return layer
   }
 
@@ -357,21 +360,23 @@ class DraggableCanvasPosition extends React.Component {
   }
 
   handleOnDragEnd = (event) => {
-    console.log('dragend')
+    const {onUpdatePoint, canvas} = this.props
+    console.log('dragend', event)
+    onUpdatePoint(canvas.id, event.target.getLatLng())
   }
 
   render() {
     const {canvas} = this.props
     const {point, thumbnail, image, ...canvasData} = canvas
 
-    return <GeoJSON data={point} draggable={true} pointToLayer={this.handlePointToLayer} onEachFeature={this.handleOnEachFeature}>
+    return <GISGeoJSON data={point} draggable={true} pointToLayer={this.handlePointToLayer} onEachFeature={this.handleOnEachFeature}>
       <Popup>
         <div style={{width: 400}}>
           {Object.keys(canvasData).map(key => <React.Fragment key={key}>{key}: {canvasData[key]} <br/></React.Fragment>)}
           <img width="100%" src={`${thumbnail}/full/full/0/default.jpg`}/>
         </div>
       </Popup>
-    </GeoJSON>
+    </GISGeoJSON>
   }
 }
 
@@ -477,10 +482,6 @@ class GISMap extends React.Component {
 
   }
 
-  buildCanvasListGeoJSON(canvasList) {
-    return canvasList.map(({point, ...canvasData}) => ({...point, properties: canvasData}))
-  }
-
   processProps(props, prevState) {
     const {position, canvasList} = props
     const {zoom} = prevState
@@ -488,10 +489,6 @@ class GISMap extends React.Component {
     if (prevState.position !== position) {
       nextState.position = position
       nextState.patterns = this.buildPatterns(position, zoom, canvasList)
-    }
-    if (prevState.canvasList !== canvasList) {
-      nextState.canvasList = canvasList
-      nextState.canvasGeoJSON = this.buildCanvasListGeoJSON(canvasList)
     }
     return nextState
   }
@@ -508,11 +505,12 @@ class GISMap extends React.Component {
   }
 
   render() {
-    const {classes, position} = this.props
-    const {data, allPoints, patterns, canvasList = []} = this.state
+    const {classes, position, canvases = [], onUpdatePoint} = this.props
+    const {data, allPoints, patterns} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
+    console.log('canvases', canvases)
 
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange}>
@@ -524,7 +522,7 @@ class GISMap extends React.Component {
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <FeatureGroup>
-              {canvasList.map(canvasItem => <DraggableCanvasPosition key={canvasItem.id} canvas={canvasItem} allPoints={allPoints} />)}
+              {canvases.map(canvasItem => <DraggableCanvasPosition key={canvasItem.id} canvas={canvasItem} allPoints={allPoints} onUpdatePoint={onUpdatePoint} />)}
             </FeatureGroup>
           </LayersControl.Overlay>
 			 	</LayersControl>
