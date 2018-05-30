@@ -335,6 +335,9 @@ class DraggableCanvasPosition extends React.Component {
 
   handleOnEachFeature = (feature, layer) => {
     layer.options.draggable = true
+    if (this.props.canvas.overrides) {
+      layer.options.rotationAngle = 180
+    }
   }
 
   handlePointToLayer = (geoJson, latlng) => {
@@ -510,7 +513,6 @@ class GISMap extends React.Component {
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
-    console.log('canvases', canvases)
 
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange}>
