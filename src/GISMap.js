@@ -415,9 +415,9 @@ class DraggableCanvasPosition extends React.Component {
     const {point, thumbnail, image, ...canvasData} = canvas
 
     return <GISGeoJSON data={point} draggable={true} pointToLayer={this.handlePointToLayer} onEachFeature={this.handleOnEachFeature}>
-      <Popup>
+      <Popup autoPan={false}>
         <div style={{width: 400}}>
-          {Object.keys(canvasData).map(key => <React.Fragment key={key}>{key}: {canvasData[key]} <br/></React.Fragment>)}
+          {Object.keys(canvasData).map(key => <React.Fragment key={key}>{key}: {String(canvasData[key])} <br/></React.Fragment>)}
           <img width="100%" src={`${thumbnail}/full/full/0/default.jpg`}/>
         </div>
       </Popup>
