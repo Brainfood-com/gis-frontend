@@ -60,20 +60,75 @@ function swap(a) {
   return [a[1], a[0]]
 }
 
-class GeoServerUtil {
-  constructor(props) {
-    this.servers = props.servers
+class ReIssueApi {
+  init() {
+    return (this._init || (this._init = this.createInitializer()))
   }
 
-  loginBuilder(serverName) {
-    const serverDef = this.servers[serverName]
-    if (serverDef.loggedIn) {
-      return serverDef.loggedIn
+  async createInitializer() {
+    return true
+  }
+
+  async isValid(response) {
+    const isValid = await this.checkResponse(response)
+    if (!isValid) {
+      delete this._init
     }
+    return isValid
+  }
+
+  async checkResponse(response) {
+    return true
+  }
+
+  async api(url, options) {
+    const initPhaseOne = await this.init()
+    const fetchPhaseOne = await fetch(url, options)
+    const isValid = await this.isValid(fetchPhaseOne)
+    if (!isValid) {
+      await this.init()
+      return await fetch(url, options)
+    }
+    return fetchPhaseOne
+  }
+}
+
+class ReIssueApiGeoServerLogin extends ReIssueApi {
+  constructor(serverDef) {
+    super()
+    this.serverDef = serverDef
+  }
+
+  async createInitializer() {
+    const {serverDef} = this
     const form = new URLSearchParams()
     form.set('username', serverDef.username)
     form.set('password', serverDef.password)
-    return serverDef.loggedIn = fetch(`${serverDef.url}/j_spring_security_check`, {credentials: 'include', method: 'POST', mode: 'no-cors', body: form})
+    await fetch(`${serverDef.url}/web`, {credentials: 'include', method: 'GET', mode: 'no-cors'})
+    return fetch(`${serverDef.url}/j_spring_security_check`, {credentials: 'include', method: 'POST', mode: 'no-cors', body: form})
+  }
+
+  async checkResponse(response) {
+    const contentType = response.headers.get('Content-Type')
+    console.log('contentType', contentType)
+    return true
+  }
+
+  api(urlSuffix, {credentials = 'include', datatype = 'json', parameters = {}, ...options} = {}) {
+    const {serverDef} = this
+    const url = new URL(`${serverDef.url}/${urlSuffix}`)
+    url.search = new URLSearchParams(parameters)
+    return super.api(url, {...options, credentials, datatype})
+  }
+}
+
+class GeoServerUtil {
+  constructor(props) {
+    const {servers} = props
+    this.servers = Object.keys(servers).reduce((result, serverName) => {
+      result[serverName] = new ReIssueApiGeoServerLogin(servers[serverName])
+      return result
+    }, {})
   }
 
   async fetch({server, typeName, workspace}) {
@@ -82,10 +137,8 @@ class GeoServerUtil {
       typeName,
       maxFeatures: 15000,
     }
-    const url = new URL(`${this.servers[server].url}/${workspace}/ows`)
-    url.search = new URLSearchParams(parameters)
 
-    const data = await this.loginBuilder(server).then(() => fetch(url, {credentials: 'include', datatype: 'json'}).then(data => data.json()))
+    const data = await this.servers[server].api(`${workspace}/ows`, {parameters}).then(data => data.json())
 
     let totalLength = 0
     const allSegments = []
@@ -222,17 +275,6 @@ const defaultGeoJSONParamters = {
   //typeName: 'cite:bc_well_data_wgs',
   //maxFeatures: 3000,
   outputFormat: 'application/json',
-}
-
-function loginBuilder(serverName) {
-  const serverDef = servers[serverName]
-  if (serverDef.loggedIn) {
-    return serverDef.loggedIn
-  }
-  const form = new URLSearchParams()
-  form.set('username', serverDef.username)
-  form.set('password', serverDef.password)
-  return serverDef.loggedIn = fetch(`${serverDef.url}/j_spring_security_check`, {credentials: 'include', method: 'POST', mode: 'no-cors', body: form})
 }
 
 class DelayedGeoJSON extends GeoJSON {
