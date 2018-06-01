@@ -41,6 +41,9 @@ async function fetchIIIFData() {
             if (structure.canvases) {
               structure.label += `(${structure.canvases.length})`
             }
+            if (structure.pointOverrideCount) {
+              structure.label += `(p=${structure.pointOverrideCount})`
+            }
           })
           manifestDetail.structuresWithCanvases = manifestDetail.structures.filter(structure => structure.canvases && structure.canvases.length)
           return manifestDetail
