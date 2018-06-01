@@ -409,11 +409,11 @@ class DraggableCanvasPosition extends React.Component {
     const hasOverridePoint = !!overridePoint
     const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
 
-    const isHidden = zoom < 14
+    const isHidden = zoom < 16
     //rotationAngle={hasOverridePoint ? 180 : 0}
     return <Marker
       draggable={isFullOpacity || !isHidden}
-      opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.2}
+      opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
       position={point ? point.coordinates.reverse() : null}
       onClick={this.handleOnClick}
       onDragstart={this.handleOnDragStart}
