@@ -44,7 +44,6 @@ class GISPosition extends React.Component {
     const {children, classes} = this.props
     const {position} = this.state
     return <Paper className={classes.root}>
-      <Typography variant='title'>Position</Typography>
           <Relider
             onDragStop={this.handleOnDragStop}
             style={{height: 200}}

@@ -22,6 +22,8 @@ import CollectionsIcon from '@material-ui/icons/Collections'
 import GridList from '@material-ui/core/GridList'
 import GridListTile from '@material-ui/core/GridListTile'
 import Card from '@material-ui/core/Card'
+import Paper from '@material-ui/core/Paper'
+import TextField from '@material-ui/core/TextField'
 import classnames from 'classnames'
 
 import {makeUrl} from './api'
@@ -35,12 +37,12 @@ async function fetchIIIFData() {
       switch (member.type) {
         case 'sc:Manifest':
           const manifestDetail = await fetch(makeUrl('api', `manifest/${member.id}`)).then(data => data.json())
-          manifestDetail.structuresWithCanvases = manifestDetail.structures.forEach(structure => {
+          manifestDetail.structures.forEach(structure => {
             if (structure.canvases) {
               structure.label += `(${structure.canvases.length})`
             }
           })
-          manifestDetail.structuresWithCanvases = manifestDetail.structures.filter(structure => structure.canvases)
+          manifestDetail.structuresWithCanvases = manifestDetail.structures.filter(structure => structure.canvases && structure.canvases.length)
           return manifestDetail
       }
     }))
@@ -59,15 +61,23 @@ const expandoListStyles = theme => ({
 })
 
 export const ExpandoList = withStyles(expandoListStyles)(class ExpandoList extends React.Component {
+  static defaultProps = {
+    onItemPicked(index) {},
+  }
+
   constructor(props) {
     super(props)
-    this.state = {value: null, items: props.items}
+    const {items, itemId} = props
+    const value = !!itemId && items ? items.findIndex(item => item.id === itemId) : null
+    this.state = {value, items}
   }
 
   componentWillReceiveProps(nextProps) {
-    const {items} = nextProps
+    const {items, itemId} = nextProps
     if (items !== this.state.items) {
-      this.setState({value: null, items})
+      this.setState({value: items.findIndex(item => item.id === itemId), items})
+    } else if (!!itemId) {
+      this.setState({value: this.state.items.findIndex(item => item.id === itemId)})
     }
   }
 
@@ -78,13 +88,19 @@ export const ExpandoList = withStyles(expandoListStyles)(class ExpandoList exten
 
   handleOnMenuClose = (ev) => {
     ev.preventDefault()
-    console.log('handleOnMenuClose', ev.currentTarget.value)
-    this.setState({anchorEl: null, value: ev.currentTarget.value})
+    const {currentTarget: {value}} = ev
+    console.log('handleOnMenuClose', value)
+    this.setState({anchorEl: null})
+    if (value !== undefined) {
+      this.setState({value})
+      this.props.onItemPicked(value)
+    }
   }
 
   handleOnClose = (ev) => {
     ev.preventDefault()
     this.setState({anchorEl: null, value: null})
+    this.props.onItemPicked(null)
   }
 
 
@@ -95,7 +111,7 @@ export const ExpandoList = withStyles(expandoListStyles)(class ExpandoList exten
   }
 
   render() {
-		const {className, classes, items, Icon, IconLabel, ItemDetail} = this.props
+		const {className, classes, itemId, items = [], Icon, IconLabel, ItemDetail} = this.props
     const {anchorEl, value} = this.state
     const isOpen = value !== null
     const item = isOpen ? items[value] : null
@@ -112,7 +128,7 @@ export const ExpandoList = withStyles(expandoListStyles)(class ExpandoList exten
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleOnMenuClose}>
         {items.map((item, index) => {
           const {id, label} = item
-          return <MenuItem key={id} value={index} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]</MenuItem>
+          return <MenuItem key={id} selected={index === value} value={index} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]({item.type})</MenuItem>
         })}
       </Menu>
       <Collapse in={isOpen} unmountOnExit>
@@ -193,21 +209,101 @@ const structureStyles = {
 }
 
 const canvasCardStyles = {
+  root: {
+    paddingBottom: '56.25%',
+    position: 'relative',
+  },
   card: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    border: '4px solid transparent',
     '&> img': {
       width: '100%',
       height: '100%',
     },
+    '$root$selected > &': {
+      borderBottomColor: 'white',
+    },
+    '$override > &': {
+      borderColor: 'red',
+    },
   },
+  selected: {},
+  override: {},
 }
 
 export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
+  static defaultProps = {
+    onSelect: function() {},
+  }
+
+  handleOnClick = event => {
+    const {canvas, onSelect} = this.props
+    onSelect(canvas)
+  }
+
   render() {
-    const {className, classes, canvas} = this.props
+    const {className, classes, canvas, selected} = this.props
+    if (!canvas) {
+      return <div/>
+    }
     const {id, thumbnail} = canvas
-    return <Card className={classnames(classes.card, className)}>
-      <img src={`${thumbnail}/full/full/0/default.jpg`}/>
-    </Card>
+    const wantedClasses = {
+      [classes.root]: true,
+      [classes.selected]: selected,
+      [classes.override]: canvas.overrides && !!canvas.overrides.find(override => override.point),
+    }
+    return <div className={classnames(wantedClasses, className)}>
+      <Card className={classes.card} onClick={this.handleOnClick}>
+        <img src={`${thumbnail}/full/full/0/default.jpg`}/>
+      </Card>
+    </div>
+  }
+})
+
+const canvasDetailStyles = {
+  root: {
+  },
+  card: {
+  },
+  removeOverride: {
+    background: 'white',
+    color: 'black',
+    display: 'none',
+    '$override >&': {
+      display: 'block',
+    },
+  },
+
+  hidden: {
+    display: 'none',
+  },
+  override: {},
+}
+export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail extends React.Component {
+  static defaultProps = {
+    onRemoveOverride(event) {},
+  }
+
+  render() {
+    const {className, classes, canvas, selected, onRemoveOverride} = this.props
+    const hasOverride = canvas && canvas.overrides && !!canvas.overrides.find(override => override.point)
+    const rootClasses = {
+      [classes.root]: true,
+      [classes.hidden]: !!!canvas,
+      [classes.override]: hasOverride,
+    }
+
+    return <Paper className={classnames(rootClasses, className)}>
+      <CanvasCard canvas={canvas} className={classes.card}/>
+      <Button fullWidth variant='raised' onClick={onRemoveOverride} className={classes.removeOverride}>
+        Remove Override
+      </Button>
+      <TextField fullWidth label='Notes' multiline={true} rows={5}/>
+    </Paper>
   }
 })
 
@@ -249,9 +345,9 @@ const canvasGridStyles = {
 
 export const CanvasGrid = withStyles(canvasGridStyles)(class CanvasGrid extends React.Component {
   render() {
-    const {classes, className, canvases} = this.props
+    const {classes, className, canvases, selected, onSelect} = this.props
     return <GISGrid className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvas={canvas} onSelect={onSelect}/>)}
     </GISGrid>
   }
 })
@@ -269,10 +365,39 @@ const canvasListStyles = {
 }
 export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends React.Component {
   render() {
-    const {className, classes, canvases} = this.props
+    const {className, classes, canvases, selected, onSelect} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card} selected={selected === canvas.id} onSelect={onSelect}/>)}
+    </div>
+  }
+})
+
+const canvasSlidingListStyles = {
+  root: {
+    width: '100%',
+    height: 108,
+  },
+  container: {
+    display: 'inline-block',
+    width: `${100 / 5}%`,
+  },
+}
+export const CanvasSlidingList = withStyles(canvasSlidingListStyles)(class CanvasSlidingList extends React.Component {
+  render() {
+    const {className, classes, canvases, selected, onSelect} = this.props
+    const position = selected ? canvases.findIndex(canvas => selected === canvas.id) : -1
+    if (position === -1) {
+      return <div />
+    }
+    const slidingWindow = canvases.slice(Math.max(0, position - 2), Math.min(canvases.length, position + 3))
+
+    return <div className={classnames(classes.root, className)}>
+      {slidingWindow.map(canvas => {
+        return <div key={canvas.id} className={classes.container}>
+          <CanvasCard canvas={canvas} selected={selected === canvas.id} onSelect={onSelect}/>
+        </div>
+      })}
     </div>
   }
 })
@@ -281,10 +406,10 @@ class ManifestDetail extends AbstractDetail {
   _type = 'manifest'
 
   render() {
-    const {className, item: manifest, onItemPicked} = this.props
+    const {className, item: manifest, onItemPicked, picked} = this.props
     if (!manifest) return <div/>
     const {structures, structuresWithCanvases} = manifest
-    return <ExpandoList className={className} items={structures} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail manifestId={manifest.id} onItemPicked={onItemPicked}/>}/>
+    return <ExpandoList className={className} items={structuresWithCanvases} itemId={picked.structure} Icon={<div/>} IconLabel='Structure' ItemDetail={<StructureDetail manifestId={manifest.id} onItemPicked={onItemPicked} picked={picked}/>}/>
   }
 }
 
@@ -292,10 +417,10 @@ class CollectionMembers extends AbstractDetail {
   _type = 'collection'
 
   render() {
-		const {className, item: collection, onItemPicked} = this.props
+		const {className, item: collection, onItemPicked, picked} = this.props
     if (!collection) return <div/>
     const {members} = collection
-    return <ExpandoList className={className} items={members} Icon={<div/>} IconLabel='Manifest' ItemDetail={<ManifestDetail onItemPicked={onItemPicked}/>}/>
+    return <ExpandoList className={className} items={members} itemId={picked.manifest} Icon={<div/>} IconLabel='Manifest' ItemDetail={<ManifestDetail onItemPicked={onItemPicked} picked={picked}/>}/>
   }
 }
 
@@ -311,7 +436,7 @@ export const IIIFTree = withStyles(iiifTreeStyles)(class IIIFTree extends React.
 
   constructor(props) {
     super(props)
-    this.state = {collections: []}
+    this.state = {}
   }
 
   componentWillMount() {
@@ -321,10 +446,10 @@ export const IIIFTree = withStyles(iiifTreeStyles)(class IIIFTree extends React.
   }
 
   render() {
-		const {classes, onItemPicked} = this.props
+		const {classes, onItemPicked, picked} = this.props
     const {collections, expanded} = this.state
     return <List className={classes.root} dense={true}>
-      <ExpandoList items={collections} Icon={<CollectionsIcon/>} IconLabel='Collection' ItemDetail={<CollectionMembers onItemPicked={onItemPicked}/>}/>
+      <ExpandoList items={collections} itemId={picked.collection} Icon={<CollectionsIcon/>} IconLabel='Collection' ItemDetail={<CollectionMembers onItemPicked={onItemPicked} picked={picked}/>}/>
     </List>
   }
 })

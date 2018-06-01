@@ -2,7 +2,7 @@ import React from 'react'
 
 import { withStyles } from '@material-ui/core/styles'
 
-import { Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker } from 'react-leaflet'
+import { Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import 'leaflet-geometryutil'
@@ -372,22 +372,13 @@ class IIIFGeoJSON extends GeoJSON {
 
 class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
-    onUpdatePoint(point) { }
+    onUpdatePoint(point) { },
+    onCanvasSelect(canvas) { },
   }
 
-  handleOnEachFeature = (feature, layer) => {
-    layer.options.draggable = true
-    if (this.props.canvas.overrides) {
-      layer.options.rotationAngle = 180
-    }
-  }
-
-  handlePointToLayer = (geoJson, latlng) => {
-    const layer = L.marker(latlng)
-    layer.on('dragstart', this.handleOnDragStart)
-    layer.on('drag', this.handleOnDrag)
-    layer.on('dragend', this.handleOnDragEnd)
-    return layer
+  handleOnClick = event => {
+    const {onCanvasSelect, canvas} = this.props
+    onCanvasSelect(canvas)
   }
 
   handleOnDragStart = (event) => {
@@ -409,19 +400,27 @@ class DraggableCanvasPosition extends React.Component {
     console.log('dragend', event)
     onUpdatePoint(canvas.id, event.target.getLatLng())
   }
-
+  
   render() {
-    const {canvas} = this.props
-    const {point, thumbnail, image, ...canvasData} = canvas
+    const {selected, canvas, isFirst, isLast, zoom} = this.props
+    const {overrides, point} = canvas
 
-    return <GISGeoJSON data={point} draggable={true} pointToLayer={this.handlePointToLayer} onEachFeature={this.handleOnEachFeature}>
-      <Popup autoPan={false}>
-        <div style={{width: 400}}>
-          {Object.keys(canvasData).map(key => <React.Fragment key={key}>{key}: {String(canvasData[key])} <br/></React.Fragment>)}
-          <img width="100%" src={`${thumbnail}/full/full/0/default.jpg`}/>
-        </div>
-      </Popup>
-    </GISGeoJSON>
+    const overridePoint = (overrides || []).find(override => override.point)
+    const hasOverridePoint = !!overridePoint
+    const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
+
+    const isHidden = zoom < 14
+    //rotationAngle={hasOverridePoint ? 180 : 0}
+    return <Marker
+      draggable={isFullOpacity || !isHidden}
+      opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.2}
+      position={point ? point.coordinates.reverse() : null}
+      onClick={this.handleOnClick}
+      onDragstart={this.handleOnDragStart}
+      onDrag={this.handleOnDrag}
+      onDragend={this.handleOnDragEnd}
+      onViewportChange={this.onViewportChange}
+      />
   }
 }
 
@@ -550,8 +549,8 @@ class GISMap extends React.Component {
   }
 
   render() {
-    const {classes, position, canvases = [], onUpdatePoint} = this.props
-    const {data, allPoints, patterns} = this.state
+    const {classes, position, canvases = [], onUpdatePoint, onCanvasSelect, selectedCanvas} = this.props
+    const {data, allPoints, patterns, zoom} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
@@ -566,7 +565,7 @@ class GISMap extends React.Component {
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <FeatureGroup>
-              {canvases.map(canvasItem => <DraggableCanvasPosition key={canvasItem.id} canvas={canvasItem} allPoints={allPoints} onUpdatePoint={onUpdatePoint} />)}
+              {canvases.map((canvasItem, index) => <DraggableCanvasPosition key={canvasItem.id} isFirst={index === 0} isLast={index == canvases.length - 1} zoom={zoom} canvas={canvasItem} allPoints={allPoints} onUpdatePoint={onUpdatePoint} onCanvasSelect={onCanvasSelect} selected={selectedCanvas === canvasItem.id}/>)}
             </FeatureGroup>
           </LayersControl.Overlay>
 			 	</LayersControl>
