@@ -161,10 +161,16 @@ export const CanvasSlidingList = withStyles(canvasSlidingListStyles)(class Canva
     const slidingWindow = canvases.slice(Math.max(0, position - 2), Math.min(canvases.length, position + 3))
 
     return <div className={classnames(classes.root, className)}>
+      {Array.from(Array(Math.abs(Math.min(0, position - 2)))).map((value, index) => {
+        return <div key={index} className={classes.container}>[lead-in-blank]</div>
+      })}
       {slidingWindow.map(canvas => {
         return <div key={canvas.id} className={classes.container}>
           <CanvasCard canvas={canvas} selected={selected === canvas.id} onSelect={onSelect}/>
         </div>
+      })}
+      {Array.from(Array(Math.abs(Math.max(0, position - canvases.length + 3)))).map((value, index) => {
+        return <div key={index} className={classes.container}>[lead-out-blank]</div>
       })}
     </div>
   }
