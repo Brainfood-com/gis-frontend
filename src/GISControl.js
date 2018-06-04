@@ -12,7 +12,8 @@ import GISMap from './GISMap'
 import GISPicView from './GISPicView'
 import GISPosition from './GISPosition'
 
-import {IIIFTree, CanvasDetail, CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './IIIF'
+import {CanvasDetail, CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
+import {IIIFTree} from './IIIF'
 import {makeUrl} from './api'
 
 /*
