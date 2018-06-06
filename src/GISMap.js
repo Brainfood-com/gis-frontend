@@ -524,7 +524,7 @@ class CameraPosition extends React.Component {
   }
 
   static defaultProps = {
-    angle: 60,
+    fieldOfView: 60,
     depth: 100,
     placement: 'left',
 
@@ -542,7 +542,7 @@ class CameraPosition extends React.Component {
   }
 
   static propTypes = {
-    angle: PropTypes.number,
+    fieldOfView: PropTypes.number,
     depth: PropTypes.number,
     position: PropTypes.any,
     heading: PropTypes.number,
@@ -565,7 +565,7 @@ class CameraPosition extends React.Component {
   }
 
   processProps(prevState, prevProps, nextProps) {
-    const pickKeys = ['angle', 'depth', 'position', 'heading', 'placement', 'zoom']
+    const pickKeys = ['fieldOfView', 'depth', 'position', 'heading', 'placement', 'zoom']
     let sameValue = 0
     const pickedProps = pickKeys.reduce((result, key) => {
       const {[key]: value} = nextProps
@@ -575,7 +575,6 @@ class CameraPosition extends React.Component {
       }
       return result
     }, {})
-    console.log('pickedProps', pickedProps)
     if (sameValue === pickKeys.length) {
       const {fieldPoints, carPoints} = prevState
       return {fieldPoints, carPoints}
@@ -613,9 +612,9 @@ class CameraPosition extends React.Component {
    * -        C
    */
   getFieldPoints(pickedProps) {
-    const {angle, depth, placement} = pickedProps
+    const {fieldOfView, depth, placement} = pickedProps
 
-    const fieldAngle = (90 - angle / 2) * Points.degreesToRadians
+    const fieldAngle = (90 - fieldOfView / 2) * Points.degreesToRadians
 
     const A1 = fieldAngle
     const A2 = fieldAngle
@@ -683,7 +682,6 @@ class CameraPosition extends React.Component {
   render() {
     const {fieldPathOptions, carPathOptions} = this.props
     const {fieldPoints, carPoints} = this.state
-    console.log('fieldPoints', fieldPoints)
 
     return <div>
       <Polygon {...fieldPathOptions} positions={fieldPoints}/>
@@ -816,7 +814,7 @@ class GISMap extends React.Component {
   }
 
   render() {
-    const {classes, position, canvases = [], onUpdatePoint, onCanvasSelect, selectedCanvas: selected, placement} = this.props
+    const {classes, position, canvases = [], onUpdatePoint, onCanvasSelect, selectedCanvas: selected, placement, fieldOfView} = this.props
     const {data, allPoints, patterns, zoom} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
@@ -843,7 +841,7 @@ class GISMap extends React.Component {
           </LayersControl.Overlay>
 			 	</LayersControl>
         <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>
-        <CameraPosition zoom={zoom} position={selectedPosition} heading={selectedBearing} placement={placement}/>
+        <CameraPosition zoom={zoom} position={selectedPosition} heading={selectedBearing} placement={placement} fieldOfView={fieldOfView}/>
       </Map>
     </div>
   }

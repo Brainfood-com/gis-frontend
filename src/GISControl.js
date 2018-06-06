@@ -13,6 +13,7 @@ import GISPicView from './GISPicView'
 import GISPosition from './GISPosition'
 
 import {CanvasDetail, CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
+import {StructureDetail} from './iiif/Structure'
 import {IIIFTree} from './IIIF'
 import {makeUrl} from './api'
 
@@ -99,6 +100,8 @@ class GISControl extends React.Component {
       canvases: [],
       selectedCanvas: null,
       picked: picked ? JSON.parse(picked) : {},
+      placement: 'left',
+      fieldOfView: 60,
     }
   }
 
@@ -134,21 +137,23 @@ class GISControl extends React.Component {
     switch (type) {
       case 'collection':
         if (picked.collection !== id) {
-          this.setState({picked: {...picked, collection: id, manifest: null, structure: null, canvas: null}, canvases: []})
+          this.setState({picked: {...picked, collection: id, manifest: null, structure: null, structureItem: null, canvas: null}, canvases: []})
           this.saveLocally()
         }
         break
       case 'manifest':
         if (picked.manifest !== id) {
-          this.setState({picked: {...picked, manifest: id, structure: null, canvas: null}, canvases: []})
+          this.setState({picked: {...picked, manifest: id, structure: null, structureItem: null, canvas: null}, canvases: []})
           this.saveLocally()
         }
         break
       case 'structure':
         if (picked.structure !== id) {
-          this.setState({picked: {...picked, structure: id, canvas: null}, canvases: []})
+          this.setState({picked: {...picked, structure: id, structureItem: item, canvas: null}, canvases: []})
           this.saveLocally()
           this.fetchCanvasPoints()
+        } else if (picked.structureItem !== item) {
+          this.setState({picked: {...picked, structureItem: item, canvas: null}, canvases: []})
         }
         break
     }
@@ -251,18 +256,26 @@ class GISControl extends React.Component {
     this.handleOnUpdatePoint(picked.canvas, null)
   }
 
+  handleOnStructureUpdate = (structure, data) => {
+    const {fieldOfView, placement} = data
+    console.log('handleOnStructureUpdate', fieldOfView, placement)
+    this.setState({fieldOfView, placement})
+  }
+
   render() {
     const {children, classes} = this.props
-    const {canvases, position, picked} = this.state
+    const {canvases, position, picked, placement, fieldOfView} = this.state
+    const selectedStructureItem = picked.structureItem
     const selectedCanvasItem = canvases.find(canvas => picked.canvas === canvas.id)
     return <div className={classes.root}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>
           <IIIFTree picked={picked} onCanvasList={this.handleOnCanvasList} onItemPicked={this.handleOnItemPicked}/>
+          <StructureDetail structure={selectedStructureItem} placement={placement} fieldOfView={fieldOfView} onUpdate={this.handleOnStructureUpdate}/>
           <CanvasDetail canvas={selectedCanvasItem} onRemoveOverride={this.removeSelectedOverride}/>
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement='left'/>
+          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement={placement} fieldOfView={fieldOfView}/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>
