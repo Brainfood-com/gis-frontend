@@ -180,7 +180,24 @@ class GISControl extends React.Component {
     canvasesDetail.forEach(canvasDetail => {
       canvasesById[canvasDetail.id] = canvasDetail
     })
+    function canvasToLatLng(canvas) {
+      return {
+        lat: canvas.point.coordinates[1],
+        lng: canvas.point.coordinates[0],
+      }
+    }
     const canvases = canvasesDetail.filter(canvas => canvas && canvas.thumbnail)
+    const bearingPoints = new Array(2)
+    bearingPoints[0] = canvasToLatLng(canvases[0])
+    for (let i = 0; i < canvases.length; i++) {
+      canvases[i].latlng = bearingPoints[1] = canvasToLatLng(canvases[i])
+      if (i > 0) {
+        canvases[i - 1].bearing = L.GeometryUtil.bearing(...bearingPoints)
+      }
+      bearingPoints[0] = bearingPoints[1]
+    }
+    canvases[canvases.length - 1].bearing = canvases[canvases.length - 2]
+
     const canvasIndex = picked.canvas && canvases.findIndex(canvas => canvas.id === picked.canvas) || 0
     const canvas = canvases.length ? canvases[canvasIndex] : null
     if (canvas !== null) {
@@ -245,7 +262,7 @@ class GISControl extends React.Component {
           <CanvasDetail canvas={selectedCanvasItem} onRemoveOverride={this.removeSelectedOverride}/>
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas}/>
+          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement='left'/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>

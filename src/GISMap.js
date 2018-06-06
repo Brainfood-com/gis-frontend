@@ -1,8 +1,9 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 import { withStyles } from '@material-ui/core/styles'
 
-import { MapLayer, Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker, ScaleControl } from 'react-leaflet'
+import { MapLayer, Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker, ScaleControl, Polygon, Polyline, PropTypes as LeafletPropTypes } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import 'leaflet-geometryutil'
@@ -434,12 +435,11 @@ class DraggableCanvasPosition extends React.Component {
 
   handleOnDragEnd = (event) => {
     const {onUpdatePoint, canvas} = this.props
-    console.log('dragend', event)
     onUpdatePoint(canvas.id, event.target.getLatLng())
   }
   
   render() {
-    const {selected, canvas, isFirst, isLast, zoom, rotation} = this.props
+    const {selected, canvas, isFirst, isLast, zoom, placement} = this.props
     const {overrides, point} = canvas
 
     const overridePoint = (overrides || []).find(override => override.point)
@@ -448,8 +448,9 @@ class DraggableCanvasPosition extends React.Component {
 
     const isHidden = zoom < 16
     //rotationAngle={hasOverridePoint ? 180 : 0}
+    const rotationAngle = canvas.bearing + (placement === 'left' ? 90 : -90)
     return <RotableMarker
-      rotationAngle={rotation}
+      rotationAngle={rotationAngle}
       draggable={isFullOpacity || !isHidden}
       opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
       position={point ? [point.coordinates[1], point.coordinates[0]] : null}
@@ -473,34 +474,134 @@ const styles = {
 	},
 }
 
-function rotatePoints(center, points, angle) {
-  const res = []
-  const sinAngle = Math.sin(angle)
-  const cosAngle = Math.cos(angle)
-  const {x: cx, y: cy} = center
+class Points {
+  static degreesToRadians = Math.PI / 180
 
-  return points.map(point => {
-    // translate to center
-    const p2 = {x: point.x - cx, y: point.y - cy}
-    // rotate using matrix rotation
-    const p3 = {x: cosAngle * p2.x - sinAngle * p2.y, y: sinAngle * p2.x + cosAngle * p2.y}
-    // translate back to center
-    return {x: p3.x + cx, y: p3.y + cy}
-  })
+  constructor(points) {
+    this.points = points
+  }
+
+  reducer(handler) {
+    function mapArray(array) {
+      return array.map(item => Array.isArray(item) ? mapArray(item) : item instanceof Points ? mapArray(item.points) : handler(item))
+    }
+
+    return new Points(mapArray(this.points))
+  }
+  
+  rotate(degrees, center = {x: 0, y: 0}) {
+    const angle = degrees * Points.degreesToRadians
+    const sinAngle = Math.sin(angle)
+    const cosAngle = Math.cos(angle)
+    const {x: cx, y: cy} = center
+
+    return this.reducer(point => {
+      const p2 = {x: point.x - cx, y: point.y - cy}
+      // rotate using matrix rotation
+      const p3 = {x: cosAngle * p2.x - sinAngle * p2.y, y: sinAngle * p2.x + cosAngle * p2.y}
+      // translate back to center
+      return {x: p3.x + cx, y: p3.y + cy}
+    })
+  }
+
+  scale(ratio) {
+    return this.reducer(({x, y}) => ({x: x * ratio, y: y * ratio}))
+  }
+  
+  center(center) {
+    return this.reducer(({x, y}) => ({x: x + center.x, y: y + center.y}))
+  }
+
+  unproject(map) {
+    return this.reducer(point => map.unproject(point))
+  }
 }
 
-class CameraMarker extends MapLayer {
+class CameraPosition extends React.Component {
+
+  static contextTypes = {
+    map: LeafletPropTypes.map,
+  }
+
   static defaultProps = {
-    lenseAngle: 60,
-    fieldDepth: 100,
-    pathOptions: {
-      stroke: false,
+    angle: 60,
+    depth: 100,
+    placement: 'left',
+
+    fieldPathOptions: {
+      stroke: true,
       weight: 2,
       opacity: 1,
-      color: 'red',
+      strokeColor: 'blue',
       fillOpacity: 0.3,
-      fillColor: 'black',
+      fillColor: 'green',
     },
+    carPathOptions: {
+      opacity: 1,
+    },
+  }
+
+  static propTypes = {
+    angle: PropTypes.number,
+    depth: PropTypes.number,
+    position: PropTypes.any,
+    heading: PropTypes.number,
+    placement: PropTypes.oneOf(['left', 'right']),
+    fieldPathOptions: PropTypes.object,
+    directionPathOptions: PropTypes.object,
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = {fieldPoints: [], carPoints: []}
+  }
+
+  componentWillMount() {
+    this.setState(this.processProps(this.state, {}, this.props))
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.processProps(this.state, this.props, nextProps))
+  }
+
+  processProps(prevState, prevProps, nextProps) {
+    const pickKeys = ['angle', 'depth', 'position', 'heading', 'placement', 'zoom']
+    let sameValue = 0
+    const pickedProps = pickKeys.reduce((result, key) => {
+      const {[key]: value} = nextProps
+      result[key] = value
+      if (prevProps[key] === value) {
+        sameValue++
+      }
+      return result
+    }, {})
+    console.log('pickedProps', pickedProps)
+    if (sameValue === pickKeys.length) {
+      const {fieldPoints, carPoints} = prevState
+      return {fieldPoints, carPoints}
+    }
+    const {position, heading, zoom} = pickedProps
+    if (!position && !heading) {
+      return {fieldPoints: [], carPoints: []}
+    }
+    const {map} = this.context
+    const {crs} = map.options
+
+    const cartesianPoint = map.project(position)
+
+    const m1 = crs.project(position)
+    const m2 = m1.subtract([zoom < 16 ? 400 : 100, 0])
+    const m3 = crs.unproject(m2)
+    const m4 = map.latLngToLayerPoint(m3)
+    const sizeAdjustRatio = (map.latLngToLayerPoint(position).x - m4.x) / 100
+
+    const fieldPoints = this.getFieldPoints(pickedProps)
+    const carPoints = this.getCarPoints(pickedProps)
+
+    return {
+      fieldPoints: fieldPoints.scale(sizeAdjustRatio).rotate(heading).center(cartesianPoint).unproject(map).points,
+      carPoints: carPoints.scale(sizeAdjustRatio).rotate(heading).center(cartesianPoint).unproject(map).points,
+    }
   }
 
   /*   
@@ -510,102 +611,87 @@ class CameraMarker extends MapLayer {
    * L1     \   /
    *      A2 \ / A1
    * -        C
-   *         / \
-   *        /   \
-   *     7 /     \ 4
-   *       \_____/
-   *      6       5
    */
+  getFieldPoints(pickedProps) {
+    const {angle, depth, placement} = pickedProps
 
-  createLeafletElement(props) {
-    const {pathOptions: {fillOpacity, ...pathOptions}, zoom} = props
-    //return L.circle(props.position, props.fieldDepth, pathOptions)
-    return L.polygon(this.getPoints(props), {...pathOptions, fillOpacity: zoom < 16 ? 0.8 : fillOpacity})
-  }
-
-  updateLeafletElement(prevProps, nextProps) {
-    console.log('updateLeafletElement', nextProps.zoom)
-    this.leafletElement.bringToFront()
-    const {zoom, pathOptions: {fillOpacity}, heading, position} = nextProps
-    if (prevProps.zoom !== zoom || prevProps.pathOptions.fillOpacity !== fillOpacity) {
-      const {zoom, pathOptions: {fillOpacity}} = nextProps
-      this.leafletElement.setStyle({fillOpacity: zoom < 16 ? 0.6 : fillOpacity})
-    }
-    if (prevProps.heading !== heading || prevProps.position !== position) {
-      this.leafletElement.setLatLngs(this.getPoints(nextProps))
-    }
-    // TODO: Update pathOptions
-  }
-
-  getPoints(props) {
-    const latLngs = this.getCameraPoints(props)
-    return latLngs
-  }
-
-  getArrowPoints(props) {
-    const {map} = this.context
-    const {position, heading, lenseAngle, fieldDepth, pathOptions} = props
-    return L.Symbol.arrowHead({})._buildArrowPath({latLng: position, heading}, map)
-  }
-
-  getCameraPoints(props) {
-    const {map} = this.context
-    const {crs} = map.options
-    const {position, heading, lenseAngle, fieldDepth, pathOptions, zoom} = props
-    if (!position) {
-      return []
-    }
-
-    const cartesianPoint = map.project(position)
-    const degreesToRadians = Math.PI / 180
-    const direction = ((heading + 90)) * degreesToRadians
-    const fieldAngle = (90 - lenseAngle / 2) * degreesToRadians
+    const fieldAngle = (90 - angle / 2) * Points.degreesToRadians
 
     const A1 = fieldAngle
     const A2 = fieldAngle
 
-    const m1 = crs.project(position)
-    const m2 = m1.subtract([zoom < 16 ? fieldDepth * 4 : fieldDepth, 0])
-    const m3 = crs.unproject(m2)
-    const m4 = map.latLngToLayerPoint(m3)
-    const adjustedDepth = map.latLngToLayerPoint(position).x - m4.x
-    const L2 = adjustedDepth / 4
+    const L2 = depth / 4
     const L1 = L2 * 3
-    const points = new Array(8)
     const cosA1 = Math.cos(A1)
     const cosA2 = Math.cos(A2)
     const sinA1 = Math.sin(A1)
     const sinA2 = Math.sin(A2)
 
-    const L1cosA1 = L1 * cosA1
-    const L1cosA2 = L1 * cosA2
-    const L2sinA2 = L2 * sinA2 
-    const L2cosA1 = L2 * cosA1
-    const L2cosA2 = L2 * cosA2
-    points[0] = L.point(cartesianPoint.x + L1cosA1, cartesianPoint.y - L1 * sinA1)
-    points[1] = L.point(points[0].x - L2cosA1, points[0].y - L2sinA2)
-    points[3] = L.point(cartesianPoint.x - L1cosA2, cartesianPoint.y - L1 * sinA2)
-    points[2] = L.point(points[3].x + L2cosA2, points[3].y - L2sinA2)
-    points[4] = L.point(cartesianPoint.x + L1cosA1, cartesianPoint.y + L1 * sinA1)
-    points[5] = L.point(points[4].x - L2cosA1, points[4].y + L2sinA2)
-    points[7] = L.point(cartesianPoint.x - L1cosA2, cartesianPoint.y + L1 * sinA2)
-    points[6] = L.point(points[7].x + L2cosA2, points[7].y + L2sinA2)
-    const rotatedPoints = rotatePoints(cartesianPoint, points, direction)
+    const points = new Array(6)
+    points[0] = {x: 0, y: 0}
+    points[1] = L.point(L1 * cosA1, -L1 * sinA1)
+    points[2] = L.point(points[1].x - L2 * cosA1, points[1].y - L2 * sinA2)
+    points[4] = L.point(-L1 * cosA2, -L1 * sinA2)
+    points[3] = L.point(points[4].x + L2 * cosA2, points[4].y - L2 * sinA2)
+    points[5] = points[0]
 
-    return [
-      position,
-      map.unproject(rotatedPoints[0]),
-      map.unproject(rotatedPoints[1]),
-      map.unproject(rotatedPoints[2]),
-      map.unproject(rotatedPoints[3]),
-      map.unproject(rotatedPoints[4]),
-      map.unproject(rotatedPoints[5]),
-      map.unproject(rotatedPoints[6]),
-      map.unproject(rotatedPoints[7]),
-      position,
+    return new Points(points).rotate(placement === 'left' ? -90 : 90) 
+  }
+
+  /*
+   *     __ __ 
+   *     \/ \/ 
+   *     ++-++
+   *    -|   |-
+   *     | C |
+   *    -|   |-
+   *     +---+
+   *
+   */
+  getCarPoints(pickedProps) {
+    // Mercedes-Benz Citan Tourer xlg
+    const carLength = 4.705
+    const carWidth = 1.829
+    const headlightBeamLength = 0.5
+
+    const {heading} = pickedProps
+
+    const lightAngle = (90 - 30 / 2) * Points.degreesToRadians
+
+    const carWidthHalf = carWidth / 2
+    const carWidthQuarter = carWidth / 4
+    const carLengthHalf = carLength / 4
+    // all basic shapes are 0-based, and will be ratio adjusted and repositioned later
+    const shell = [
+      {x: carWidthHalf, y: -carLengthHalf},
+      {x: -carWidthHalf, y: -carLengthHalf},
+      {x: -carWidthHalf, y: carLengthHalf},
+      {x: carWidthHalf, y: carLengthHalf},
     ]
+    const headlight = [
+      {x: 0, y: 0},
+      {x: Math.cos(lightAngle) * headlightBeamLength, y: -headlightBeamLength},
+      {x: -Math.cos(lightAngle) * headlightBeamLength, y: -headlightBeamLength},
+    ]
+    return new Points([
+      shell,
+      new Points(headlight).center({x: -carWidthQuarter, y: -carLengthHalf}),
+      new Points(headlight).center({x: carWidthQuarter, y: -carLengthHalf}),
+    ]).scale(10)
+  }
+
+  render() {
+    const {fieldPathOptions, carPathOptions} = this.props
+    const {fieldPoints, carPoints} = this.state
+    console.log('fieldPoints', fieldPoints)
+
+    return <div>
+      <Polygon {...fieldPathOptions} positions={fieldPoints}/>
+      <Polygon {...carPathOptions} positions={carPoints}/>
+    </div>
   }
 }
+
 
 class WithinAccuracy extends React.Component {
 
@@ -730,42 +816,14 @@ class GISMap extends React.Component {
   }
 
   render() {
-    const {classes, position, canvases = [], onUpdatePoint, onCanvasSelect, selectedCanvas: selected} = this.props
+    const {classes, position, canvases = [], onUpdatePoint, onCanvasSelect, selectedCanvas: selected, placement} = this.props
     const {data, allPoints, patterns, zoom} = this.state
 
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
 
-    const overrideCanvases = [], otherCanvases = []
-    let selectedCanvas, selectedIndex, selectedPoint
-    let rotationPoints
-    function canvasToLatLng(canvas) {
-      return {
-        lat: canvas.point.coordinates[1],
-        lng: canvas.point.coordinates[0],
-      }
-    }
-    canvases.forEach((canvas, index) => {
-      const {overrides, id} = canvas
-      const overridePoint = (overrides || []).find(override => override.point)
-      if (selected === id) {
-        selectedCanvas = canvas
-        selectedPoint = canvasToLatLng(canvas)
-        if (index < canvases.length - 1) {
-          const followingCanvas = canvases[index + 1]
-          rotationPoints = [selectedPoint, canvasToLatLng(canvases[index + 1])]
-        } else if (index > 0) {
-          const preceedingCanvas = canvases[index - 1]
-          rotationPoints = [canvasToLatLng(canvases[index - 1]), selectedPoint]
-        }
-      }
-      if (index === 0 || overridePoint || (index - 1) === canvases.length) {
-        overrideCanvases.push(canvas)
-      } else {
-        otherCanvases.push(canvas)
-      }
-    })
-    const viewRotation =  rotationPoints && L.GeometryUtil.bearing(...rotationPoints)
+    const selectedCanvas = canvases.find(canvas => selected === canvas.id) || {}
+    const {latlng: selectedPosition, bearing: selectedBearing} = selectedCanvas
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange}>
         <ScaleControl/>
@@ -777,16 +835,15 @@ class GISMap extends React.Component {
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <FeatureGroup>
-              {overrideCanvases.map(canvas => {
-                return <DraggableCanvasPosition key={canvas.id} zoom={zoom} canvas={canvas} allPoints={allPoints} onUpdatePoint={onUpdatePoint} onCanvasSelect={onCanvasSelect} selected={selectedCanvas === canvas.id}/>
+              {canvases.map(canvas => {
+                return <DraggableCanvasPosition key={canvas.id} zoom={zoom} canvas={canvas} allPoints={allPoints} onUpdatePoint={onUpdatePoint} onCanvasSelect={onCanvasSelect} selected={selected === canvas.id} placement={placement}/>
 
               })}
-              {false && selectedCanvas ? <DraggableCanvasPosition zoom={zoom} canvas={selectedCanvas} allPoints={allPoints} onUpdatePoint={onUpdatePoint} onCanvasSelect={onCanvasSelect} selected={true} rotation={viewRotation}/> : null}
-          </FeatureGroup>
+            </FeatureGroup>
           </LayersControl.Overlay>
 			 	</LayersControl>
-        <CameraMarker zoom={zoom} position={selectedPoint} heading={viewRotation}/>
         <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>
+        <CameraPosition zoom={zoom} position={selectedPosition} heading={selectedBearing} placement={placement}/>
       </Map>
     </div>
   }
