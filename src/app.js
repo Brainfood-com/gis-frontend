@@ -8,6 +8,7 @@ import thunk from 'redux-thunk'
 import ThemeConfig from './config/theming'
 import GISControl from './GISControl'
 import Page from './Page'
+import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/actions'
 
 const history = createHistory()
 const middleware = routerMiddleware(history)
@@ -18,9 +19,12 @@ const enhancer = compose(
 export const store = createStore(
 	combineReducers({
 		router: routerReducer,
+    iiif: iiifReducer,
 	}),
 	enhancer
 )
+
+store.dispatch(iiifStartOfDay())
 
 import { Provider, connect } from 'react-redux'
 import { Router, Route } from 'react-router'

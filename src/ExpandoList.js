@@ -38,7 +38,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
     const {items, itemId} = nextProps
     if (items !== this.state.items) {
       this.setState({value: items.findIndex(item => item.id === itemId), items})
-    } else if (!!itemId) {
+    } else if (!!items && !!itemId) {
       this.setState({value: this.state.items.findIndex(item => item.id === itemId)})
     }
   }

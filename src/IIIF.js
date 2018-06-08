@@ -17,6 +17,7 @@ async function fetchIIIFData() {
       switch (member.type) {
         case 'sc:Manifest':
           const manifestDetail = await fetch(makeUrl('api', `manifest/${member.id}`)).then(data => data.json())
+          const manifestStructures = manifestDetail.structures = await fetch(makeUrl('api', `manifest/${member.id}/structures`)).then(data => data.json())
           manifestDetail.structures.forEach(structure => {
             if (structure.canvases) {
               structure.label += `(${structure.canvases.length})`
@@ -29,6 +30,7 @@ async function fetchIIIFData() {
           return manifestDetail
       }
     }))
+    console.log('collectionDetail', collectionDetail)
     return collectionDetail
   }))
 }
@@ -84,7 +86,12 @@ class ManifestDetail extends AbstractDetail {
   }
 }
 
-class CollectionMembers extends AbstractDetail {
+const connect = (mapStateToProps, mapDispatchToProps) => clz => clz
+
+const mapStateToProps = null
+const mapDispatchToProps = null
+
+const CollectionMembers = connect(mapStateToProps, mapDispatchToProps)(class CollectionMembers extends AbstractDetail {
   _type = 'collection'
 
   render() {
@@ -93,7 +100,7 @@ class CollectionMembers extends AbstractDetail {
     const {members} = collection
     return <ExpandoList className={className} items={members} itemId={picked.manifest} Icon={<div/>} IconLabel='Manifest' ItemDetail={<ManifestDetail onItemPicked={onItemPicked} picked={picked}/>}/>
   }
-}
+})
 
 const iiifTreeStyles = {
   root: {

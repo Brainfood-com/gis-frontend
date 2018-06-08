@@ -151,10 +151,14 @@ class GISControl extends React.Component {
         if (picked.structure !== id) {
           this.setState({picked: {...picked, structure: id, structureItem: item, canvas: null}, canvases: []})
           this.saveLocally()
-          this.fetchCanvasPoints()
         } else if (picked.structureItem !== item) {
           this.setState({picked: {...picked, structureItem: item, canvas: null}, canvases: []})
+        } else {
+          break
         }
+        this.setState((prevState, props) => {
+          this.fetchCanvasPoints()
+        })
         break
     }
   }
@@ -163,14 +167,13 @@ class GISControl extends React.Component {
     this.setState((prevState, props) => {
       const {
         picked: {
-          manifest,
           structure,
         }
       } = prevState
-      if (!manifest || !structure) {
+      if (!structure) {
         return
       }
-      fetch(makeUrl('api', `manifest/${manifest}/range/${structure}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
+      fetch(makeUrl('api', `range/${structure}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
     })
   }
 
@@ -251,6 +254,12 @@ class GISControl extends React.Component {
     }
   }
 
+  handleOnCanvasUpdate = (canvas, data) => {
+    if (!data.hasOverride) {
+      this.handleOnUpdatePoint(canvas.id, null)
+    }
+  }
+
   removeSelectedOverride = () => {
     const {picked} = this.state
     this.handleOnUpdatePoint(picked.canvas, null)
@@ -272,7 +281,7 @@ class GISControl extends React.Component {
         <div className={classes.mapViewLeft}>
           <IIIFTree picked={picked} onCanvasList={this.handleOnCanvasList} onItemPicked={this.handleOnItemPicked}/>
           <StructureDetail structure={selectedStructureItem} placement={placement} fieldOfView={fieldOfView} onUpdate={this.handleOnStructureUpdate}/>
-          <CanvasDetail canvas={selectedCanvasItem} onRemoveOverride={this.removeSelectedOverride}/>
+          <CanvasDetail canvas={selectedCanvasItem} onRemoveOverride={this.removeSelectedOverride} onUpdate={this.handleOnCanvasUpdate}/>
         </div>
         <div className={classes.mapViewMiddle}>
           <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement={placement} fieldOfView={fieldOfView}/>

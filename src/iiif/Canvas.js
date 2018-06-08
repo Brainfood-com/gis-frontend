@@ -5,6 +5,7 @@ import List from '@material-ui/core/List'
 import Card from '@material-ui/core/Card'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
+import Typography from '@material-ui/core/Typography'
 import classnames from 'classnames'
 
 const canvasCardStyles = {
@@ -84,12 +85,58 @@ const canvasDetailStyles = {
 }
 export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail extends React.Component {
   static defaultProps = {
-    onRemoveOverride(event) {},
+    onUpdate(canvas, data) {},
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = {}
+  }
+
+  componentWillMount() {
+    this.setState(this.processProps(this.state, {}, this.props))
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.processProps(this.state, this.props, nextProps))
+  }
+
+  processProps(prevState, prevProps, nextProps) {
+    const {canvas} = nextProps
+    const result = {}
+    if (prevProps.canvas !== canvas) {
+      result.hasOverride = canvas && canvas.overrides && !!canvas.overrides.find(override => override.point)
+      result.notes = canvas ? canvas.notes : undefined
+    }
+    return result
+  }
+
+  handleInputChange = (event) => {
+    const {name} = event.currentTarget
+    switch (name) {
+      case 'override':
+        this.setState({hasOverride: false})
+        this.onUpdate()
+        return
+    }
+    const {value} = event.currentTarget
+    if (this.state[name] !== value) {
+      this.setState({[name]: value})
+      this.onUpdate()
+    }
+  }
+
+  onUpdate() {
+    this.setState((prevState, props) => {
+      const {canvas, onUpdate} = props
+      const {hasOverride, notes} = prevState
+      onUpdate(canvas, {hasOverride, notes})
+    })
   }
 
   render() {
-    const {className, classes, canvas, selected, onRemoveOverride} = this.props
-    const hasOverride = canvas && canvas.overrides && !!canvas.overrides.find(override => override.point)
+    const {className, classes, canvas, selected} = this.props
+    const {hasOverride} = this.state
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -97,11 +144,12 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
     }
 
     return <Paper className={classnames(rootClasses, className)}>
+      <Typography variant='heading'>Canvas</Typography>
       <CanvasCard canvas={canvas} className={classes.card}/>
-      <Button fullWidth variant='raised' onClick={onRemoveOverride} className={classes.removeOverride}>
+      <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleInputChange}>
         Remove Override
       </Button>
-      <TextField fullWidth label='Notes' multiline={true} rows={5}/>
+      <TextField name='notes' fullWidth label='Notes' multiline={true} rows={5}/>
     </Paper>
   }
 })

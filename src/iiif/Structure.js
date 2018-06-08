@@ -82,7 +82,7 @@ export const StructureDetail = withStyles(structureDetailStyles)(class Structure
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='heading'>Structure</Typography>
+      <Typography variant='headline'>Structure</Typography>
       <FormControl inline>
         <FormLabel>Placement</FormLabel>
         <RadioGroup name='placement' value={placement} onChange={this.handleInputChange}>
