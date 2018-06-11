@@ -222,7 +222,7 @@ class GISControl extends React.Component {
       return
     }
     const canvasItem = canvases.find(canvasItem => canvasItem.id === id)
-    fetch(makeUrl('api', `manifest/${picked.manifest}/canvas/${id}/point/web`), {
+    fetch(makeUrl('api', `canvas/${id}/point/web`), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
