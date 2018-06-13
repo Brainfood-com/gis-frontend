@@ -5,6 +5,10 @@ import List from '@material-ui/core/List'
 import Card from '@material-ui/core/Card'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
+import Dialog from '@material-ui/core/Dialog'
+import AppBar from '@material-ui/core/AppBar'
+import CloseIcon from '@material-ui/icons/Close';
+import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography'
 import classnames from 'classnames'
 
@@ -90,7 +94,9 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
 
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = {
+      dialogOpen: false
+    }
   }
 
   componentWillMount() {
@@ -126,12 +132,21 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
     }
   }
 
+  largePhotoView = (event) => {
+    console.log('Large photo view')
+    this.setState({dialogOpen: true})
+  }
+
   onUpdate() {
     this.setState((prevState, props) => {
       const {canvas, onUpdate} = props
       const {hasOverride, notes} = prevState
       onUpdate(canvas, {hasOverride, notes})
     })
+  }
+
+  handleClose() {
+    this.setState({dialogOpen: false})
   }
 
   render() {
@@ -149,6 +164,19 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
       <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleInputChange}>
         Remove Override
       </Button>
+      <Dialog
+        fullScreen
+        open={this.state.dialogOpen}
+        onClose={() => this.handleClose()}
+      >
+        <AppBar>
+          <IconButton color="inherit" onClick={() => this.handleClose()} aria-label="Close">
+            <CloseIcon />
+          </IconButton>
+        </AppBar>
+        <CanvasLeaflet />
+      </Dialog>
+      <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       <TextField name='notes' fullWidth label='Notes' multiline={true} rows={5}/>
     </Paper>
   }
@@ -220,6 +248,17 @@ export const CanvasSlidingList = withStyles(canvasSlidingListStyles)(class Canva
       {Array.from(Array(Math.abs(Math.max(0, position - canvases.length + 3)))).map((value, index) => {
         return <div key={index} className={classes.container}>[lead-out-blank]</div>
       })}
+    </div>
+  }
+})
+
+const canvasLeafletStyles = {
+}
+
+export const CanvasLeaflet = withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React.Component {
+  render() {
+    return <div>
+      <h1>Leaflet IIIF</h1>
     </div>
   }
 })
