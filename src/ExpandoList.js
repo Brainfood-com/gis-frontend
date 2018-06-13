@@ -12,6 +12,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction'
 import ListItemText from '@material-ui/core/ListItemText'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
+import Immutable from 'immutable'
 
 const styles = theme => ({
   root: {},
@@ -24,23 +25,22 @@ const styles = theme => ({
 
 export default withStyles(styles)(class ExpandoList extends React.Component {
   static defaultProps = {
-    onItemPicked(index) {},
+    onItemPicked(id) {},
+    items: Immutable.Map(),
   }
 
   constructor(props) {
     super(props)
-    const {items, itemId} = props
-    const value = !!itemId && items ? items.findIndex(item => item.id === itemId) : null
-    this.state = {value, items}
+    this.state = this.processProps({}, {}, props)
+  }
+
+  processProps(prevState, prevProps, nextProps) {
+    const {items, itemId} = nextProps
+    return {value: itemId}
   }
 
   componentWillReceiveProps(nextProps) {
-    const {items, itemId} = nextProps
-    if (items !== this.state.items) {
-      this.setState({value: items.findIndex(item => item.id === itemId), items})
-    } else if (!!items && !!itemId) {
-      this.setState({value: this.state.items.findIndex(item => item.id === itemId)})
-    }
+    this.setState(this.processProps(this.state, this.props, nextProps))
   }
 
   handleOnMenuOpen = (ev) => {
@@ -64,7 +64,6 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
     this.props.onItemPicked(null)
   }
 
-
 	handleOnClick = (ev, id) => {
     ev.preventDefault()
     const {expanded} = this.state
@@ -72,14 +71,15 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
   }
 
   render() {
-		const {className, classes, itemId, items = [], Icon, IconLabel, ItemDetail} = this.props
+		const {className, classes, itemId, items, Icon, IconLabel, ItemDetail} = this.props
     const {anchorEl, value} = this.state
     const isOpen = value !== null
-    const item = isOpen ? items[value] : null
+    const item = isOpen ? items.get(value) : null
+    //console.log('items', IconLabel, isOpen, value, item, items.toJSON())
     return <React.Fragment>
       <ListItem button disableGutters className={classnames(classes.root, className)} onClick={this.handleOnMenuOpen}>
         <Avatar>{Icon}</Avatar>
-        <ListItemText primary={item ? item.label : IconLabel}/>
+        <ListItemText primary={item ? item.get('label') : IconLabel}/>
         <ListItemSecondaryAction disabled={!isOpen}>
           <Button disabled={!isOpen} onClick={this.handleOnClose}>
             <CloseIcon/>
@@ -87,9 +87,11 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
         </ListItemSecondaryAction>
       </ListItem>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleOnMenuClose}>
-        {items.map((item, index) => {
-          const {id, label} = item
-          return <MenuItem key={id} selected={index === value} value={index} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]({item.type})</MenuItem>
+        {items.toList().map((item, index) => {
+          const id = item.get('id')
+          const label = item.get('label')
+          const type = item.get('type')
+          return <MenuItem key={id} selected={id === value} value={id} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]({type})</MenuItem>
         })}
       </Menu>
       <Collapse in={isOpen} unmountOnExit>

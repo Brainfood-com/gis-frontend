@@ -8,7 +8,7 @@ import thunk from 'redux-thunk'
 import ThemeConfig from './config/theming'
 import GISControl from './GISControl'
 import Page from './Page'
-import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/actions'
+import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux'
 
 const history = createHistory()
 const middleware = routerMiddleware(history)

@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
@@ -7,6 +8,11 @@ import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import classnames from 'classnames'
+
+import connectHelper from '../connectHelper'
+import * as iiifRedux from './redux'
+import {safeGetImmutableId} from '../api'
+import {AbstractDetail} from './base'
 
 const canvasCardStyles = {
   root: {
@@ -83,7 +89,18 @@ const canvasDetailStyles = {
   },
   override: {},
 }
-export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail extends React.Component {
+const canvasDetailRedux = {
+  mapStateToProps(store, props) {
+    const id = safeGetImmutableId(props.item)
+    const canvas = store.iiif.getIn([iiifRedux.MODEL['sc:Canvas'], id])
+    return {canvas}
+  },
+  mapDispatchToProps: {
+    getItem: iiifRedux.getCanvas,
+    updateCanvas: iiifRedux.updateCanvas,
+  },
+}
+export const CanvasDetail = _.flow(connectHelper(canvasDetailRedux), withStyles(canvasDetailStyles))(class CanvasDetail extends React.Component {
   static defaultProps = {
     onUpdate(canvas, data) {},
   }
@@ -144,7 +161,7 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='heading'>Canvas</Typography>
+      <Typography variant='headline'>Canvas</Typography>
       <CanvasCard canvas={canvas} className={classes.card}/>
       <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleInputChange}>
         Remove Override
