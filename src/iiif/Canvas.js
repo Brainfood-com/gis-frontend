@@ -7,9 +7,10 @@ import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Dialog from '@material-ui/core/Dialog'
 import AppBar from '@material-ui/core/AppBar'
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close'
+import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
+import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
 
 const canvasCardStyles = {
@@ -158,6 +159,8 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
       [classes.override]: hasOverride,
     }
 
+    console.log('CANVAS', this.props.canvas)
+
     return <Paper className={classnames(rootClasses, className)}>
       <Typography variant='heading'>Canvas</Typography>
       <CanvasCard canvas={canvas} className={classes.card}/>
@@ -169,12 +172,12 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
         open={this.state.dialogOpen}
         onClose={() => this.handleClose()}
       >
-        <AppBar>
+        <AppBar style={{position: 'relative'}}>
           <IconButton color="inherit" onClick={() => this.handleClose()} aria-label="Close">
             <CloseIcon />
           </IconButton>
         </AppBar>
-        <CanvasLeaflet />
+        <CanvasLeaflet url={this.props.canvas ? this.props.canvas.image + '/' : 'http://foo'} />
       </Dialog>
       <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       <TextField name='notes' fullWidth label='Notes' multiline={true} rows={5}/>
@@ -248,17 +251,6 @@ export const CanvasSlidingList = withStyles(canvasSlidingListStyles)(class Canva
       {Array.from(Array(Math.abs(Math.max(0, position - canvases.length + 3)))).map((value, index) => {
         return <div key={index} className={classes.container}>[lead-out-blank]</div>
       })}
-    </div>
-  }
-})
-
-const canvasLeafletStyles = {
-}
-
-export const CanvasLeaflet = withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React.Component {
-  render() {
-    return <div>
-      <h1>Leaflet IIIF</h1>
     </div>
   }
 })
