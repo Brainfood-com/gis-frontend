@@ -50,7 +50,7 @@ export const CollectionForm = _.flow(picked(['collection']), withStyles(collecti
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={collection.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={collection.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <TextField name='tags' fullWidth label='Tags' value={collection.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }

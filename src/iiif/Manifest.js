@@ -49,7 +49,7 @@ export const ManifestForm = _.flow(picked(['manifest']), withStyles(manifestForm
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={manifest.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={manifest.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <TextField name='tags' fullWidth label='Tags' value={manifest.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }

@@ -76,7 +76,7 @@ export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(
           <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={range.get('fovDepth')} onChange={this.handleInputChange} margin='dense'/>
         </FormGroup>
       </FormControl>
-      <TextField name='notes' fullWidth label='Notes' value={range.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <TextField name='notes' fullWidth label='Notes' value={range.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
       <TextField name='tags' fullWidth label='Tags' value={range.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
     </Paper>
   }

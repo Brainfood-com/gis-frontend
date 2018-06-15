@@ -194,7 +194,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
           <Checkbox name='hole' checked={!!canvas.get('hole')} onChange={this.handleInputChange}/>
         }/>
       </FormGroup>
-      <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
