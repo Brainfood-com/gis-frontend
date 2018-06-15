@@ -610,8 +610,8 @@ const CameraPosition = picked(['range', 'canvas'])(class CameraPosition extends 
     if (!range || !points || !canvas) {
       return {fieldPoints: [], carPoints: []}
     }
-    pickedProps.fovAngle = range.get('fovAngle', 60)
-    pickedProps.fovDepth = range.get('fovDepth', 10)
+    pickedProps.fovAngle = range.get('fovAngle') || 60
+    pickedProps.fovDepth = range.get('fovDepth') || 100
     pickedProps.fovOrientation = range.get('fovOrientation', 'left')
 
     const canvasId = canvas.get('id')
