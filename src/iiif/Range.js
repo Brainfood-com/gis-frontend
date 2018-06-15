@@ -63,7 +63,6 @@ export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='subheading'>{range.get('label')}</Typography>
       <FormControl>
         <FormLabel>Orientation</FormLabel>
         <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>

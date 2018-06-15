@@ -10,16 +10,16 @@ export class IIIFTree extends React.Component {
   render() {
 		const {className, collections} = this.props
     return <div className={className}>
-      <Typography variant='headline'>Collection</Typography>
+      <Typography variant='title'>Collection</Typography>
       <CollectionPick/>
       <CollectionForm/>
-      <Typography variant='headline'>Manifest</Typography>
+      <Typography variant='title'>Manifest</Typography>
       <ManifestPick/>
       <ManifestForm/>
-      <Typography variant='headline'>Range</Typography>
+      <Typography variant='title'>Range</Typography>
       <RangePick/>
       <RangeForm/>
-      <Typography variant='headline'>Canvas</Typography>
+      <Typography variant='title'>Canvas</Typography>
       <CanvasForm/>
     </div>
   }
