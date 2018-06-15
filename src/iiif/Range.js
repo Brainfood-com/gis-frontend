@@ -29,10 +29,10 @@ const rangeFormStyles = {
 
 const fieldInputProcessors = {
   fovAngle(value) {
-    return parseInt(value)
+    return value === '' ? null : parseInt(value)
   },
   fovDepth(value) {
-    return parseInt(value)
+    return value === '' ? null : parseInt(value)
   },
   tags(value) {
     return value.split(/\n+/)
