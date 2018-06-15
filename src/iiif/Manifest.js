@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import FormControl from '@material-ui/core/FormControl'
@@ -24,7 +25,7 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const ManifestForm = withStyles(manifestFormStyles)(class ManifestForm extends React.Component {
+export const ManifestForm = _.flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends React.Component {
   static defaultProps = {
     updateManifest(id, data) {},
   }
@@ -55,14 +56,11 @@ export const ManifestForm = withStyles(manifestFormStyles)(class ManifestForm ex
   }
 })
 
-export const ManifestTree = picked(['manifest', 'range'])(class ManifestTree extends React.Component {
+export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPick extends React.Component {
   render() {
-    const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props
-    if (!manifest) return <div/>
-      //<ManifestForm manifest={manifest} updateManifest={updateOwner}/>
-    return <div className={className}>
-      <Typography variant='headline'>Range</Typography>
-      <ExpandoList items={rangesWithCanvases} selectedItem={range} Icon={<div/>} IconLabel='Range' onItemPicked={onItemPicked}/>
-    </div>
+    const {className, collection, manifests, manifest, onItemPicked} = this.props
+    if (!collection) return <div/>
+    return <ExpandoList className={className} items={manifests} selectedItem={manifest} Icon={<div/>} IconLabel='Manifest' onItemPicked={onItemPicked}/>
   }
 })
+

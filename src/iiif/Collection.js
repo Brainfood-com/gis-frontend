@@ -1,5 +1,7 @@
+import _ from 'lodash'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
+import CollectionsIcon from '@material-ui/icons/Collections'
 import FormControl from '@material-ui/core/FormControl'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormLabel from '@material-ui/core/FormLabel'
@@ -24,7 +26,7 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const CollectionForm = withStyles(collectionFormStyles)(class CollectionForm extends React.Component {
+export const CollectionForm = _.flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends React.Component {
   static defaultProps = {
     updateCollection(id, data) {},
   }
@@ -55,14 +57,10 @@ export const CollectionForm = withStyles(collectionFormStyles)(class CollectionF
   }
 })
 
-export const CollectionTree = picked(['collection', 'manifest'])(class CollectionTree extends React.Component {
+export const CollectionPick = picked(['root', 'collection'])(class CollectionPick extends React.Component {
   render() {
-    const {className, collection, manifests, manifest, onItemPicked, updateOwner} = this.props
-    if (!collection) return <div/>
-      //<CollectionForm collection={collection} updateCollection={updateOwner}/>
-    return <div className={className}>
-      <Typography variant='headline'>Manifest</Typography>
-      <ExpandoList items={manifests} selectedItem={manifest} Icon={<div/>} IconLabel='Manifest' onItemPicked={onItemPicked}/>
-    </div>
+    const {className, collections, onItemPicked, collection} = this.props
+    return <ExpandoList className={className} items={collections} selectedItem={collection} Icon={<CollectionsIcon/>} IconLabel='Collection' onItemPicked={onItemPicked}/>
   }
 })
+

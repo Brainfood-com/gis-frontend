@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
@@ -13,6 +14,7 @@ import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
 import classnames from 'classnames'
 
+import ExpandoList from '../ExpandoList'
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
@@ -36,7 +38,7 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const RangeForm = withStyles(rangeFormStyles)(class RangeForm extends React.Component {
+export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends React.Component {
   static defaultProps = {
     updateRange(id, data) {},
   }
@@ -81,12 +83,11 @@ export const RangeForm = withStyles(rangeFormStyles)(class RangeForm extends Rea
   }
 })
 
-export const RangeTree = picked(['range'])(class RangeTree extends React.Component {
+export const RangePick = picked(['manifest', 'range'])(class RangePick extends React.Component {
   render() {
-    const {className, range, onItemPicked, updateRange} = this.props
-    if (!range) return <div/>
-    return <div className={className}>
-      <RangeForm range={range} updateRange={updateRange}/>
-    </div>
+    const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props
+    if (!manifest) return <div/>
+    return <ExpandoList className={className} items={rangesWithCanvases} selectedItem={range} Icon={<div/>} IconLabel='Range' onItemPicked={onItemPicked}/>
   }
 })
+

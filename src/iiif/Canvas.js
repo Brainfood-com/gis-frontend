@@ -108,7 +108,7 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends React.Component {
+export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -131,8 +131,8 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
   }
 
   handleRemoveOverride = (event) => {
-    const {canvas, deleteCanvasPointOverride} = this.props
-    deleteCanvasPointOverride(canvas.get('id'))
+    const {range, canvas, deleteRangePoint} = this.props
+    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
   }
 
   largePhotoView = (event) => {
@@ -146,6 +146,7 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
 
   render() {
     const {className, classes, canvas, selected} = this.props
+    if (!canvas) return <div />
     const image = canvas.get('image')
     const rootClasses = {
       [classes.root]: true,
@@ -286,19 +287,3 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
   }
 */
 
-
-export const CanvasTree = picked(['range', 'canvas'])(class CanvasTree extends React.Component {
-  handleDeleteCanvasPointOverride = id => {
-    const {range, deleteRangePoint} = this.props
-    deleteRangePoint(range.get('id'), id, {sourceId: 'web'})
-  }
-
-  render() {
-    const {className, canvas, onItemPicked, updateCanvas} = this.props
-    if (!canvas) return <div/>
-    return <div className={className}>
-      <Typography variant='headline'>Canvas</Typography>
-      <CanvasForm canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={this.handleDeleteCanvasPointOverride}/>
-    </div>
-  }
-})

@@ -68,29 +68,35 @@ export const picked = picked => Component => {
     const {iiif} = store
     return picked.reduce((result, type) => {
       const pickedId = iiif.getIn([iiifRedux.MODEL['picked'], type, 'value'])
-      const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[type], pickedId])
-      if (pickedValue) {
-        switch (type) {
-          case 'collection':
-            // .members
-            result.manifests = pickedValue.get('manifests', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
-            break
-          case 'manifest':
-            // .ranges
-            // .rangesWithCanvases
-            result.ranges = pickedValue.get('ranges', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
-            result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
-            break
-          case 'range':
-            // .canvases
-            // .points
-            //console.log('rangeCanvases', rangeCanvases)
-            result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
-            result.canvases = pickedValue.get('canvases', Immutable.List()).map(id => {
-              return iiif.getIn([iiifRedux.MODEL.canvas, id])
-            })
-            break
-        }
+      switch (type) {
+        case 'root':
+          result.collections = iiif.get(iiifRedux.MODEL['collection'])
+          break
+        default:
+          const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[type], pickedId])
+          if (pickedValue) {
+            switch (type) {
+              case 'collection':
+                // .members
+                result.manifests = pickedValue.get('manifests', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
+                break
+              case 'manifest':
+                // .ranges
+                // .rangesWithCanvases
+                result.ranges = pickedValue.get('ranges', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                break
+              case 'range':
+                // .canvases
+                // .points
+                //console.log('rangeCanvases', rangeCanvases)
+                result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
+                result.canvases = pickedValue.get('canvases', Immutable.List()).map(id => {
+                  return iiif.getIn([iiifRedux.MODEL.canvas, id])
+                })
+                break
+            }
+          }
       }
       return result
     }, {})
