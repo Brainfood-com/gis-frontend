@@ -7,7 +7,12 @@ import List from '@material-ui/core/List'
 import Card from '@material-ui/core/Card'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
+import Dialog from '@material-ui/core/Dialog'
+import AppBar from '@material-ui/core/AppBar'
+import CloseIcon from '@material-ui/icons/Close'
+import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
+import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
 import Relider from 'relider'
 
@@ -109,6 +114,11 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
     deleteCanvasPointOverride(id) {},
   }
 
+  constructor(props) {
+    super(props)
+    this.state = {}
+  }
+
   handleInputChange = event => {
     const {canvas, updateCanvas} = this.props
     const {name, value} = event.currentTarget
@@ -125,8 +135,18 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
     deleteCanvasPointOverride(canvas.get('id'))
   }
 
+  largePhotoView = (event) => {
+    console.log('Large photo view')
+    this.setState({dialogOpen: true})
+  }
+
+  handleClose() {
+    this.setState({dialogOpen: false})
+  }
+
   render() {
     const {className, classes, canvas, selected} = this.props
+    const image = canvas.get('image')
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -136,6 +156,19 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
     return <Paper className={classnames(rootClasses, className)}>
       <Typography variant='headline'>Canvas</Typography>
       <CanvasCard canvas={canvas} className={classes.card}/>
+      <Dialog
+        fullScreen
+        open={this.state.dialogOpen}
+        onClose={() => this.handleClose()}
+      >
+        <AppBar style={{position: 'relative'}}>
+          <IconButton color="inherit" onClick={() => this.handleClose()} aria-label="Close">
+            <CloseIcon />
+          </IconButton>
+        </AppBar>
+        <CanvasLeaflet url={image ? image + '/' : 'http://foo'} />
+      </Dialog>
+      <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleRemoveOverride}>
         Remove Override
       </Button>
