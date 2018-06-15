@@ -194,8 +194,15 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
   try {
     const object = getState().iiif.getIn([model, id])
     const dataToSend = keys.reduce((result, key) => {
-      const value = data[key]
-      result[key] = !!value ? value : object.get(key)
+      const newValue = data[key]
+      if (newValue !== undefined) {
+        result[key] = newValue
+      } else {
+        const existingValue = object.get(key)
+        if (existingValue !== undefined) {
+          result[key] = existingValue
+        }
+      }
       return result
     }, {})
     dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: model, itemOrItems: {id, ...dataToSend}})
@@ -277,8 +284,8 @@ export const getRangePoints = requiredId(rangeId => async (dispatch, getState) =
   const points = new Array(canvasPoints.length)
   const bearingPoints = new Array(2)
   canvasPoints.forEach((canvasPoint, index) => {
-    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, ...canvasPointRest} = canvasPoint
-    canvases[index] = {id, format, height, image, thumbnail, width, externalId, label, overrides}
+    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, notes, exclude, hole, ...canvasPointRest} = canvasPoint
+    canvases[index] = {id, format, height, image, thumbnail, width, externalId, label, overrides, notes, exclude, hole}
 
     const latlng = bearingPoints[1] = {
       lat: point.coordinates[1],

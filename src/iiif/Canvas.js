@@ -12,6 +12,14 @@ import AppBar from '@material-ui/core/AppBar'
 import CloseIcon from '@material-ui/icons/Close'
 import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
+
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+
+
 import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
 import Relider from 'relider'
@@ -106,6 +114,12 @@ const fieldInputProcessors = {
   tags(value) {
     return value.split(/\n+/)
   },
+  exclude(value, checked) {
+    return checked
+  },
+  hole(value, checked) {
+    return checked
+  },
 }
 
 export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
@@ -121,9 +135,9 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
 
   handleInputChange = event => {
     const {canvas, updateCanvas} = this.props
-    const {name, value} = event.currentTarget
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    const processedValue = inputProcessor(value)
+    const {name, value, checked} = event.currentTarget
+    const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
+    const processedValue = inputProcessor(value, checked)
     const currentValue = canvas.get(name)
     if (currentValue !== processedValue) {
       updateCanvas(canvas.get('id'), {[name]: processedValue})
@@ -172,7 +186,15 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
       <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleRemoveOverride}>
         Remove Override
       </Button>
-      <TextField name='notes' fullWidth label='Notes' multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <FormGroup row>
+        <FormControlLabel label='Exclude' control={
+          <Checkbox name='exclude' checked={!!canvas.get('exclude')} onChange={this.handleInputChange}/>
+        }/>
+        <FormControlLabel label='Hole' control={
+          <Checkbox name='hole' checked={!!canvas.get('hole')} onChange={this.handleInputChange}/>
+        }/>
+      </FormGroup>
+      <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
