@@ -11,9 +11,8 @@ import TextField from '@material-ui/core/TextField'
 
 import GISMap from './GISMap'
 import GISPicView from './GISPicView'
-import GISPosition from './GISPosition'
 
-import {CanvasDetail, CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
+import {CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
 //import {StructureDetail} from './iiif/Structure'
 import {IIIFTree} from './IIIF'
 import {makeUrl} from './api'
@@ -144,43 +143,8 @@ class GISControl extends React.Component {
     })
   }
 
-  handleOnItemPicked = (type, item) => {
-    const id = item ? item.get('id') : undefined
-    const {picked} = this.state
-    console.log('onItemPicked', type, item)
-    switch (type) {
-      case 'collection':
-        if (picked.collection !== id) {
-          this.setState({picked: {...picked, collection: id, manifest: null, range: null, rangeItem: null, canvas: null}, canvases: []})
-          this.props.getCollection(id)
-          this.saveLocally()
-        }
-        break
-      case 'manifest':
-        if (picked.manifest !== id) {
-          this.setState({picked: {...picked, manifest: id, range: null, rangeItem: null, canvas: null}, canvases: []})
-          this.props.getManifest(id)
-          this.saveLocally()
-        }
-        break
-      case 'range':
-        if (picked.range !== id) {
-          this.setState({picked: {...picked, range: id, rangeItem: item, canvas: null}, canvases: []})
-          this.props.getRange(id)
-          this.saveLocally()
-        } else if (picked.rangeItem !== item) {
-          this.setState({picked: {...picked, rangeItem: item, canvas: null}, canvases: []})
-        } else {
-          break
-        }
-        this.setState((prevState, props) => {
-          this.fetchCanvasPoints()
-        })
-        break
-    }
-  }
-
   fetchCanvasPoints = () => {
+    return
     this.setState((prevState, props) => {
       const {
         picked: {
@@ -290,23 +254,20 @@ class GISControl extends React.Component {
 
   render() {
     const {children, classes} = this.props
-    const {canvases, position, picked, placement, fieldOfView} = this.state
+    const {position, picked, placement, fieldOfView} = this.state
     const selectedStructureItem = picked.structureItem
-    const selectedCanvasItem = canvases.find(canvas => picked.canvas === canvas.id)
     return <div className={classes.root}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>
-          <IIIFTree onCanvasList={this.handleOnCanvasList} onItemPicked={this.handleOnItemPicked}/>
-          <CanvasDetail item={selectedCanvasItem}/>
+          <IIIFTree/>
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement={placement} fieldOfView={fieldOfView}/>
+          <GISMap position={position} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect}/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>
         <div className={classes.mapViewBottomLeft}>
-          <GISPosition position={position} onPositionChange={this.handleOnPositionChange}/>
-          <CanvasSlidingList canvases={canvases} selected={picked.canvas} onSelect={this.handleOnCanvasMapSelect}/>
+          <CanvasSlidingList/>
         </div>
       </div>
     </div>

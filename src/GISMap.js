@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import 'leaflet-geometryutil'
 import RotableMarker from './RotatableMarker'
+import {picked} from './iiif/Picked'
 
 import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
 import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
@@ -410,13 +411,13 @@ class IIIFGeoJSON extends GeoJSON {
 
 class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
-    onUpdatePoint(point) { },
-    onCanvasSelect(canvas) { },
+    onUpdatePoint(id, point) { },
+    onCanvasSelect(id) { },
   }
 
   handleOnClick = event => {
     const {onCanvasSelect, canvas} = this.props
-    onCanvasSelect(canvas)
+    onCanvasSelect(canvas.get('id'))
   }
 
   handleOnDragStart = (event) => {
@@ -435,12 +436,13 @@ class DraggableCanvasPosition extends React.Component {
 
   handleOnDragEnd = (event) => {
     const {onUpdatePoint, canvas} = this.props
-    onUpdatePoint(canvas.id, event.target.getLatLng())
+    onUpdatePoint(canvas, event.target.getLatLng())
   }
   
   render() {
-    const {selected, canvas, isFirst, isLast, zoom, placement} = this.props
-    const {overrides, point} = canvas
+    const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
+    const overrides = canvas.get('overrides')
+    const {bearing, point} = rangePoint
 
     const overridePoint = (overrides || []).find(override => override.point)
     const hasOverridePoint = !!overridePoint
@@ -448,7 +450,7 @@ class DraggableCanvasPosition extends React.Component {
 
     const isHidden = zoom < 16
     //rotationAngle={hasOverridePoint ? 180 : 0}
-    const rotationAngle = canvas.bearing + (placement === 'left' ? 90 : -90)
+    const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
     return <RotableMarker
       rotationAngle={rotationAngle}
       draggable={isFullOpacity || !isHidden}
@@ -462,6 +464,30 @@ class DraggableCanvasPosition extends React.Component {
       />
   }
 }
+
+const RangePoints = picked(['range', 'canvas'])(class RangePoints extends React.Component {
+  onUpdatePoint = (canvas, point) => {
+    const {range, setRangePoint} = this.props
+    const rangeId = range.get('id')
+    const canvasId = canvas.get('id')
+    setRangePoint(rangeId, canvasId, {sourceId: 'web', priority: 1, point})
+  }
+
+  render() {
+    const {allPoints, zoom, range, points, canvases, canvas, onItemPicked} = this.props
+    if (!range || !points || !canvases) return <div/>
+    const fovOrientation = range.get('fovOrientation', 'left')
+    const selected = canvas ? canvas.get('id') : null
+    return <FeatureGroup>
+      {canvases.filter(canvas => canvas).map(canvas => {
+        const id = canvas.get('id')
+        const rangePoint = points.get(id)
+        return <DraggableCanvasPosition key={id} zoom={zoom} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation}/>
+
+      })}
+    </FeatureGroup>
+  }
+})
 
 const styles = {
   root: {
@@ -517,7 +543,7 @@ class Points {
   }
 }
 
-class CameraPosition extends React.Component {
+const CameraPosition = picked(['range', 'canvas'])(class CameraPosition extends React.Component {
 
   static contextTypes = {
     map: LeafletPropTypes.map,
@@ -565,7 +591,7 @@ class CameraPosition extends React.Component {
   }
 
   processProps(prevState, prevProps, nextProps) {
-    const pickKeys = ['fieldOfView', 'depth', 'position', 'heading', 'placement', 'zoom']
+    const pickKeys = ['range', 'points', 'canvas', 'zoom']
     let sameValue = 0
     const pickedProps = pickKeys.reduce((result, key) => {
       const {[key]: value} = nextProps
@@ -579,27 +605,37 @@ class CameraPosition extends React.Component {
       const {fieldPoints, carPoints} = prevState
       return {fieldPoints, carPoints}
     }
-    const {position, heading, zoom} = pickedProps
-    if (!position && !heading) {
+    const {range, points, canvas, zoom} = pickedProps
+    
+    if (!range || !points || !canvas) {
       return {fieldPoints: [], carPoints: []}
     }
+    pickedProps.fovAngle = range.get('fovAngle', 60)
+    pickedProps.fovDepth = range.get('fovDepth', 10)
+    pickedProps.fovOrientation = range.get('fovOrientation', 'left')
+
+    const canvasId = canvas.get('id')
+    const rangePoint = points.get(canvasId)
+    const {latlng, bearing} = rangePoint
+    //position, heading, zoom} = pickedProps
+
     const {map} = this.context
     const {crs} = map.options
 
-    const cartesianPoint = map.project(position)
+    const cartesianPoint = map.project(latlng)
 
-    const m1 = crs.project(position)
+    const m1 = crs.project(latlng)
     const m2 = m1.subtract([zoom < 16 ? 400 : 100, 0])
     const m3 = crs.unproject(m2)
     const m4 = map.latLngToLayerPoint(m3)
-    const sizeAdjustRatio = (map.latLngToLayerPoint(position).x - m4.x) / 100
+    const sizeAdjustRatio = (map.latLngToLayerPoint(latlng).x - m4.x) / 100
 
     const fieldPoints = this.getFieldPoints(pickedProps)
     const carPoints = this.getCarPoints(pickedProps)
 
     return {
-      fieldPoints: fieldPoints.scale(sizeAdjustRatio).rotate(heading).center(cartesianPoint).unproject(map).points,
-      carPoints: carPoints.scale(sizeAdjustRatio).rotate(heading).center(cartesianPoint).unproject(map).points,
+      fieldPoints: fieldPoints.scale(sizeAdjustRatio).rotate(bearing).center(cartesianPoint).unproject(map).points,
+      carPoints: carPoints.scale(sizeAdjustRatio).rotate(bearing).center(cartesianPoint).unproject(map).points,
     }
   }
 
@@ -612,14 +648,14 @@ class CameraPosition extends React.Component {
    * -        C
    */
   getFieldPoints(pickedProps) {
-    const {fieldOfView, depth, placement} = pickedProps
+    const {fovAngle, fovDepth, fovOrientation} = pickedProps
 
-    const fieldAngle = (90 - fieldOfView / 2) * Points.degreesToRadians
+    const fieldAngle = (90 - fovAngle / 2) * Points.degreesToRadians
 
     const A1 = fieldAngle
     const A2 = fieldAngle
 
-    const L2 = depth / 4
+    const L2 = fovDepth / 4
     const L1 = L2 * 3
     const cosA1 = Math.cos(A1)
     const cosA2 = Math.cos(A2)
@@ -634,7 +670,7 @@ class CameraPosition extends React.Component {
     points[3] = L.point(points[4].x + L2 * cosA2, points[4].y - L2 * sinA2)
     points[5] = points[0]
 
-    return new Points(points).rotate(placement === 'left' ? -90 : 90) 
+    return new Points(points).rotate(fovOrientation === 'left' ? -90 : 90) 
   }
 
   /*
@@ -652,8 +688,6 @@ class CameraPosition extends React.Component {
     const carLength = 4.705
     const carWidth = 1.829
     const headlightBeamLength = 0.5
-
-    const {heading} = pickedProps
 
     const lightAngle = (90 - 30 / 2) * Points.degreesToRadians
 
@@ -688,8 +722,7 @@ class CameraPosition extends React.Component {
       <Polygon {...carPathOptions} positions={carPoints}/>
     </div>
   }
-}
-
+})
 
 class WithinAccuracy extends React.Component {
 
@@ -820,8 +853,8 @@ class GISMap extends React.Component {
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
 
-    const selectedCanvas = canvases.find(canvas => selected === canvas.id) || {}
-    const {latlng: selectedPosition, bearing: selectedBearing} = selectedCanvas
+    //const selectedCanvas = canvases.find(canvas => selected === canvas.id) || {}
+    //const {latlng: selectedPosition, bearing: selectedBearing} = selectedCanvas
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange}>
         <ScaleControl/>
@@ -832,16 +865,11 @@ class GISMap extends React.Component {
             <GISGeoJSON data={data}/>
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
-            <FeatureGroup>
-              {canvases.map(canvas => {
-                return <DraggableCanvasPosition key={canvas.id} zoom={zoom} canvas={canvas} allPoints={allPoints} onUpdatePoint={onUpdatePoint} onCanvasSelect={onCanvasSelect} selected={selected === canvas.id} placement={placement}/>
-
-              })}
-            </FeatureGroup>
+            <RangePoints allPoints={allPoints}/>
           </LayersControl.Overlay>
 			 	</LayersControl>
         <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>
-        <CameraPosition zoom={zoom} position={selectedPosition} heading={selectedBearing} placement={placement} fieldOfView={fieldOfView}/>
+        <CameraPosition zoom={zoom}/>
       </Map>
     </div>
   }
