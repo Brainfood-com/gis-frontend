@@ -48,10 +48,9 @@ export const CollectionForm = withStyles(collectionFormStyles)(class CollectionF
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='headline'>Collection</Typography>
       <Typography variant='subheading'>{collection.get('label')}</Typography>
-      <TextField name='notes' fullWidth label='Notes' value={collection.get('notes')} multiline={true} rows={5} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={collection.get('tags', []).join("\n")} multiline={true} rows={5} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={collection.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={collection.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -62,6 +61,7 @@ export const CollectionTree = picked(['collection', 'manifest'])(class Collectio
     if (!collection) return <div/>
       //<CollectionForm collection={collection} updateCollection={updateOwner}/>
     return <div className={className}>
+      <Typography variant='headline'>Manifest</Typography>
       <ExpandoList items={manifests} selectedItem={manifest} Icon={<div/>} IconLabel='Manifest' onItemPicked={onItemPicked}/>
     </div>
   }

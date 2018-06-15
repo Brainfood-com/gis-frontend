@@ -154,7 +154,6 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='headline'>Canvas</Typography>
       <CanvasCard canvas={canvas} className={classes.card}/>
       <Dialog
         fullScreen
@@ -172,8 +171,8 @@ export const CanvasForm = withStyles(canvasFormStyles)(class CanvasForm extends 
       <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleRemoveOverride}>
         Remove Override
       </Button>
-      <TextField name='notes' fullWidth label='Notes' multiline={true} rows={5} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={5} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -298,6 +297,7 @@ export const CanvasTree = picked(['range', 'canvas'])(class CanvasTree extends R
     const {className, canvas, onItemPicked, updateCanvas} = this.props
     if (!canvas) return <div/>
     return <div className={className}>
+      <Typography variant='headline'>Canvas</Typography>
       <CanvasForm canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={this.handleDeleteCanvasPointOverride}/>
     </div>
   }

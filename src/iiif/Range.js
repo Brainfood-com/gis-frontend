@@ -4,6 +4,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import Radio from '@material-ui/core/Radio'
 import RadioGroup from '@material-ui/core/RadioGroup'
+import FormGroup from '@material-ui/core/FormGroup'
 import FormControl from '@material-ui/core/FormControl'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormLabel from '@material-ui/core/FormLabel'
@@ -18,6 +19,9 @@ import {picked} from './Picked'
 
 const rangeFormStyles = {
   root: {
+  },
+  numberTextField: {
+    width: '50%',
   },
 }
 
@@ -57,19 +61,22 @@ export const RangeForm = withStyles(rangeFormStyles)(class RangeForm extends Rea
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='headline'>Range</Typography>
       <Typography variant='subheading'>{range.get('label')}</Typography>
-      <FormControl inline>
+      <FormControl>
         <FormLabel>Orientation</FormLabel>
-        <RadioGroup name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange}>
-          <FormControlLabel value='left' control={<Radio color='primary' />} label='Left'/>
-          <FormControlLabel value='right' control={<Radio color='primary' />} label='Right'/>
+        <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>
+          <FormControlLabel value='left' control={<Radio color='primary' />} label='Left' margin='dense'/>
+          <FormControlLabel value='right' control={<Radio color='primary' />} label='Right' margin='dense'/>
         </RadioGroup>
       </FormControl>
-      <TextField name='fovAngle' label='Angle(degrees)' value={range.get('fovAngle')} onChange={this.handleInputChange}/>
-      <TextField name='fovDepth' label='Depth(meters?)' value={range.get('fovDepth')} onChange={this.handleInputChange}/>
-      <TextField name='notes' fullWidth label='Notes' value={range.get('notes')} multiline={true} rows={5} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={range.get('tags', []).join("\n")} multiline={true} rows={5} onChange={this.handleInputChange}/>
+      <FormControl>
+        <FormGroup row>
+          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={range.get('fovAngle')} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={range.get('fovDepth')} onChange={this.handleInputChange} margin='dense'/>
+        </FormGroup>
+      </FormControl>
+      <TextField name='notes' fullWidth label='Notes' value={range.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <TextField name='tags' fullWidth label='Tags' value={range.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
     </Paper>
   }
 })

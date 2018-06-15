@@ -48,10 +48,9 @@ export const ManifestForm = withStyles(manifestFormStyles)(class ManifestForm ex
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='headline'>Manifest</Typography>
       <Typography variant='subheading'>{manifest.get('label')}</Typography>
-      <TextField name='notes' fullWidth label='Notes' value={manifest.get('notes')} multiline={true} rows={5} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={manifest.get('tags', []).join("\n")} multiline={true} rows={5} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={manifest.get('notes')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={manifest.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -62,6 +61,7 @@ export const ManifestTree = picked(['manifest', 'range'])(class ManifestTree ext
     if (!manifest) return <div/>
       //<ManifestForm manifest={manifest} updateManifest={updateOwner}/>
     return <div className={className}>
+      <Typography variant='headline'>Range</Typography>
       <ExpandoList items={rangesWithCanvases} selectedItem={range} Icon={<div/>} IconLabel='Range' onItemPicked={onItemPicked}/>
     </div>
   }

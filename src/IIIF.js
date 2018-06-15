@@ -1,5 +1,6 @@
 import React from 'react'
 import CollectionsIcon from '@material-ui/icons/Collections'
+import Typography from '@material-ui/core/Typography'
 
 import {makeUrl} from './api'
 import ExpandoList from './ExpandoList'
@@ -15,6 +16,7 @@ const Root = picked(['collection'])(class Root extends React.Component {
   render() {
 		const {className, collections, onItemPicked, collection} = this.props
     return <div className={className}>
+      <Typography variant='headline'>Collection</Typography>
       <ExpandoList items={collections} selectedItem={collection} Icon={<CollectionsIcon/>} IconLabel='Collection' onItemPicked={onItemPicked}/>
     </div>
   }
