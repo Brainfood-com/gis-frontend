@@ -1,8 +1,28 @@
 import React from 'react'
 
 import L from 'leaflet'
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
+import 'font-awesome/css/font-awesome.css'
 import 'leaflet-geometryutil'
 import RotatableMarker from './RotatableMarker'
+
+const overriddenIcon = L.AwesomeMarkers.icon({
+  markerColor: 'green',
+  prefix: 'fa',
+  icon: 'camera-retro',
+})
+const selectedIcon = L.AwesomeMarkers.icon({
+  markerColor: 'white',
+  prefix: 'fa',
+  iconColor: 'black',
+  icon: 'car',
+})
+const defaultIcon = L.AwesomeMarkers.icon({
+  markerColor: 'blue',
+  prefix: 'fa',
+  icon: 'film',
+})
 
 export default class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
@@ -43,11 +63,13 @@ export default class DraggableCanvasPosition extends React.Component {
     const hasOverridePoint = !!overridePoint
     const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
 
+    const markerIcon = selected ? selectedIcon : hasOverridePoint ? overriddenIcon : defaultIcon
     const isHidden = zoom < 16
     if (isHidden && !isFullOpacity) return <div />
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
     return <RotatableMarker
+      icon={markerIcon}
       rotationAngle={rotationAngle}
       draggable={isFullOpacity || !isHidden}
       opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
