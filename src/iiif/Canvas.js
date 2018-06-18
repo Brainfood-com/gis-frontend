@@ -265,7 +265,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
       <div className={classes.relider}>
         <Relider
           onDragStop={this.handleOnDragStop}
-          style={{width: '95%', height: 50}}
+          style={{width: '95%'}}
           sliderStyle={{marginBottom: 5, marginTop: 5, marginRight: 5, marginLeft: 5}}
           horizontal={true}
           reversed={false}
