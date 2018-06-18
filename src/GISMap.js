@@ -9,6 +9,7 @@ import L from 'leaflet'
 import 'leaflet-geometryutil'
 import RotatableMarker from './RotatableMarker'
 import {picked} from './iiif/Picked'
+import ReIssueApiGeoServerLogin from './api/ReIssueApiGeoServerLogin'
 
 import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
 import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
@@ -62,68 +63,6 @@ function buildListFetcher(list) {
 
 function swap(a) {
   return [a[1], a[0]]
-}
-
-class ReIssueApi {
-  init() {
-    return (this._init || (this._init = this.createInitializer()))
-  }
-
-  async createInitializer() {
-    return true
-  }
-
-  async isValid(response) {
-    const isValid = await this.checkResponse(response)
-    if (!isValid) {
-      delete this._init
-    }
-    return isValid
-  }
-
-  async checkResponse(response) {
-    return true
-  }
-
-  async api(url, options) {
-    const initPhaseOne = await this.init()
-    const fetchPhaseOne = await fetch(url, options)
-    const isValid = await this.isValid(fetchPhaseOne)
-    if (!isValid) {
-      await this.init()
-      return await fetch(url, options)
-    }
-    return fetchPhaseOne
-  }
-}
-
-class ReIssueApiGeoServerLogin extends ReIssueApi {
-  constructor(serverDef) {
-    super()
-    this.serverDef = serverDef
-  }
-
-  async createInitializer() {
-    const {serverDef} = this
-    const form = new URLSearchParams()
-    form.set('username', serverDef.username)
-    form.set('password', serverDef.password)
-    await fetch(`${serverDef.url}/web`, {credentials: 'include', method: 'GET', mode: 'no-cors'})
-    return fetch(`${serverDef.url}/j_spring_security_check`, {credentials: 'include', method: 'POST', mode: 'no-cors', body: form})
-  }
-
-  async checkResponse(response) {
-    const contentType = response.headers.get('Content-Type')
-    console.log('contentType', contentType)
-    return true
-  }
-
-  api(urlSuffix, {credentials = 'include', datatype = 'json', parameters = {}, ...options} = {}) {
-    const {serverDef} = this
-    const url = new URL(`${serverDef.url}/${urlSuffix}`)
-    url.search = new URLSearchParams(parameters)
-    return super.api(url, {...options, credentials, datatype})
-  }
 }
 
 class GeoServerUtil {
