@@ -7,7 +7,7 @@ import { MapLayer, Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, L
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import 'leaflet-geometryutil'
-import RotableMarker from './RotatableMarker'
+import RotatableMarker from './RotatableMarker'
 import {picked} from './iiif/Picked'
 
 import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -452,7 +452,7 @@ class DraggableCanvasPosition extends React.Component {
     const isHidden = zoom < 16
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
-    return <RotableMarker
+    return <RotatableMarker
       rotationAngle={rotationAngle}
       draggable={isFullOpacity || !isHidden}
       opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
