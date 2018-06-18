@@ -38,6 +38,9 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
+
+const notSetDefault = (value, def) => value === null || value === undefined ? def : value
+
 export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends React.Component {
   static defaultProps = {
     updateRange(id, data) {},
@@ -72,12 +75,12 @@ export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(
       </FormControl>
       <FormControl>
         <FormGroup row>
-          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={range.get('fovAngle')} onChange={this.handleInputChange} margin='dense'/>
-          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={range.get('fovDepth')} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={notSetDefault(range.get('fovAngle'), 60)} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={notSetDefault(range.get('fovDepth'), 100)} onChange={this.handleInputChange} margin='dense'/>
         </FormGroup>
       </FormControl>
-      <TextField name='notes' fullWidth label='Notes' value={range.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <TextField name='tags' fullWidth label='Tags' value={range.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <TextField name='notes' fullWidth label='Notes' value={notSetDefault(range.get('notes'), '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <TextField name='tags' fullWidth label='Tags' value={notSetDefault(range.get('tags'), []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
     </Paper>
   }
 })

@@ -75,7 +75,8 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
 
   render() {
     const {className, classes, canvas, selected} = this.props
-    if (!canvas) {
+    const thumbnail = canvas ? canvas.get('thumbnail') : null
+    if (!thumbnail) {
       return <div/>
     }
     const wantedClasses = {
@@ -85,7 +86,7 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
     }
     return <div className={classnames(wantedClasses, className)}>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <img src={`${canvas.get('thumbnail')}/full/full/0/default.jpg`}/>
+        <img src={`${thumbnail}/full/full/0/default.jpg`}/>
       </Card>
     </div>
   }
@@ -130,7 +131,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
 
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = {dialogOpen: false}
   }
 
   handleInputChange = event => {
