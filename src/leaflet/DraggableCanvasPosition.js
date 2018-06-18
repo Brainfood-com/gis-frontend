@@ -2,7 +2,7 @@ import React from 'react'
 
 import L from 'leaflet'
 import 'leaflet-geometryutil'
-import RotatableMarker from '../RotatableMarker'
+import RotatableMarker from './RotatableMarker'
 
 export default class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
