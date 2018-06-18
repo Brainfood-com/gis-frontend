@@ -499,7 +499,7 @@ class GISMap extends React.Component {
             <GISGeoJSON data={data}/>
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
-            <RangePoints allPoints={allPoints}/>
+            <RangePoints zoom={zoom} allPoints={allPoints}/>
           </LayersControl.Overlay>
 			 	</LayersControl>
         <LeafletPolylineDecorator latlngs={allPoints} patterns={patterns}/>

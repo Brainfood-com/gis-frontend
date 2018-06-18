@@ -39,11 +39,12 @@ export default class DraggableCanvasPosition extends React.Component {
     const overrides = canvas.get('overrides')
     const {bearing, point} = rangePoint
 
-    const overridePoint = (overrides || []).find(override => override.point)
+    const overridePoint = (overrides || []).find(override => override.get('point'))
     const hasOverridePoint = !!overridePoint
     const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
 
     const isHidden = zoom < 16
+    if (isHidden && !isFullOpacity) return <div />
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
     return <RotatableMarker
