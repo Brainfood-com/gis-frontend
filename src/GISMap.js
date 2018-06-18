@@ -3,12 +3,12 @@ import PropTypes from 'prop-types'
 
 import { withStyles } from '@material-ui/core/styles'
 
-import { MapLayer, Popup, FeatureGroup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker, ScaleControl, Polygon, Polyline, PropTypes as LeafletPropTypes } from 'react-leaflet'
+import { MapLayer, Popup, GeoJSON, Map, TileLayer, WMSTileLayer, LayersControl, MapControl, Circle, CircleMarker, ScaleControl, Polygon, Polyline, PropTypes as LeafletPropTypes } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import {picked} from './iiif/Picked'
 import ReIssueApiGeoServerLogin from './api/ReIssueApiGeoServerLogin'
 import DraggableCanvasPosition from './leaflet/DraggableCanvasPosition'
+import RangePoints from './leaflet/RangePoints'
 
 import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
 import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
@@ -346,31 +346,6 @@ class IIIFGeoJSON extends GeoJSON {
     this.processProps(nextProps)
   }
 }
-
-
-const RangePoints = picked(['range', 'canvas'])(class RangePoints extends React.Component {
-  onUpdatePoint = (canvas, point) => {
-    const {range, setRangePoint} = this.props
-    const rangeId = range.get('id')
-    const canvasId = canvas.get('id')
-    setRangePoint(rangeId, canvasId, {sourceId: 'web', priority: 1, point})
-  }
-
-  render() {
-    const {allPoints, zoom, range, points, canvases, canvas, onItemPicked} = this.props
-    if (!range || !points || !canvases) return <div/>
-    const fovOrientation = range.get('fovOrientation', 'left')
-    const selected = canvas ? canvas.get('id') : null
-    return <FeatureGroup>
-      {canvases.filter(canvas => canvas).map(canvas => {
-        const id = canvas.get('id')
-        const rangePoint = points.get(id)
-        return <DraggableCanvasPosition key={id} zoom={zoom} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation}/>
-
-      })}
-    </FeatureGroup>
-  }
-})
 
 const styles = {
   root: {
