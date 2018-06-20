@@ -28,6 +28,21 @@ import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
 
+export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
+  const {deltaX, deltaY, deltaZ, deltaMode} = event
+  if (deltaX === 0) {
+    return
+  }
+  event.preventDefault()
+  if (!!!canvases) return
+  const position = canvases.findIndex(item => item === canvas)
+  if (position === -1) return
+  const nextPosition = position + Math.sign(deltaX)
+  if (nextPosition >= 0 && nextPosition < canvases.size) {
+    onItemPicked(canvases.get(nextPosition).get('id'))
+  }
+}
+
 const canvasCardStyles = {
   root: {
     paddingBottom: '56.25%',
@@ -94,6 +109,11 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
     onItemPicked(id) {},
   }
 
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
   handleOnClick = event => {
     const {canvas, onItemPicked} = this.props
     onItemPicked(canvas.get("id"))
@@ -111,7 +131,7 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.get('exclude'),
     }
-    return <div className={classnames(wantedClasses, className)}>
+    return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
@@ -156,11 +176,17 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
+    onItemPicked(id) {},
   }
 
   constructor(props) {
     super(props)
     this.state = {dialogOpen: false}
+  }
+
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
   }
 
   handleInputChange = event => {
@@ -189,7 +215,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
   }
 
   render() {
-    const {className, classes, canvas, selected} = this.props
+    const {className, classes, canvases, canvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
     const image = canvas.get('image')
     const rootClasses = {
@@ -199,7 +225,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard canvas={canvas} className={classes.card}/>
+      <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
       <Dialog
         fullScreen
         open={this.state.dialogOpen}
@@ -239,7 +265,7 @@ export const CanvasGrid = withStyles(canvasGridStyles)(class CanvasGrid extends 
   render() {
     const {classes, className, canvases, selected, onItemPicked} = this.props
     return <GISGrid className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvas={canvas} onItemPicked={onItemPicked}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvases={canvases} canvas={canvas} onItemPicked={onItemPicked}/>)}
     </GISGrid>
   }
 })
@@ -260,7 +286,7 @@ export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends 
     const {className, classes, canvases, selected, onItemPicked} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvases={canvases} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
     </div>
   }
 })
@@ -283,6 +309,11 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
     onItemPicked(canvas.get('id'))
   }
 
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
   render() {
     const {className, classes, canvases, canvas, onItemPicked} = this.props
     if (!!!canvases) return <div/>
@@ -290,7 +321,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
     if (position === -1) return <div/>
     const slidingWindow = canvases.slice(Math.max(0, position - 2), Math.min(canvases.size, position + 3)).toArray()
 
-    return <div className={classnames(classes.root, className)}>
+    return <div className={classnames(classes.root, className)} onWheel={this.handleOnWheel}>
       <div className={classes.relider}>
         <Relider
           onDragStop={this.handleOnDragStop}
@@ -312,7 +343,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
       })}
       {slidingWindow.map((item, index) => {
         return <div key={index} className={classes.container}>
-          {item ? <CanvasCard canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/> : '[canvas-not-loaded]'}
+          {item ? <CanvasCard canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/> : '[canvas-not-loaded]'}
         </div> 
       })}
       {Array.from(Array(Math.abs(Math.max(0, position - canvases.size + 3)))).map((value, index) => {
