@@ -65,12 +65,12 @@ const canvasHasOverride = canvas => {
 
 export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
   static defaultProps = {
-    onSelect(id) {},
+    onItemPicked(id) {},
   }
 
   handleOnClick = event => {
-    const {canvas, onSelect} = this.props
-    onSelect(canvas.get("id"))
+    const {canvas, onItemPicked} = this.props
+    onItemPicked(canvas.get("id"))
   }
 
   render() {
@@ -208,9 +208,9 @@ const canvasGridStyles = {
 
 export const CanvasGrid = withStyles(canvasGridStyles)(class CanvasGrid extends React.Component {
   render() {
-    const {classes, className, canvases, selected, onSelect} = this.props
+    const {classes, className, canvases, selected, onItemPicked} = this.props
     return <GISGrid className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvas={canvas} onSelect={onSelect}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvas={canvas} onItemPicked={onItemPicked}/>)}
     </GISGrid>
   }
 })
@@ -228,10 +228,10 @@ const canvasListStyles = {
 }
 export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends React.Component {
   render() {
-    const {className, classes, canvases, selected, onSelect} = this.props
+    const {className, classes, canvases, selected, onItemPicked} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card} selected={selected === canvas.id} onSelect={onSelect}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
     </div>
   }
 })
@@ -283,7 +283,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
       })}
       {slidingWindow.map((item, index) => {
         return <div key={index} className={classes.container}>
-          {item ? <CanvasCard canvas={item} selected={item === canvas} onSelect={onItemPicked}/> : '[canvas-not-loaded]'}
+          {item ? <CanvasCard canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/> : '[canvas-not-loaded]'}
         </div> 
       })}
       {Array.from(Array(Math.abs(Math.max(0, position - canvases.size + 3)))).map((value, index) => {
