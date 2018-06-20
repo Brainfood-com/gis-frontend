@@ -68,6 +68,7 @@ export const CollectionPanel = picked(['root', 'collection'])(class CollectionPa
   render() {
     const {className, collections, collection} = this.props
 
-    return <ItemPanel className={className} name='collection' title='Collection' pick={<CollectionPick/>} form={<CollectionForm/>}/>
+    const title = collection ? collection.get('label') : 'Collection'
+    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} form={<CollectionForm/>}/>
   }
 })

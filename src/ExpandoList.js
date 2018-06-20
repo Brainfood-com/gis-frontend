@@ -68,7 +68,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
     return <List dense={true}>
       <ListItem button disableGutters className={classnames(classes.root, className)} onClick={this.handleOnMenuOpen}>
         <Avatar>{Icon}</Avatar>
-        <ListItemText primary={selectedItem ? selectedItem.get('label') : IconLabel}/>
+        <ListItemText primary={`Select a ${IconLabel}`}/>
         <ListItemSecondaryAction disabled={!isOpen}>
           <Button disabled={!isOpen} onClick={this.handleOnClose}>
             <CloseIcon/>

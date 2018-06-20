@@ -69,6 +69,7 @@ export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPa
     const {className, collection, manifests, manifest} = this.props
 
     if (!collection) return <div/>
-    return <ItemPanel className={className} name='manifest' title='Manifest' pick={<ManifestPick/>} form={<ManifestForm/>}/>
+    const title = manifest ? manifest.get('label') : 'Manifest'
+    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm/>}/>
   }
 })

@@ -99,6 +99,7 @@ export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends
     const {className, manifest, rangesWithCanvases, range} = this.props
 
     if (!manifest) return <div/>
-    return <ItemPanel className={className} name='range' title='Range' pick={<RangePick/>} form={<RangeForm/>}/>
+    const title = range ? range.get('label') : 'Range'
+    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm/>}/>
   }
 })
