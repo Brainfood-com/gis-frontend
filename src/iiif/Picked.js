@@ -44,7 +44,16 @@ export const picked = picked => Component => {
         dispatch(iiifRedux.pick(primaryPick, id))
         //dispatch(iiifRedux.getCanvas(id))
       }
-      mapDispatchToProps.updateCanvas = iiifRedux.updateCanvas
+      mapDispatchToProps.updateCanvas = (id, data) => (dispatch, getState) => {
+        dispatch(iiifRedux.updateCanvas(id, data)).then(() => {
+          if (data.exclude !== undefined) {
+            const rangeId = getState().iiif.getIn([iiifRedux.MODEL['picked'], 'range', 'value'])
+            if (rangeId) {
+              dispatch(iiifRedux.getRangePoints(rangeId))
+            }
+          }
+        })
+      }
       mapDispatchToProps.setRangePoint = iiifRedux.setRangePoint
       mapDispatchToProps.deleteRangePoint = iiifRedux.deleteRangePoint
       break

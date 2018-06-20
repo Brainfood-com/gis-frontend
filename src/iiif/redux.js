@@ -281,21 +281,22 @@ export const getRangePoints = requiredId(rangeId => async (dispatch, getState) =
   const canvasPoints = await fetch(makeUrl('api', `range/${rangeId}/canvasPoints`)).then(data => data.json())
 
   const canvases = new Array(canvasPoints.length)
-  const points = new Array(canvasPoints.length)
+  const points = new Array()
   const bearingPoints = new Array(2)
   canvasPoints.forEach((canvasPoint, index) => {
     const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, notes, exclude, hole, ...canvasPointRest} = canvasPoint
     canvases[index] = {id, format, height, image, thumbnail, width, externalId, label, overrides, notes, exclude, hole}
-
-    const latlng = bearingPoints[1] = {
-      lat: point.coordinates[1],
-      lng: point.coordinates[0],
+    if (point) {
+      const latlng = bearingPoints[1] = {
+        lat: point.coordinates[1],
+        lng: point.coordinates[0],
+      }
+      points.push({id, point, latlng, ...canvasPointRest})
+      if (points.length > 1) {
+        points[points.length - 2].bearing = GeometryUtil.bearing(...bearingPoints)
+      }
+      bearingPoints[0] = bearingPoints[1]
     }
-    points[index] = {id, point, latlng, ...canvasPointRest}
-    if (index > 0) {
-      points[index - 1].bearing = GeometryUtil.bearing(...bearingPoints)
-    }
-    bearingPoints[0] = bearingPoints[1]
   })
   points[points.length - 1].bearing = points[points.length - 2].bearing
 

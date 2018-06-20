@@ -81,6 +81,9 @@ export default picked(['range', 'canvas'])(class CameraPosition extends React.Co
 
     const canvasId = canvas.get('id')
     const rangePoint = points.get(canvasId)
+    if (!rangePoint) {
+      return {fieldPoints: [], carPoints: []}
+    }
     const {latlng, bearing} = rangePoint
     //position, heading, zoom} = pickedProps
 

@@ -17,7 +17,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
     if (!range || !points || !canvases) return <div/>
     const fovOrientation = range.get('fovOrientation', 'left')
     const selected = canvas ? canvas.get('id') : null
-    const notNullCanvases = canvases.filter(canvas => canvas)
+    const notNullCanvases = canvases.filter(canvas => canvas && points.get(canvas.get('id')))
     return <FeatureGroup>
       {notNullCanvases.map((canvas, index) => {
         const id = canvas.get('id')

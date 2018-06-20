@@ -53,6 +53,32 @@ const canvasCardStyles = {
   },
   selected: {},
   override: {},
+  exclude: {
+    '& $excludeTopLeft': {
+      display:'block',
+    },
+    '& $excludeBottomLeft': {
+      display:'block',
+    },
+  },
+  excludeTopLeft: {
+    zIndex: 1,
+    display:'none',
+    position:'absolute',
+    height: '100%',
+    content: '',
+    background: 'linear-gradient(to top right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
+    width: '100%',
+  },
+  excludeBottomLeft: {
+    zIndex: 1,
+    display:'none',
+    position:'absolute',
+    height: '100%',
+    content: '',
+    background: 'linear-gradient(to bottom right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
+    width: '100%',
+  },
 }
 
 const canvasHasOverride = canvas => {
@@ -83,8 +109,11 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       [classes.root]: true,
       [classes.selected]: selected,
       [classes.override]: canvasHasOverride(canvas),
+      [classes.exclude]: canvas.get('exclude'),
     }
     return <div className={classnames(wantedClasses, className)}>
+      <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
+      <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
         <img src={`${thumbnail}/full/full/0/default.jpg`}/>
       </Card>
