@@ -14,6 +14,7 @@ import ExpandoList from '../ExpandoList'
 import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
+import ItemPanel from '../ItemPanel'
 
 const manifestFormStyles = {
   root: {
@@ -63,3 +64,11 @@ export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPic
   }
 })
 
+export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPanel extends React.Component {
+  render() {
+    const {className, collection, manifests, manifest} = this.props
+
+    if (!collection) return <div/>
+    return <ItemPanel className={className} name='manifest' title='Manifest' pick={<ManifestPick/>} form={<ManifestForm/>}/>
+  }
+})

@@ -15,6 +15,7 @@ import ExpandoList from '../ExpandoList'
 import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
+import ItemPanel from '../ItemPanel'
 
 const collectionFormStyles = {
   root: {
@@ -63,3 +64,10 @@ export const CollectionPick = picked(['root', 'collection'])(class CollectionPic
   }
 })
 
+export const CollectionPanel = picked(['root', 'collection'])(class CollectionPanel extends React.Component {
+  render() {
+    const {className, collections, collection} = this.props
+
+    return <ItemPanel className={className} name='collection' title='Collection' pick={<CollectionPick/>} form={<CollectionForm/>}/>
+  }
+})

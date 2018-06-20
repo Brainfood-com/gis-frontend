@@ -18,6 +18,7 @@ import ExpandoList from '../ExpandoList'
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
+import ItemPanel from '../ItemPanel'
 
 const rangeFormStyles = {
   root: {
@@ -93,3 +94,11 @@ export const RangePick = picked(['manifest', 'range'])(class RangePick extends R
   }
 })
 
+export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends React.Component {
+  render() {
+    const {className, manifest, rangesWithCanvases, range} = this.props
+
+    if (!manifest) return <div/>
+    return <ItemPanel className={className} name='range' title='Range' pick={<RangePick/>} form={<RangeForm/>}/>
+  }
+})
