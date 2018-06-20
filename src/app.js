@@ -9,6 +9,7 @@ import ThemeConfig from './config/theming'
 import GISControl from './GISControl'
 import Page from './Page'
 import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux'
+import {reducer as itemPanelReducer} from './ItemPanel'
 
 const history = createHistory()
 const middleware = routerMiddleware(history)
@@ -20,6 +21,7 @@ export const store = createStore(
 	combineReducers({
 		router: routerReducer,
     iiif: iiifReducer,
+    panel: itemPanelReducer,
 	}),
 	enhancer
 )
