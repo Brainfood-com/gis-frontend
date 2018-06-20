@@ -59,7 +59,7 @@ export const ManifestForm = _.flow(picked(['manifest']), withStyles(manifestForm
 export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPick extends React.Component {
   render() {
     const {className, collection, manifests, manifest, onItemPicked} = this.props
-    if (!collection) return <div/>
+    if (!collection) return <Typography>Please select a collection.</Typography>
     return <ExpandoList className={className} items={manifests} selectedItem={manifest} Icon={<div/>} IconLabel='Manifest' onItemPicked={onItemPicked}/>
   }
 })

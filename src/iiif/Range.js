@@ -89,7 +89,7 @@ export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(
 export const RangePick = picked(['manifest', 'range'])(class RangePick extends React.Component {
   render() {
     const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props
-    if (!manifest) return <div/>
+    if (!manifest) return <Typography>Please select a manifest.</Typography>
     return <ExpandoList className={className} items={rangesWithCanvases} selectedItem={range} Icon={<div/>} IconLabel='Range' onItemPicked={onItemPicked}/>
   }
 })
