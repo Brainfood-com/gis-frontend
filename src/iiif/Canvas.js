@@ -264,7 +264,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
             <CloseIcon />
           </IconButton>
         </AppBar>
-        <CanvasLeaflet canvas={canvas} />
+        <CanvasLeaflet canvases={canvases} canvas={canvas} onItemPicked={onItemPicked} />
       </Dialog>
       <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       {point}
