@@ -243,11 +243,13 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
   render() {
     const {className, classes, canvases, canvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
+    const hasOverride = canvasHasOverride(canvas)
     const image = canvas.get('image')
+    const point = canvas.get('point')
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
-      [classes.override]: canvasHasOverride(canvas),
+      [classes.override]: hasOverride,
     }
 
     return <Paper className={classnames(rootClasses, className)}>
@@ -265,15 +267,16 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
         <CanvasLeaflet url={image ? image + '/' : 'http://foo'} />
       </Dialog>
       <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
-      <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleRemoveOverride}>
-        Remove Override
-      </Button>
+      {point}
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
           <Checkbox name='exclude' checked={!!canvas.get('exclude')} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Hole' control={
           <Checkbox name='hole' checked={!!canvas.get('hole')} onChange={this.handleInputChange}/>
+        }/>
+        <FormControlLabel label='Override' control={
+          <Checkbox name='override' disabled={!hasOverride} checked={!!hasOverride} onChange={this.handleRemoveOverride}/>
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
