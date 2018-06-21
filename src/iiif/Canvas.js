@@ -322,9 +322,25 @@ const canvasSlidingListStyles = {
     width: '100%',
     height: 108,
   },
-  container: {
+  container0: {
     display: 'inline-block',
-    width: `${100 / 5}%`,
+    width: '20%',
+  },
+  container1: {
+    display: 'inline-block',
+    width: '15%',
+  },
+  container2: {
+    display: 'inline-block',
+    width: '11%',
+  },
+  container3: {
+    display: 'inline-block',
+    width: '8%',
+  },
+  container4: {
+    display: 'inline-block',
+    width: '6%',
   },
 }
 export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
@@ -345,7 +361,32 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
     if (!!!canvases) return <div/>
     const position = canvases.findIndex(item => item === canvas)
     if (position === -1) return <div/>
-    const slidingWindow = canvases.slice(Math.max(0, position - 2), Math.min(canvases.size, position + 3)).toArray()
+
+    function pickCanvas(offset) {
+      const absOffset = Math.abs(offset)
+      const index = position + offset
+      const className = classes[`container${absOffset}`]
+      if (index < 0) {
+        return <div key={`in-${absOffset}`} className={className}>[lead-in-blank{offset}:{index}]</div>
+      } else if (index >= canvases.size) {
+        return <div key={`out-${absOffset}`} className={className}>[lead-out-blank{offset}:{index}]</div>
+      } else {
+        const item = canvases.get(index)
+        if (item) {
+          const id = item.get('id')
+          return <div key={`canvas-${id}`} className={className}><CanvasCard canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
+        } else {
+          return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
+        }
+      }
+    }
+
+    const cells = new Array(9)
+    const count = Math.floor(cells.length / 2)
+    for (let j = 0; j <= count; j++) {
+      cells[count + j] = pickCanvas(j)
+      cells[count - j] = pickCanvas(-j)
+    }
 
     return <div className={classnames(classes.root, className)} onWheel={this.handleOnWheel}>
       <div className={classes.relider}>
@@ -364,17 +405,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
           onChange={this.handleOnReliderChange}
         />
       </div>
-      {Array.from(Array(Math.abs(Math.min(0, position - 2)))).map((value, index) => {
-        return <div key={index} className={classes.container}>[lead-in-blank]</div>
-      })}
-      {slidingWindow.map((item, index) => {
-        return <div key={index} className={classes.container}>
-          {item ? <CanvasCard canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/> : '[canvas-not-loaded]'}
-        </div> 
-      })}
-      {Array.from(Array(Math.abs(Math.max(0, position - canvases.size + 3)))).map((value, index) => {
-        return <div key={index} className={classes.container}>[lead-out-blank{index}]</div>
-      })}
+      {cells}
     </div>
   }
 })
