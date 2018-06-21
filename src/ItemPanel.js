@@ -3,6 +3,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 import { withStyles } from '@material-ui/core/styles'
+import classnames from 'classnames'
 import Typography from '@material-ui/core/Typography'
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
@@ -52,6 +53,8 @@ const itemPanelRedux = {
 
 // TODO: Use the theme size instead of hard-coded 4 and 8
 const styles = {
+  root: {
+  },
   expanded: {
     margin: [4, 0],
   },
@@ -60,6 +63,8 @@ const styles = {
     paddingRight: 0,
   },
   details: {
+    borderTop: '1px solid black',
+    borderBottom: '1px solid black',
     flexDirection: 'column',
     paddingRight: 8,
     paddingBottom: 8,
@@ -87,7 +92,7 @@ export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class I
   render() {
     const {className, classes, title, pick, form, expanded} = this.props
 
-    return <ExpansionPanel className={className} classes={{expanded: classes.expanded}} expanded={expanded} onChange={this.handleOnChange}>
+    return <ExpansionPanel className={classnames(classes.root, className)} classes={{expanded: classes.expanded}} expanded={expanded} onChange={this.handleOnChange}>
       <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon />}>
         <Typography variant='title'>{title}</Typography>
       </ExpansionPanelSummary>
