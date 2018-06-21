@@ -264,7 +264,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
             <CloseIcon />
           </IconButton>
         </AppBar>
-        <CanvasLeaflet url={image ? image + '/' : 'http://foo'} />
+        <CanvasLeaflet canvas={canvas} />
       </Dialog>
       <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       {point}

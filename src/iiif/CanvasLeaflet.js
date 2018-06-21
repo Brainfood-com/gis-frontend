@@ -1,42 +1,27 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
-import $ from 'jquery'
+import classnames from 'classnames'
+
+import IIIFViewer from 'react-leaflet-iiif-viewer'
 
 const canvasLeafletStyles = {
+  root: {
+    position: 'relative',
+  },
+  viewer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
 }
 
-const CanvasLeaflet = withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React.Component {
-	componentDidMount() {
-    window.$ = $
-    const self = this
-
-    // Lazy load leaflet after we have a DOM
-    const L = this.L = require('leaflet')
-    require('leaflet-iiif')
-    require('leaflet/dist/leaflet.css')
-    require('leaflet-draw')
-
-    const map = this.map = L.map('bfpleaflet', {
-      center: [0, 0],
-      crs: L.CRS.Simple,
-      zoom: 1
-    })
-
-    const iiif = this.iiif = L.tileLayer.iiif(this.props.url, {
-      tileSize: 256,
-      fitBounds: true,
-      setMaxBounds: true
-    })
-    iiif.addTo(this.map)
-	}
-
-  componentWillUnmount() {
-    this.map.remove()
-  }
-
+export default withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React.Component {
   render() {
-    return <div id="bfpleaflet" style={{width: '100%', height: '100%'}}></div>
+    const {className, classes, canvas} = this.props
+    const url = canvas ? canvas.get('image') : null
+    if (!url) return <div />
+    return <div className={classnames(classes.root, className)}>
+      <IIIFViewer url={`${url}/`} className={classes.viewer}/>
+    </div>
   }
 })
-
-export default CanvasLeaflet
