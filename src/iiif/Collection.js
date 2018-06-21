@@ -60,7 +60,7 @@ export const CollectionForm = _.flow(picked(['collection']), withStyles(collecti
 export const CollectionPick = picked(['root', 'collection'])(class CollectionPick extends React.Component {
   render() {
     const {className, collections, onItemPicked, collection} = this.props
-    return <ExpandoList className={className} items={collections} selectedItem={collection} Icon={<CollectionsIcon/>} IconLabel='Collection' onItemPicked={onItemPicked}/>
+    return <ExpandoList className={className} items={collections} selectedItem={collection} IconLabel='Collection' onItemPicked={onItemPicked}/>
   }
 })
 

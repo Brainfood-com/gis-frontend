@@ -60,7 +60,7 @@ export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPic
   render() {
     const {className, collection, manifests, manifest, onItemPicked} = this.props
     if (!collection) return <Typography>Please select a collection.</Typography>
-    return <ExpandoList className={className} items={manifests} selectedItem={manifest} Icon={<div/>} IconLabel='Manifest' onItemPicked={onItemPicked}/>
+    return <ExpandoList className={className} items={manifests} selectedItem={manifest} IconLabel='Manifest' onItemPicked={onItemPicked}/>
   }
 })
 

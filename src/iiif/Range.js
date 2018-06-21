@@ -90,7 +90,7 @@ export const RangePick = picked(['manifest', 'range'])(class RangePick extends R
   render() {
     const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props
     if (!manifest) return <Typography>Please select a manifest.</Typography>
-    return <ExpandoList className={className} items={rangesWithCanvases} selectedItem={range} Icon={<div/>} IconLabel='Range' onItemPicked={onItemPicked}/>
+    return <ExpandoList className={className} items={rangesWithCanvases} selectedItem={range} IconLabel='Range' onItemPicked={onItemPicked}/>
   }
 })
 
