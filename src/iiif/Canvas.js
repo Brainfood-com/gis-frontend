@@ -65,6 +65,9 @@ const canvasCardStyles = {
     '$override > &': {
       borderColor: 'red',
     },
+    '$loading > &': {
+      backgroundColor: 'purple',
+    },
   },
   selected: {},
   override: {},
@@ -94,6 +97,7 @@ const canvasCardStyles = {
     background: 'linear-gradient(to bottom right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
     width: '100%',
   },
+  loading: {},
 }
 
 const canvasHasOverride = canvas => {
@@ -109,9 +113,30 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
     onItemPicked(id) {},
   }
 
+  constructor(props) {
+    super(props)
+    const {canvas} = props
+    this.state = {
+      loading: true,
+      thumbnail: canvas ? canvas.get('thumbnail') : null,
+    }
+  }
+
   handleOnWheel = event => {
     const {canvases, canvas, onItemPicked} = this.props
     handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
+  handleOnLoad = event => {
+    this.setState({loading: false})
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {canvas} = nextProps
+    const thumbnail = canvas ? canvas.get('thumbnail') : null
+    if (this.state.thumbnail !== thumbnail) {
+      this.setState({thumbnail, loading: true})
+    }
   }
 
   handleOnClick = event => {
@@ -121,7 +146,7 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
 
   render() {
     const {className, classes, canvas, selected} = this.props
-    const thumbnail = canvas ? canvas.get('thumbnail') : null
+    const {thumbnail, loading} = this.state
     if (!thumbnail) {
       return <div/>
     }
@@ -130,12 +155,13 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       [classes.selected]: selected,
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.get('exclude'),
+      [classes.loading]: loading,
     }
     return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <img src={`${thumbnail}/full/full/0/default.jpg`}/>
+        <img src={`${thumbnail}/full/full/0/default.jpg`} onLoad={this.handleOnLoad}/>
       </Card>
     </div>
   }
