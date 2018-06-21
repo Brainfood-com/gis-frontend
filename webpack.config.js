@@ -131,7 +131,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /node_modules\/relider\/.*\.jsx?$/,
+                test: /node_modules\/(react-leaflet-iiif-viewer|relider)\/.*\.jsx?$/,
                 loader: 'babel-loader',
                 query: {
                     presets: ['react', 'es2015', 'stage-2']

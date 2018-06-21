@@ -1,3 +1,5 @@
+import _ from 'lodash'
+import Immutable from 'immutable'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
@@ -5,8 +7,41 @@ import List from '@material-ui/core/List'
 import Card from '@material-ui/core/Card'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
+import Dialog from '@material-ui/core/Dialog'
+import AppBar from '@material-ui/core/AppBar'
+import CloseIcon from '@material-ui/icons/Close'
+import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
+
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+
+
+import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
+import Relider from 'relider'
+
+import connectHelper from '../connectHelper'
+import * as iiifRedux from './redux'
+import {picked} from './Picked'
+
+export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
+  const {deltaX, deltaY, deltaZ, deltaMode} = event
+  if (deltaX === 0) {
+    return
+  }
+  event.preventDefault()
+  if (!!!canvases) return
+  const position = canvases.findIndex(item => item === canvas)
+  if (position === -1) return
+  const nextPosition = position + Math.sign(deltaX)
+  if (nextPosition >= 0 && nextPosition < canvases.size) {
+    onItemPicked(canvases.get(nextPosition).get('id'))
+  }
+}
 
 const canvasCardStyles = {
   root: {
@@ -30,41 +65,109 @@ const canvasCardStyles = {
     '$override > &': {
       borderColor: 'red',
     },
+    '$loading > &': {
+      backgroundColor: 'purple',
+    },
   },
   selected: {},
   override: {},
+  exclude: {
+    '& $excludeTopLeft': {
+      display:'block',
+    },
+    '& $excludeBottomLeft': {
+      display:'block',
+    },
+  },
+  excludeTopLeft: {
+    zIndex: 1,
+    display:'none',
+    position:'absolute',
+    height: '100%',
+    content: '',
+    background: 'linear-gradient(to top right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
+    width: '100%',
+  },
+  excludeBottomLeft: {
+    zIndex: 1,
+    display:'none',
+    position:'absolute',
+    height: '100%',
+    content: '',
+    background: 'linear-gradient(to bottom right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
+    width: '100%',
+  },
+  loading: {},
+}
+
+const canvasHasOverride = canvas => {
+  if (canvas) {
+    const overrides = canvas.get('overrides')
+    return overrides && !!overrides.find(override => override.get('point'))
+  }
+  return false
 }
 
 export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
   static defaultProps = {
-    onSelect: function() {},
+    onItemPicked(id) {},
+  }
+
+  constructor(props) {
+    super(props)
+    const {canvas} = props
+    this.state = {
+      loading: true,
+      thumbnail: canvas ? canvas.get('thumbnail') : null,
+    }
+  }
+
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
+  handleOnLoad = event => {
+    this.setState({loading: false})
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {canvas} = nextProps
+    const thumbnail = canvas ? canvas.get('thumbnail') : null
+    if (this.state.thumbnail !== thumbnail) {
+      this.setState({thumbnail, loading: true})
+    }
   }
 
   handleOnClick = event => {
-    const {canvas, onSelect} = this.props
-    onSelect(canvas)
+    const {canvas, onItemPicked} = this.props
+    onItemPicked(canvas.get("id"))
   }
 
   render() {
     const {className, classes, canvas, selected} = this.props
-    if (!canvas) {
+    const {thumbnail, loading} = this.state
+    if (!thumbnail) {
       return <div/>
     }
-    const {id, thumbnail} = canvas
     const wantedClasses = {
       [classes.root]: true,
       [classes.selected]: selected,
-      [classes.override]: canvas.overrides && !!canvas.overrides.find(override => override.point),
+      [classes.override]: canvasHasOverride(canvas),
+      [classes.exclude]: canvas.get('exclude'),
+      [classes.loading]: loading,
     }
-    return <div className={classnames(wantedClasses, className)}>
+    return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
+      <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
+      <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <img src={`${thumbnail}/full/full/0/default.jpg`}/>
+        <img src={`${thumbnail}/full/full/0/default.jpg`} onLoad={this.handleOnLoad}/>
       </Card>
     </div>
   }
 })
 
-const canvasDetailStyles = {
+const canvasFormStyles = {
   root: {
   },
   card: {
@@ -83,60 +186,66 @@ const canvasDetailStyles = {
   },
   override: {},
 }
-export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail extends React.Component {
+const fieldInputProcessors = {
+  tags(value) {
+    return value.split(/\n+/)
+  },
+  exclude(value, checked) {
+    return checked
+  },
+  hole(value, checked) {
+    return checked
+  },
+}
+
+export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
   static defaultProps = {
-    onUpdate(canvas, data) {},
+    updateCanvas(id, data) {},
+    deleteCanvasPointOverride(id) {},
+    onItemPicked(id) {},
   }
 
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = {dialogOpen: false}
   }
 
-  componentWillMount() {
-    this.setState(this.processProps(this.state, {}, this.props))
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState(this.processProps(this.state, this.props, nextProps))
-  }
-
-  processProps(prevState, prevProps, nextProps) {
-    const {canvas} = nextProps
-    const result = {}
-    if (prevProps.canvas !== canvas) {
-      result.hasOverride = canvas && canvas.overrides && !!canvas.overrides.find(override => override.point)
-      result.notes = canvas ? canvas.notes : undefined
-    }
-    return result
-  }
-
-  handleInputChange = (event) => {
-    const {name} = event.currentTarget
-    switch (name) {
-      case 'override':
-        this.setState({hasOverride: false})
-        this.onUpdate()
-        return
-    }
-    const {value} = event.currentTarget
-    if (this.state[name] !== value) {
-      this.setState({[name]: value})
-      this.onUpdate()
+  handleInputChange = event => {
+    const {canvas, updateCanvas} = this.props
+    const {name, value, checked} = event.currentTarget
+    const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
+    const processedValue = inputProcessor(value, checked)
+    const currentValue = canvas.get(name)
+    if (currentValue !== processedValue) {
+      updateCanvas(canvas.get('id'), {[name]: processedValue})
     }
   }
 
-  onUpdate() {
-    this.setState((prevState, props) => {
-      const {canvas, onUpdate} = props
-      const {hasOverride, notes} = prevState
-      onUpdate(canvas, {hasOverride, notes})
-    })
+  handleRemoveOverride = (event) => {
+    const {range, canvas, deleteRangePoint} = this.props
+    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
+  }
+
+  largePhotoView = (event) => {
+    console.log('Large photo view')
+    this.setState({dialogOpen: true})
+  }
+
+  handleClose() {
+    this.setState({dialogOpen: false})
   }
 
   render() {
-    const {className, classes, canvas, selected} = this.props
-    const {hasOverride} = this.state
+    const {className, classes, canvases, canvas, selected, onItemPicked} = this.props
+    if (!canvas) return <div />
+    const hasOverride = canvasHasOverride(canvas)
+    const image = canvas.get('image')
+    const point = canvas.get('point')
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -144,12 +253,34 @@ export const CanvasDetail = withStyles(canvasDetailStyles)(class CanvasDetail ex
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Typography variant='heading'>Canvas</Typography>
-      <CanvasCard canvas={canvas} className={classes.card}/>
-      <Button name='override' fullWidth variant='raised' className={classes.removeOverride} onClick={this.handleInputChange}>
-        Remove Override
-      </Button>
-      <TextField name='notes' fullWidth label='Notes' multiline={true} rows={5}/>
+      <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
+      <Dialog
+        fullScreen
+        open={this.state.dialogOpen}
+        onClose={() => this.handleClose()}
+      >
+        <AppBar style={{position: 'relative'}}>
+          <IconButton color="inherit" onClick={() => this.handleClose()} aria-label="Close">
+            <CloseIcon />
+          </IconButton>
+        </AppBar>
+        <CanvasLeaflet canvases={canvases} canvas={canvas} onItemPicked={onItemPicked} />
+      </Dialog>
+      <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
+      {point}
+      <FormGroup row>
+        <FormControlLabel label='Exclude' control={
+          <Checkbox name='exclude' checked={!!canvas.get('exclude')} onChange={this.handleInputChange}/>
+        }/>
+        <FormControlLabel label='Hole' control={
+          <Checkbox name='hole' checked={!!canvas.get('hole')} onChange={this.handleInputChange}/>
+        }/>
+        <FormControlLabel label='Override' control={
+          <Checkbox name='override' disabled={!hasOverride} checked={!!hasOverride} onChange={this.handleRemoveOverride}/>
+        }/>
+      </FormGroup>
+      <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -161,9 +292,9 @@ const canvasGridStyles = {
 
 export const CanvasGrid = withStyles(canvasGridStyles)(class CanvasGrid extends React.Component {
   render() {
-    const {classes, className, canvases, selected, onSelect} = this.props
+    const {classes, className, canvases, selected, onItemPicked} = this.props
     return <GISGrid className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvas={canvas} onSelect={onSelect}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} selected={selected === canvas.id} canvases={canvases} canvas={canvas} onItemPicked={onItemPicked}/>)}
     </GISGrid>
   }
 })
@@ -181,10 +312,10 @@ const canvasListStyles = {
 }
 export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends React.Component {
   render() {
-    const {className, classes, canvases, selected, onSelect} = this.props
+    const {className, classes, canvases, selected, onItemPicked} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvas={canvas} className={classes.card} selected={selected === canvas.id} onSelect={onSelect}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} canvases={canvases} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
     </div>
   }
 })
@@ -194,32 +325,108 @@ const canvasSlidingListStyles = {
     width: '100%',
     height: 108,
   },
-  container: {
+  container0: {
     display: 'inline-block',
-    width: `${100 / 5}%`,
+    width: '20%',
+  },
+  container1: {
+    display: 'inline-block',
+    width: '15%',
+  },
+  container2: {
+    display: 'inline-block',
+    width: '11%',
+  },
+  container3: {
+    display: 'inline-block',
+    width: '8%',
+  },
+  container4: {
+    display: 'inline-block',
+    width: '6%',
   },
 }
-export const CanvasSlidingList = withStyles(canvasSlidingListStyles)(class CanvasSlidingList extends React.Component {
-  render() {
-    const {className, classes, canvases, selected, onSelect} = this.props
-    const position = selected ? canvases.findIndex(canvas => selected === canvas.id) : -1
-    if (position === -1) {
-      return <div />
-    }
-    const slidingWindow = canvases.slice(Math.max(0, position - 2), Math.min(canvases.length, position + 3))
+export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
+  handleOnReliderChange = (handles) => {
+    const {onItemPicked, canvases} = this.props
+    const {value: position} = handles[0]
+    const canvas = canvases.get(position)
+    onItemPicked(canvas.get('id'))
+  }
 
-    return <div className={classnames(classes.root, className)}>
-      {Array.from(Array(Math.abs(Math.min(0, position - 2)))).map((value, index) => {
-        return <div key={index} className={classes.container}>[lead-in-blank]</div>
-      })}
-      {slidingWindow.map(canvas => {
-        return <div key={canvas.id} className={classes.container}>
-          <CanvasCard canvas={canvas} selected={selected === canvas.id} onSelect={onSelect}/>
-        </div>
-      })}
-      {Array.from(Array(Math.abs(Math.max(0, position - canvases.length + 3)))).map((value, index) => {
-        return <div key={index} className={classes.container}>[lead-out-blank]</div>
-      })}
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
+  render() {
+    const {className, classes, canvases, canvas, onItemPicked} = this.props
+    if (!!!canvases) return <div/>
+    const position = canvases.findIndex(item => item === canvas)
+    if (position === -1) return <div/>
+
+    function pickCanvas(offset) {
+      const absOffset = Math.abs(offset)
+      const index = position + offset
+      const className = classes[`container${absOffset}`]
+      if (index < 0) {
+        return <div key={`in-${absOffset}`} className={className}>[lead-in-blank{offset}:{index}]</div>
+      } else if (index >= canvases.size) {
+        return <div key={`out-${absOffset}`} className={className}>[lead-out-blank{offset}:{index}]</div>
+      } else {
+        const item = canvases.get(index)
+        if (item) {
+          const id = item.get('id')
+          return <div key={`canvas-${id}`} className={className}><CanvasCard canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
+        } else {
+          return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
+        }
+      }
+    }
+
+    const cells = new Array(9)
+    const count = Math.floor(cells.length / 2)
+    for (let j = 0; j <= count; j++) {
+      cells[count + j] = pickCanvas(j)
+      cells[count - j] = pickCanvas(-j)
+    }
+
+    return <div className={classnames(classes.root, className)} onWheel={this.handleOnWheel}>
+      <div className={classes.relider}>
+        <Relider
+          onDragStop={this.handleOnDragStop}
+          style={{width: '95%'}}
+          sliderStyle={{marginBottom: 5, marginTop: 5, marginRight: 5, marginLeft: 5}}
+          horizontal={true}
+          reversed={false}
+          min={0}
+          max={canvases.size - 1}
+          step={1}
+          handles={[
+            {value: position}
+          ]}
+          onChange={this.handleOnReliderChange}
+        />
+      </div>
+      {cells}
     </div>
   }
 })
+
+/*
+	handleOnChange = (handles) => {
+    const {onPositionChange} = this.props
+    const position = handles[0].value
+    this.setState({position})
+    onPositionChange(position)
+  }
+
+  render() {
+    const {children, classes} = this.props
+    const {position} = this.state
+    return <Paper className={classes.root}>
+
+    </Paper>
+  }
+*/
+

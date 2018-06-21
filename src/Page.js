@@ -34,7 +34,7 @@ const styles = {
     height: '100%',
 	},
   footer: {
-
+    display:'none',
   },
   menuButton: {
     marginLeft: -12,

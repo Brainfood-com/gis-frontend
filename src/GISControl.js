@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import React from 'react'
 
 import classnames from 'classnames'
@@ -10,12 +11,13 @@ import TextField from '@material-ui/core/TextField'
 
 import GISMap from './GISMap'
 import GISPicView from './GISPicView'
-import GISPosition from './GISPosition'
 
-import {CanvasDetail, CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
-import {StructureDetail} from './iiif/Structure'
+import {CanvasCard, CanvasGrid, CanvasList, CanvasSlidingList} from './iiif/Canvas'
+//import {StructureDetail} from './iiif/Structure'
 import {IIIFTree} from './IIIF'
 import {makeUrl} from './api'
+import * as iiifRedux from './iiif/redux'
+import connectHelper from './connectHelper'
 
 /*
  *  /---------------+--------\
@@ -91,6 +93,17 @@ const styles = {
     minWidth: 100,
   },
 }
+const controlRedux = {
+  mapStateToProps(store, props) {
+    return {}
+  },
+  mapDispatchToProps: {
+    getCollection: iiifRedux.getCollection,
+    getManifest: iiifRedux.getManifest,
+    getRange: iiifRedux.getRange,
+    getCanvas: iiifRedux.getCanvas,
+  },
+}
 class GISControl extends React.Component {
   constructor(props) {
     super(props)
@@ -130,50 +143,18 @@ class GISControl extends React.Component {
     })
   }
 
-  handleOnItemPicked = (type, item) => {
-    const {id} = item || {}
-    const {picked} = this.state
-    console.log('onItemPicked', type, item)
-    switch (type) {
-      case 'collection':
-        if (picked.collection !== id) {
-          this.setState({picked: {...picked, collection: id, manifest: null, structure: null, structureItem: null, canvas: null}, canvases: []})
-          this.saveLocally()
-        }
-        break
-      case 'manifest':
-        if (picked.manifest !== id) {
-          this.setState({picked: {...picked, manifest: id, structure: null, structureItem: null, canvas: null}, canvases: []})
-          this.saveLocally()
-        }
-        break
-      case 'structure':
-        if (picked.structure !== id) {
-          this.setState({picked: {...picked, structure: id, structureItem: item, canvas: null}, canvases: []})
-          this.saveLocally()
-        } else if (picked.structureItem !== item) {
-          this.setState({picked: {...picked, structureItem: item, canvas: null}, canvases: []})
-        } else {
-          break
-        }
-        this.setState((prevState, props) => {
-          this.fetchCanvasPoints()
-        })
-        break
-    }
-  }
-
   fetchCanvasPoints = () => {
+    return
     this.setState((prevState, props) => {
       const {
         picked: {
-          structure,
+          range,
         }
       } = prevState
-      if (!structure) {
+      if (!range) {
         return
       }
-      fetch(makeUrl('api', `range/${structure}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
+      fetch(makeUrl('api', `range/${range}/canvasPoints`)).then(data => data.json()).then(this.processCanvasResult)
     })
   }
 
@@ -273,28 +254,24 @@ class GISControl extends React.Component {
 
   render() {
     const {children, classes} = this.props
-    const {canvases, position, picked, placement, fieldOfView} = this.state
+    const {position, picked, placement, fieldOfView} = this.state
     const selectedStructureItem = picked.structureItem
-    const selectedCanvasItem = canvases.find(canvas => picked.canvas === canvas.id)
     return <div className={classes.root}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>
-          <IIIFTree picked={picked} onCanvasList={this.handleOnCanvasList} onItemPicked={this.handleOnItemPicked}/>
-          <StructureDetail structure={selectedStructureItem} placement={placement} fieldOfView={fieldOfView} onUpdate={this.handleOnStructureUpdate}/>
-          <CanvasDetail canvas={selectedCanvasItem} onRemoveOverride={this.removeSelectedOverride} onUpdate={this.handleOnCanvasUpdate}/>
+          <IIIFTree/>
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap position={position} canvases={canvases} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect} selectedCanvas={picked.canvas} placement={placement} fieldOfView={fieldOfView}/>
+          <GISMap position={position} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={this.handleOnCanvasMapSelect}/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>
         <div className={classes.mapViewBottomLeft}>
-          <GISPosition position={position} onPositionChange={this.handleOnPositionChange}/>
-          <CanvasSlidingList canvases={canvases} selected={picked.canvas} onSelect={this.handleOnCanvasMapSelect}/>
+          <CanvasSlidingList/>
         </div>
       </div>
     </div>
   }
 }
 
-export default withStyles(styles)(GISControl)
+export default _.flow(connectHelper(controlRedux), withStyles(styles))(GISControl)
