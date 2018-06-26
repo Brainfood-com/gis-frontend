@@ -10,6 +10,7 @@ import GISControl from './GISControl'
 import Page from './Page'
 import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux'
 import {reducer as itemPanelReducer} from './ItemPanel'
+import * as apiRedux from './api/redux'
 
 const history = createHistory()
 const middleware = routerMiddleware(history)
@@ -22,11 +23,14 @@ export const store = createStore(
 		router: routerReducer,
     iiif: iiifReducer,
     panel: itemPanelReducer,
+    geoserver: apiRedux.reducer,
 	}),
 	enhancer
 )
 
 store.dispatch(iiifStartOfDay())
+store.dispatch(apiRedux.setTypeName('gis:tl_2017_06037_edges'))
+store.dispatch(apiRedux.setDistance(1500))
 
 import { Provider, connect } from 'react-redux'
 import { Router, Route } from 'react-router'

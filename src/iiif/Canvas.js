@@ -20,6 +20,7 @@ import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 
 
+import GoogleStreetView from '../GoogleStreetView'
 import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
 import Relider from 'relider'
@@ -97,7 +98,18 @@ const canvasCardStyles = {
     background: 'linear-gradient(to bottom right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
     width: '100%',
   },
+  hole: {},
   loading: {},
+/*
+.crossed {
+    position: relative;
+    width: 300px;
+    height: 300px;
+}
+
+.crossed:before {
+}
+  */
 }
 
 const canvasHasOverride = canvas => {
@@ -155,6 +167,7 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       [classes.selected]: selected,
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.get('exclude'),
+      [classes.hole]: canvas.get('hole'),
       [classes.loading]: loading,
     }
     return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
@@ -162,6 +175,66 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
         <img src={`${thumbnail}/full/full/0/default.jpg`} onLoad={this.handleOnLoad}/>
+      </Card>
+    </div>
+  }
+})
+
+const canvasStreetViewStyles = {
+}
+
+export const CanvasStreetView = withStyles(canvasStreetViewStyles)(class CanvasStreetView extends React.Component {
+  static defaultProps = {
+    onItemPicked(id) {},
+  }
+
+  constructor(props) {
+    super(props)
+    const {canvas, points} = props
+    const rangePoint = points && canvas && points.get(canvas.get('id'))
+    this.state = {
+      loading: true,
+      rangePoint: rangePoint,
+    }
+  }
+
+  handleOnWheel = event => {
+    const {canvases, canvas, onItemPicked} = this.props
+    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  }
+
+  handleOnLoad = event => {
+    this.setState({loading: false})
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const {points, canvas} = nextProps
+    const rangePoint = points && canvas && points.get(canvas.get('id'))
+    if (this.state.rangePoint !== rangePoint) {
+      this.setState({rangePoint, loading: true})
+    }
+  }
+
+  handleOnClick = event => {
+    const {canvas, onItemPicked} = this.props
+    onItemPicked(canvas.get("id"))
+  }
+
+  render() {
+    const {className, classes, canvas, selected} = this.props
+    const {rangePoint, loading} = this.state
+    if (!rangePoint) {
+      return <div/>
+    }
+    const wantedClasses = {
+      [classes.root]: true,
+      [classes.selected]: selected,
+      [classes.override]: canvasHasOverride(canvas),
+      [classes.loading]: loading,
+    }
+    return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
+      <Card className={classes.card} onClick={this.handleOnClick}>
+        <GoogleStreetView location={rangePoint.latlng} bearing={location.bearing}/>
       </Card>
     </div>
   }
@@ -241,7 +314,7 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
   }
 
   render() {
-    const {className, classes, canvases, canvas, selected, onItemPicked} = this.props
+    const {className, classes, canvases, points, canvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.get('image')
@@ -254,7 +327,9 @@ export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasF
 
     return <Paper className={classnames(rootClasses, className)}>
       <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
+      <CanvasStreetView canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
       <Dialog
+        onWheel={this.handleOnWheel_}
         fullScreen
         open={this.state.dialogOpen}
         onClose={() => this.handleClose()}
@@ -346,6 +421,7 @@ const canvasSlidingListStyles = {
     width: '6%',
   },
 }
+
 export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
   handleOnReliderChange = (handles) => {
     const {onItemPicked, canvases} = this.props
@@ -373,7 +449,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
         return <div key={`in-${absOffset}`} className={className}>[lead-in-blank{offset}:{index}]</div>
       } else if (index >= canvases.size) {
         return <div key={`out-${absOffset}`} className={className}>[lead-out-blank{offset}:{index}]</div>
-      } else {
+      } else if (canvases) {
         const item = canvases.get(index)
         if (item) {
           const id = item.get('id')
@@ -381,6 +457,8 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }
+      } else {
+        return <div key={`missing-${offset}`}/>
       }
     }
 
@@ -395,8 +473,7 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
       <div className={classes.relider}>
         <Relider
           onDragStop={this.handleOnDragStop}
-          style={{width: '95%'}}
-          sliderStyle={{marginBottom: 5, marginTop: 5, marginRight: 5, marginLeft: 5}}
+          style={{width: '100%'}}
           horizontal={true}
           reversed={false}
           min={0}

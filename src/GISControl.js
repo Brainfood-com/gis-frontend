@@ -69,7 +69,7 @@ const styles = {
   },
   mapViewBottom: {
     minHeight: '10%',
-    maxHeight: '15%',
+    maxHeight: '20%',
     display: 'flex',
     flexDirection: 'row',
     '& > *': {

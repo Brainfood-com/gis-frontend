@@ -5,7 +5,11 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
 import 'font-awesome/css/font-awesome.css'
 import 'leaflet-geometryutil'
+import { FeatureGroup } from 'react-leaflet'
 import RotatableMarker from './RotatableMarker'
+
+import * as apiRedux from '../api/redux'
+import connectHelper from '../connectHelper'
 
 const overriddenIcon = L.AwesomeMarkers.icon({
   markerColor: 'green',
@@ -24,29 +28,32 @@ const defaultIcon = L.AwesomeMarkers.icon({
   icon: 'film',
 })
 
-export default class DraggableCanvasPosition extends React.Component {
+export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDispatchToProps: apiRedux.mapDispatchToProps})(class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
     onUpdatePoint(id, point) { },
     onCanvasSelect(id) { },
   }
 
   handleOnClick = event => {
-    const {onCanvasSelect, canvas} = this.props
+    const {onCanvasSelect, canvas, rangePoint, setPoint} = this.props
     onCanvasSelect(canvas.get('id'))
+    if (rangePoint) {
+      setPoint(rangePoint.latlng)
+    }
   }
 
   handleOnDragStart = (event) => {
-    console.log('dragstart')
   }
 
   handleOnDrag = (event) => {
-    const {allPoints} = this.props
+    const {allPoints, setPoint} = this.props
     //console.log('drag', event)
     const {latlng, target} = event
     const {_map: map} = target
 
     const fixedLatlng = L.GeometryUtil.closest(map, allPoints, latlng)
-    target.setLatLng(fixedLatlng)
+    //target.setLatLng(fixedLatlng)
+    //setPoint(latlng)
   }
 
   handleOnDragEnd = (event) => {
@@ -56,7 +63,7 @@ export default class DraggableCanvasPosition extends React.Component {
   
   render() {
     const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
-    const overrides = canvas.get('overrides')
+    const overrides = canvas.get('overrides') || []
     const {bearing, point} = rangePoint
 
     const overridePoint = (overrides || []).find(override => override.get('point'))
@@ -68,18 +75,26 @@ export default class DraggableCanvasPosition extends React.Component {
     if (isHidden && !isFullOpacity) return <div />
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
-    return <RotatableMarker
-      icon={markerIcon}
-      rotationAngle={rotationAngle}
-      draggable={isFullOpacity || !isHidden}
-      opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
-      position={point ? [point.coordinates[1], point.coordinates[0]] : null}
-      onClick={this.handleOnClick}
-      onDragstart={this.handleOnDragStart}
-      onDrag={this.handleOnDrag}
-      onDragend={this.handleOnDragEnd}
-      onViewportChange={this.onViewportChange}
-      />
+    return <FeatureGroup>
+      {overrides.map(override => {
+        const id = override.get('iiif_canvas_override_source_id')
+        const point = override.get('point').toJSON()
+        console.log('override', point)
+        return <RotatableMarker key={id} icon={markerIcon} position={point ? [point.coordinates[1], point.coordinates[0]] : null}/>
+      })}
+      <RotatableMarker
+        icon={markerIcon}
+        rotationAngle={rotationAngle}
+        draggable={isFullOpacity || !isHidden}
+        opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
+        position={point ? [point.coordinates[1], point.coordinates[0]] : null}
+        onClick={this.handleOnClick}
+        onDragstart={this.handleOnDragStart}
+        onDrag={this.handleOnDrag}
+        onDragend={this.handleOnDragEnd}
+        onViewportChange={this.onViewportChange}
+        />
+    </FeatureGroup>
   }
-}
+})
 

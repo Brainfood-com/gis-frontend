@@ -125,6 +125,7 @@ plugins = plugins.map(function(pluginOrRef) {
     return new constructor(...args)
 })
 
+
 module.exports = {
     mode: 'development',
     entry: ['babel-polyfill', 'whatwg-fetch', './src/app.js'],

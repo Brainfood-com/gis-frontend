@@ -71,7 +71,7 @@ export default picked(['range', 'canvas'])(class CameraPosition extends React.Co
       return {fieldPoints, carPoints}
     }
     const {range, points, canvas, zoom} = pickedProps
-    
+
     if (!range || !points || !canvas) {
       return {fieldPoints: [], carPoints: []}
     }

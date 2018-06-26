@@ -9,6 +9,17 @@ const canvasLeafletStyles = {
   root: {
     position: 'relative',
   },
+  scrollPane: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top:0,
+    left:0,
+    right:0,
+    bottom:0,
+    zIndex:0,
+    display:'none',
+  },
   viewer: {
     position: 'absolute',
     width: '100%',
@@ -28,6 +39,7 @@ export default withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React
     if (!url) return <div />
     return <div className={classnames(classes.root, className)}>
       <IIIFViewer url={`${url}/`} className={classes.viewer} onWheel={this.handleOnWheel}/>
+      <div className={classes.scrollPane} onWheel={this.handleOnWheel}/>
     </div>
   }
 })
