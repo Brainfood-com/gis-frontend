@@ -22,11 +22,27 @@ const selectedIcon = L.AwesomeMarkers.icon({
   iconColor: 'black',
   icon: 'car',
 })
+const selectedOverridenIcon = L.AwesomeMarkers.icon({
+  markerColor: 'green',
+  prefix: 'fa',
+  iconColor: 'black',
+  icon: 'car',
+})
 const defaultIcon = L.AwesomeMarkers.icon({
   markerColor: 'blue',
   prefix: 'fa',
   icon: 'film',
 })
+const iconChooser = {
+  true: {
+    true: selectedOverridenIcon,
+    false: selectedIcon,
+  },
+  false: {
+    true: overriddenIcon,
+    false: defaultIcon,
+  },
+}
 
 export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDispatchToProps: apiRedux.mapDispatchToProps})(class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
@@ -70,18 +86,12 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const hasOverridePoint = !!overridePoint
     const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
 
-    const markerIcon = selected ? selectedIcon : hasOverridePoint ? overriddenIcon : defaultIcon
+    const markerIcon = iconChooser[selected][hasOverridePoint]
     const isHidden = zoom < 16
     if (isHidden && !isFullOpacity) return <div />
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
     return <FeatureGroup>
-      {overrides.map(override => {
-        const id = override.get('iiif_canvas_override_source_id')
-        const point = override.get('point').toJSON()
-        console.log('override', point)
-        return <RotatableMarker key={id} icon={markerIcon} position={point ? [point.coordinates[1], point.coordinates[0]] : null}/>
-      })}
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
