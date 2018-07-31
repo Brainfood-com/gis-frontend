@@ -73,7 +73,8 @@ const geoserverUtil = new GeoServerUtil({
   },
 })
 const baseLayers = [
-  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile', checked: true},
+  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile', checked: false},
+  {name: 'Wikimedia', url: 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', type: 'tile', checked: true},
 ]
 
 const overlayLayers = [
