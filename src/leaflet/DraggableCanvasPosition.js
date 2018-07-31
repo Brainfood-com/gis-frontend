@@ -12,7 +12,7 @@ import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
 
 const overriddenIcon = L.AwesomeMarkers.icon({
-  markerColor: 'green',
+  markerColor: 'red',
   prefix: 'fa',
   icon: 'camera-retro',
 })
@@ -23,7 +23,7 @@ const selectedIcon = L.AwesomeMarkers.icon({
   icon: 'car',
 })
 const selectedOverridenIcon = L.AwesomeMarkers.icon({
-  markerColor: 'green',
+  markerColor: 'red',
   prefix: 'fa',
   iconColor: 'black',
   icon: 'car',

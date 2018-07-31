@@ -67,7 +67,7 @@ const canvasCardStyles = {
       borderColor: 'red',
     },
     '$loading > &': {
-      backgroundColor: 'purple',
+      backgroundColor: '#aaaaaa',
     },
   },
   selected: {},
@@ -399,6 +399,25 @@ const canvasSlidingListStyles = {
   root: {
     width: '100%',
     height: 108,
+    '& $handleDefault': {
+      borderWidth: 1,
+      borderStyle: 'solid',
+      backgroundColor:'white',
+    },
+    '& $handleCurrent$handleOverride': {
+      borderColor:['white', '!important'],
+    },
+    '& $handleCurrent$handleExclude': {
+      borderColor:['white', '!important'],
+    },
+    '& $handleOverride': {
+      backgroundColor:'red',
+      borderColor:'red',
+    },
+    '& $handleExclude': {
+      backgroundColor:'black',
+      borderColor: 'black',
+    },
   },
   container0: {
     display: 'inline-block',
@@ -420,12 +439,20 @@ const canvasSlidingListStyles = {
     display: 'inline-block',
     width: '6%',
   },
+  handleDefault: {
+  },
+  handleCurrent: {
+  },
+  handleOverride: {
+  },
+  handleExclude: {
+  },
 }
 
 export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
   handleOnReliderChange = (handles) => {
     const {onItemPicked, canvases} = this.props
-    const {value: position} = handles[0]
+    const {value: position} = handles.find(handle => !handle.readOnly)
     const canvas = canvases.get(position)
     onItemPicked(canvas.get('id'))
   }
@@ -462,6 +489,21 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
       }
     }
 
+    const allHandles = canvases.map((item, index) => {
+      if (!item) {
+        return
+      }
+      const hasOverrides = item.get('overrides')
+      const isExcluded = item.get('exclude')
+      const isCurrent = item === canvas
+      const result = {
+        value: index,
+        readOnly: !isCurrent,
+        className: classnames(classes.handleDefault, hasOverrides && classes.handleOverride, isExcluded && classes.handleExclude, isCurrent && classes.handleCurrent),
+      }
+      return hasOverrides || isExcluded || isCurrent ? result : null
+    }).filter(item => item).toJSON()
+
     const cells = new Array(9)
     const count = Math.floor(cells.length / 2)
     for (let j = 0; j <= count; j++) {
@@ -479,9 +521,8 @@ export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(
           min={0}
           max={canvases.size - 1}
           step={1}
-          handles={[
-            {value: position}
-          ]}
+          tickStep={5}
+          handles={allHandles}
           onChange={this.handleOnReliderChange}
         />
       </div>
