@@ -85,7 +85,7 @@ const overlayLayers = [
   {name: 'lariac_buildings', workspace: 'gis', layers: 'gis:lariac_buildings', type: 'wms'},
   {name: 'tiger-edges', workspace: 'gis', layers: 'gis:tl_2017_06037_edges', type: 'wms'},
   {name: 'sunset_road_edge', workspace: 'gis', layers: 'gis:sunset_road_edges', type: 'geojson', checked: true},
-  {name: 'sunset_road_edge_connected', workspace: 'gis', layers: 'gis:sunset_road_edges_connected', type: 'geojson', checked: true},
+  {name: 'sunset_road_edge_connected', workspace: 'gis', layers: 'gis:sunset_road_edges_connected', type: 'geojson', checked: false},
   {name: 'tiger-roads', workspace: 'gis', layers: 'gis:tl_2017_06037_roads', type: 'wms'},
   {name: 'sunset_buildings', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'wms'},
   {name: 'tiger-roads-tms', workspace: 'gis', layers: 'gis:tl_2017_06037_roads', type: 'geotile'},
@@ -370,15 +370,17 @@ class GISMap extends React.Component {
 			 	<LayersControl>
           {baseLayers.map(layerDef => renderLayer(LayersControl.BaseLayer, layerDef))}
           {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef))}
-          <LayersControl.Overlay name='sunset-road' checked={true}>
+          <LayersControl.Overlay name='sunset-road' checked={false}>
             <GISGeoJSON data={data}/>
           </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <RangePoints zoom={zoom} allPoints={allPoints}/>
           </LayersControl.Overlay>
+          <LayersControl.Overlay name='view' checked={false}>
+            <ViewGeoJSON/>
+          </LayersControl.Overlay>
 			 	</LayersControl>
         <CameraPosition zoom={zoom}/>
-        <ViewGeoJSON/>
       </Map>
     </div>
   }
