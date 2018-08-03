@@ -238,7 +238,6 @@ export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags'],
 
 export const getManifestStructures = requiredId(manifestId => async dispatch => {
   const manifestStructures = await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
   const ranges = []
   const rangesWithCanvases = []
   const foundCanvasIds = {}
@@ -256,6 +255,7 @@ export const getManifestStructures = requiredId(manifestId => async dispatch => 
     }
     ranges.push(id)
   })
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: Object.values(foundCanvasIds).map(id => ({id, type: 'canvas'}))})
   const manifestDetail = {
     id: manifestId,
