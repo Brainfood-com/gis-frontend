@@ -122,7 +122,7 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
         const {id} = item
         const currentValue = map.get(id)
         if (!currentValue) {
-          return map.set(id, Immutable.Map(item))
+          return map.set(id, Immutable.fromJS(item))
         } else {
           return map.set(id, currentValue.merge(item))
         }
