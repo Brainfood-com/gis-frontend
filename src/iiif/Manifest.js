@@ -70,6 +70,6 @@ export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPa
 
     if (!collection) return <div/>
     const title = manifest ? manifest.get('label') : 'Manifest'
-    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm/>}/>
+    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm/>} busy={manifest && manifest.get('_busy')}/>
   }
 })

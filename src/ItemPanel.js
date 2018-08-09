@@ -54,6 +54,7 @@ const itemPanelRedux = {
 // TODO: Use the theme size instead of hard-coded 4 and 8
 const styles = {
   root: {
+    position: 'relative',
   },
   expanded: {
     margin: [4, 0],
@@ -77,18 +78,62 @@ const styles = {
     paddingBottom: 8,
     paddingLeft: 8,
   },
+  busy: {
+    '& > $busyContainer': {
+      display: 'block',
+    },
+  },
+  busyContainer: {
+    top:0,
+    left:0,
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    background: 'black',
+    opacity: 0.8,
+    display: 'none',
+  },
 }
 
 export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class ItemPanel extends React.Component {
   static propTypes = {
     name: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
+    title: PropTypes.string,
     pick: PropTypes.element.isRequired,
     form: PropTypes.element.isRequired,
+    busy: PropTypes.number,
   }
 
   static defaultProps = {
     expanded: true,
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = this.updateBusyTimer({}, props)
+  }
+
+  updateBusyTimer = (currentState = {}, props) => {
+    const {busy} = props
+    if (busy) {
+      if (currentState.timer) {
+        return currentState
+      }
+      const callback = () => {
+        this.setState({busy: true})
+      }
+      const timer = setTimeout(callback, 250)
+      return {timer}
+    } else {
+      if (currentState.timer) {
+        clearTimeout(currentState.timer)
+      }
+      return {timer: undefined, busy: false}
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.updateBusyTimer(this.state, nextProps))
   }
 
   handleOnChange = (event, expanded) => {
@@ -98,15 +143,19 @@ export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class I
 
   render() {
     const {className, classes, title, pick, form, expanded} = this.props
+    const {busy} = this.state
 
-    return <ExpansionPanel className={classnames(classes.root, className)} classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
-      <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
-        <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
-      </ExpansionPanelSummary>
-      <ExpansionPanelDetails className={classes.details}>
-        {React.cloneElement(pick)}
-        {React.cloneElement(form)}
-      </ExpansionPanelDetails>
-    </ExpansionPanel>
+    return <div className={classnames(classes.root, busy && classes.busy, className)}>
+      <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
+        <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
+          <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
+        </ExpansionPanelSummary>
+        <ExpansionPanelDetails className={classes.details}>
+          {React.cloneElement(pick)}
+          {React.cloneElement(form)}
+        </ExpansionPanelDetails>
+      </ExpansionPanel>
+      <div className={classes.busyContainer}/>
+    </div>
   }
 })

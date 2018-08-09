@@ -9,6 +9,8 @@ const ACTION = Enum(
   'set',
   'delete',
   'clear',
+  'incrBusy',
+  'decrBusy',
 )
 const iiifTypeToModelType = {
   'sc:Collection': 'collection',
@@ -121,15 +123,41 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
         if (!!!item) debugger
         const {id} = item
         const currentValue = map.get(id)
+        const immutableItem = Immutable.fromJS(item).delete('_busy')
+        let newValue
         if (!currentValue) {
-          return map.set(id, Immutable.fromJS(item))
+          newValue = immutableItem
         } else {
-          return map.set(id, currentValue.merge(item))
+          newValue = currentValue.merge(immutableItem)
         }
+        return map.set(id, newValue)
       }
       break
     case ACTION.delete:
       itemHandler = (map, item) => map.delete(item.id)
+      break
+    case ACTION.incrBusy:
+      itemHandler = (map, id) => {
+        const currentValue = map.get(id)
+        if (!currentValue) {
+          return map.set(id, Immutable.fromJS({_busy: 1}))
+        } else {
+          return map.set(id, currentValue.set('_busy', (currentValue.get('_busy') || 0) + 1))
+        }
+      }
+      break
+    case ACTION.decrBusy:
+      itemHandler = (map, id) => {
+        const currentValue = map.get(id)
+        if (!currentValue) {
+          return map
+        }
+        const busy = currentValue.get('_busy')
+        if (busy && busy > 1) {
+          return map.set(id, currentValue.set('_busy', busy - 1))
+        }
+        return map.set(id, currentValue.delete('_busy'))
+      }
       break
   }
   if (Array.isArray(itemOrItems)) {
@@ -218,25 +246,35 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
   }
 }
 
-const requiredId = chain => id => !!id ? chain(id) : dispatch => {}
+const requiredId = chain => id => !!id ? chain(id) : async dispatch => {}
+const busyCall = (modelName, chain) => id => {
+  return async (dispatch, getState) => {
+    dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
+    try {
+      return await chain(id)(dispatch, getState)
+    } finally {
+      dispatch({type: 'redux-iiif', actionType: ACTION.decrBusy, modelType: MODEL[modelName], itemOrItems: id})
+    }
+  }
+}
 
-export const getCollection = requiredId(collectionId => async dispatch => {
+export const getCollection = requiredId(busyCall('collection', collectionId => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionDetail})
-})
+}))
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags'], id => makeUrl('api', `collection/${id}`), getCollection)
 
-export const getManifest = requiredId(manifestId => async dispatch => {
+export const getManifest = requiredId(busyCall('manifest', manifestId => async dispatch => {
   const manifestDetail = await fetch(makeUrl('api', `manifest/${manifestId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestDetail})
-})
+}))
 
 export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags'], id => makeUrl('api', `manifest/${id}`), getManifest)
 
-export const getManifestStructures = requiredId(manifestId => async dispatch => {
+export const getManifestStructures = requiredId(busyCall('manifest', manifestId => async dispatch => {
   const manifestStructures = await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())
   const ranges = []
   const rangesWithCanvases = []
@@ -263,19 +301,18 @@ export const getManifestStructures = requiredId(manifestId => async dispatch => 
     rangesWithCanvases,
   }
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestDetail})
-})
+}))
 
-
-export const getRange = requiredId(rangeId => async dispatch => {
+export const getRange = requiredId(busyCall('range', rangeId => async dispatch => {
   const rangeDetail = await fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail.structures})
   //rangeDetail.ranges = rangeDetail.ranges.map(range => range.id)
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail})
-})
+}))
 
 export const updateRange = buildUpdater(MODEL['range'], ['notes', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), getRange)
 
-export const getRangePoints = requiredId(rangeId => async (dispatch, getState) => {
+export const getRangePoints = requiredId(busyCall('range', rangeId => async (dispatch, getState) => {
   let pickedId = getState().iiif.getIn([MODEL['picked'], 'canvas', 'value'])
 
   const canvasPoints = await fetch(makeUrl('api', `range/${rangeId}/canvasPoints`)).then(data => data.json())
@@ -311,7 +348,7 @@ export const getRangePoints = requiredId(rangeId => async (dispatch, getState) =
   if (!!!pickedId && canvases.length) {
     dispatch(pick('canvas', canvases[0].id))
   }
-})
+}))
 
 export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) => async dispatch => {
   try {
@@ -349,9 +386,9 @@ export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => async dispatc
   }
 }
 
-export const getCanvas = requiredId(canvasId => async dispatch => {
+export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatch => {
   const canvasDetail = await fetch(makeUrl('api', `canvas/${canvasId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasDetail})
-})
+}))
 
 export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), getCanvas)

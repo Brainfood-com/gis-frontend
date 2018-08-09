@@ -100,6 +100,6 @@ export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends
 
     if (!manifest) return <div/>
     const title = range ? range.get('label') : 'Range'
-    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm/>}/>
+    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm/>} busy={range && range.get('_busy')}/>
   }
 })

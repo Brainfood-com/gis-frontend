@@ -69,6 +69,6 @@ export const CollectionPanel = picked(['root', 'collection'])(class CollectionPa
     const {className, collections, collection} = this.props
 
     const title = collection ? collection.get('label') : 'Collection'
-    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} form={<CollectionForm/>}/>
+    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} form={<CollectionForm/>} busy={collection && collection.get('_busy')}/>
   }
 })
