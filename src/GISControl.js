@@ -68,9 +68,9 @@ const styles = {
     minWidth: 100,
   },
   mapViewBottom: {
-    minHeight: '10%',
-    maxHeight: '20%',
     display: 'flex',
+    flexGrow:0,
+    flexShrink:0,
     flexDirection: 'row',
     '& > *': {
       flex: 1,

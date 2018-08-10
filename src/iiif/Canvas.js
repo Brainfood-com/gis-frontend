@@ -398,7 +398,6 @@ export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends 
 const canvasSlidingListStyles = {
   root: {
     width: '100%',
-    height: 108,
     '& $handleDefault': {
       borderWidth: 1,
       borderStyle: 'solid',
