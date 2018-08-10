@@ -8,6 +8,8 @@ import { handleCanvasWheel } from './Canvas'
 const canvasLeafletStyles = {
   root: {
     position: 'relative',
+    display:'flex',
+    height:'100%',
   },
   scrollPane: {
     position: 'absolute',
