@@ -312,6 +312,9 @@ export const getRange = requiredId(busyCall('range', rangeId => async dispatch =
 
 export const updateRange = buildUpdater(MODEL['range'], ['notes', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), getRange)
 
+const REGEXES = [
+  /^http:\/\/(media.getty.edu\/iiif\/research\/archives\/[^\/]+?(?:_thumb)?)$/,
+]
 export const getRangePoints = requiredId(busyCall('range', rangeId => async (dispatch, getState) => {
   let pickedId = getState().iiif.getIn([MODEL['picked'], 'canvas', 'value'])
 
@@ -320,9 +323,23 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
   const canvases = new Array(canvasPoints.length)
   const points = new Array()
   const bearingPoints = new Array(2)
+  const iiifLocalCache = service => {
+    for (const regex of REGEXES) {
+      const match = service.match(regex)
+      if (match) {
+        return makeUrl('cantaloupe', 'iiif/2/' + match[1].replace(/\//g, '%2F'))
+      }
+    }
+    return service
+  }
+
   canvasPoints.forEach((canvasPoint, index) => {
     const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, notes, exclude, hole, ...canvasPointRest} = canvasPoint
-    canvases[index] = {id, format, height, image, thumbnail, width, externalId, label, overrides, notes, exclude, hole}
+    canvases[index] = {
+      id, format, height, width, externalId, label, overrides, notes, exclude, hole,
+      image: iiifLocalCache(image),
+      thumbnail: iiifLocalCache(thumbnail),
+    }
     if (point) {
       const latlng = bearingPoints[1] = {
         lat: point.coordinates[1],
