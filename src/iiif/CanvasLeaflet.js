@@ -40,7 +40,7 @@ export default withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React
     const url = canvas ? canvas.get('image') : null
     if (!url) return <div />
     return <div className={classnames(classes.root, className)}>
-      <IIIFViewer url={`${url}/`} className={classes.viewer} onWheel={this.handleOnWheel}/>
+      <IIIFViewer url={`${url}/info.json`} className={classes.viewer} onWheel={this.handleOnWheel}/>
       <div className={classes.scrollPane} onWheel={this.handleOnWheel}/>
     </div>
   }
