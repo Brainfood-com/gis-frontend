@@ -174,7 +174,7 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <img src={`${thumbnail}/full/full/0/default.jpg`} onLoad={this.handleOnLoad}/>
+        <img src={`${thumbnail}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad}/>
       </Card>
     </div>
   }
