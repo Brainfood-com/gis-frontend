@@ -18,6 +18,11 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import {DragSource} from 'react-dnd'
+import {getEmptyImage} from 'react-dnd-html5-backend'
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
+import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
+import 'font-awesome/css/font-awesome.css'
 
 
 import GoogleStreetView from '../GoogleStreetView'
@@ -44,7 +49,7 @@ export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   }
 }
 
-const canvasCardStyles = {
+const canvasCardBaseStyles = {
   root: {
     paddingBottom: '56.25%',
     position: 'relative',
@@ -120,7 +125,7 @@ const canvasHasOverride = canvas => {
   return false
 }
 
-export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
+const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
   }
@@ -179,6 +184,98 @@ export const CanvasCard = withStyles(canvasCardStyles)(class CanvasCard extends 
     </div>
   }
 })
+
+const canvasCardDragPreviewStyles = {
+  root: {
+    opacity: 0.4,
+    backgroundColor: 'black',
+    cursor: 'none',
+    position: 'relative',
+  },
+  marker: {
+    zIndex: 1,
+    color: 'red',
+    cursor: 'none',
+    bottom: '-100%',
+    left: '50%',
+    position: 'absolute',
+    transform: 'translate(-50%, 0%)',
+  },
+}
+
+const CanvasCardDragPreview = withStyles(canvasCardDragPreviewStyles)(class CanvasCardDragPreview extends React.Component {
+  render() {
+    const {className, classes, canvas, selected, ...props} = this.props
+    return <div className={classnames(classes.root, className)}>
+      <i className={classnames('fa fa-map-marker fa-3x', classes.marker)}/>
+    </div>
+  }
+})
+
+const canvasCardStyles = {
+  root: {
+    position: 'relative',
+    '&$isDragging > $draggingOverlay': {
+      display: 'block',
+    },
+    cursor: 'grab',
+  },
+  draggingOverlay: {
+    position: 'absolute',
+    zIndex:1,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0.8,
+    backgroundColor: 'black',
+    display: 'none',
+  },
+  isDragging: {},
+}
+
+const CanvasCardType = Symbol('CanvasCard')
+
+const canvasCardSource = {
+  beginDrag(props, monitor) {
+    const {canvas, selected} = props
+    return {canvas, selected}
+  },
+}
+
+export const CanvasCard = DragSource(CanvasCardType, canvasCardSource, (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  connectDragPreview: connect.dragPreview(),
+  isDragging: monitor.isDragging(),
+}))(withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
+  static TYPE = CanvasCardType
+  static PREVIEW = CanvasCardDragPreview
+
+  componentDidMount() {
+    const { connectDragPreview } = this.props
+    if (connectDragPreview) {
+      connectDragPreview(getEmptyImage(), {
+        //anchorX: 0.5,
+        //anchorY: 0.5,
+        captureDraggingState: false,
+      })
+    }
+  }
+
+  render() {
+    const {connectDragSource, isDragging, className, classes, ...props} = this.props
+    const wantedClasses = {
+      [classes.root]: true,
+      [classes.isDragging]: isDragging,
+    }
+    return connectDragSource(
+      <div className={classnames(wantedClasses, className)}>
+        <div className={classes.draggingOverlay}/>
+        <CanvasCardBase {...props}/>
+      </div>
+    )
+  }
+}))
 
 const canvasStreetViewStyles = {
 }

@@ -16,6 +16,7 @@ import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
 import leafletMarkerIconShadow from 'leaflet/dist/images/marker-shadow.png'
 import CameraPosition from './leaflet/CameraPosition'
 import ViewGeoJSON from './leaflet/ViewGeoJSON'
+import CanvasDropTarget from './leaflet/CanvasDropTarget'
 
 L.Marker.prototype.options.icon = L.icon({
   ...L.Icon.Default.prototype.options,
@@ -366,6 +367,7 @@ class GISMap extends React.Component {
 
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
+        <CanvasDropTarget/>
         <ScaleControl/>
 			 	<LayersControl>
           {baseLayers.map(layerDef => renderLayer(LayersControl.BaseLayer, layerDef))}
