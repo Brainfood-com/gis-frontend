@@ -135,7 +135,7 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
     const {canvas} = props
     this.state = {
       loading: true,
-      thumbnail: canvas ? canvas.get('thumbnail') : null,
+      image: canvas ? canvas.get('image') : null,
     }
   }
 
@@ -150,9 +150,9 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
 
   componentWillReceiveProps(nextProps) {
     const {canvas} = nextProps
-    const thumbnail = canvas ? canvas.get('thumbnail') : null
-    if (this.state.thumbnail !== thumbnail) {
-      this.setState({thumbnail, loading: true})
+    const image = canvas ? canvas.get('image') : null
+    if (this.state.image !== image) {
+      this.setState({image, loading: true})
     }
   }
 
@@ -163,8 +163,8 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
 
   render() {
     const {className, classes, canvas, selected} = this.props
-    const {thumbnail, loading} = this.state
-    if (!thumbnail) {
+    const {image, loading} = this.state
+    if (!image) {
       return <div/>
     }
     const wantedClasses = {
@@ -179,7 +179,7 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <img src={`${thumbnail}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad}/>
+        <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad}/>
       </Card>
     </div>
   }
