@@ -13,8 +13,10 @@ import GISDragLayer from './GISDragLayer'
 import Page from './Page'
 import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux'
 import {reducer as itemPanelReducer} from './ItemPanel'
+import {reducer as applicationReducer} from './application-redux'
 import * as apiRedux from './api/redux'
 import {CanvasCard} from './iiif/Canvas'
+import {GlobalBusy} from './GlobalBusy'
 
 const history = createHistory()
 const middleware = routerMiddleware(history)
@@ -24,6 +26,7 @@ const enhancer = compose(
 )
 export const store = createStore(
 	combineReducers({
+    application: applicationReducer,
 		router: routerReducer,
     iiif: iiifReducer,
     panel: itemPanelReducer,
@@ -56,9 +59,11 @@ class App extends React.Component {
     console.log('props', this.props)
     return <Provider store={this.props.store}>
       <ThemeConfig>
-				<Router history={this.props.history}>
+        <GlobalBusy>
+				  <Router history={this.props.history}>
 							<Route exact path="/" component={Home} />
-				</Router>
+  				</Router>
+        </GlobalBusy>
       </ThemeConfig>
 		</Provider>
   }

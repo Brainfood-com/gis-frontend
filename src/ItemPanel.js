@@ -11,6 +11,7 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 
 import connectHelper from './connectHelper'
+import {BusyPane} from './GlobalBusy'
 
 const defaultState = JSON.parse(localStorage.getItem('gis-app.panel')) || {}
 
@@ -78,21 +79,6 @@ const styles = {
     paddingBottom: 8,
     paddingLeft: 8,
   },
-  busy: {
-    '& > $busyContainer': {
-      display: 'block',
-    },
-  },
-  busyContainer: {
-    top:0,
-    left:0,
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    background: 'black',
-    opacity: 0.8,
-    display: 'none',
-  },
 }
 
 export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class ItemPanel extends React.Component {
@@ -145,7 +131,8 @@ export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class I
     const {className, classes, title, pick, form, expanded} = this.props
     const {busy} = this.state
 
-    return <div className={classnames(classes.root, busy && classes.busy, className)}>
+    return <div className={classnames(classes.root, className)}>
+      <BusyPane isBusy={busy}>
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
@@ -155,7 +142,7 @@ export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class I
           {React.cloneElement(form)}
         </ExpansionPanelDetails>
       </ExpansionPanel>
-      <div className={classes.busyContainer}/>
+      </BusyPane>
     </div>
   }
 })

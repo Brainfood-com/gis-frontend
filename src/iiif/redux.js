@@ -3,6 +3,7 @@ import Immutable from 'immutable'
 
 import GeometryUtil from 'leaflet-geometryutil'
 
+import {decrBusy as globalDecrBusy, incrBusy as globalIncrBusy} from '../application-redux'
 import {makeUrl} from '../api'
 
 const ACTION = Enum(
@@ -249,10 +250,12 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
 const requiredId = chain => id => !!id ? chain(id) : async dispatch => {}
 const busyCall = (modelName, chain) => id => {
   return async (dispatch, getState) => {
+    dispatch(globalIncrBusy())
     dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
     try {
       return await chain(id)(dispatch, getState)
     } finally {
+      dispatch(globalDecrBusy())
       dispatch({type: 'redux-iiif', actionType: ACTION.decrBusy, modelType: MODEL[modelName], itemOrItems: id})
     }
   }
