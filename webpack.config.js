@@ -10,6 +10,10 @@ var UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 var devOverrides = {
+    'lodash-es': 'lodash',
+    'lodash.memoize': 'lodash/memoize',
+    'lodash.uniq': 'lodash/uniq',
+    'lodash.camelcase': 'lodash/camelcase',
     'material-ui': 'material-ui/es',
     webworkify: 'webworkify-webpack-dropin',
     'react-material-tags': 'react-material-tags/src/tags.js',
@@ -134,16 +138,10 @@ module.exports = {
             {
                 test: /node_modules\/(react-leaflet-iiif-viewer|relider)\/.*\.jsx?$/,
                 loader: 'babel-loader',
-                query: {
-                    presets: ['react', 'es2015', 'stage-2']
-                }
             }, {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
                 loader: 'babel-loader',
-                query: {
-                    presets: ['react', 'es2015', 'stage-2']
-                }
             }, {
                 test: /\.json$/,
                 loader: 'json-loader'
