@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
@@ -42,7 +42,7 @@ const fieldInputProcessors = {
 
 const notSetDefault = (value, def) => value === null || value === undefined ? def : value
 
-export const RangeForm = _.flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends React.Component {
+export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends React.Component {
   static defaultProps = {
     updateRange(id, data) {},
   }

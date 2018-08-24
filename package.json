@@ -59,6 +59,7 @@
     "leaflet-polylinedecorator": "^1.6.0",
     "leaflet-providers": "^1.1.17",
     "leaflet.awesome-markers": "^2.0.4",
+    "lodash-es": "^4.17.10",
     "object-path": "^0.11.4",
     "react": "^16.4.1",
     "react-dnd": "^5.0.0",

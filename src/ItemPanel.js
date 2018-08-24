@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
 
@@ -81,7 +81,7 @@ const styles = {
   },
 }
 
-export default _.flow(connectHelper(itemPanelRedux), withStyles(styles))(class ItemPanel extends React.Component {
+export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class ItemPanel extends React.Component {
   static propTypes = {
     name: PropTypes.string.isRequired,
     title: PropTypes.string,

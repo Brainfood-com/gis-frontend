@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import FormControl from '@material-ui/core/FormControl'
@@ -26,7 +26,7 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const ManifestForm = _.flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends React.Component {
+export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends React.Component {
   static defaultProps = {
     updateManifest(id, data) {},
   }

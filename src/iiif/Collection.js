@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import CollectionsIcon from '@material-ui/icons/Collections'
@@ -27,7 +27,7 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const CollectionForm = _.flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends React.Component {
+export const CollectionForm = flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends React.Component {
   static defaultProps = {
     updateCollection(id, data) {},
   }

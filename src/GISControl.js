@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import React from 'react'
 
 import classnames from 'classnames'
@@ -274,4 +274,4 @@ class GISControl extends React.Component {
   }
 }
 
-export default _.flow(connectHelper(controlRedux), withStyles(styles))(GISControl)
+export default flow(connectHelper(controlRedux), withStyles(styles))(GISControl)

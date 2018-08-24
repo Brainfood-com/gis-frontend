@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import flow from 'lodash-es/flow'
 import Immutable from 'immutable'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -368,7 +368,7 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = _.flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
+export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -545,7 +545,7 @@ const canvasSlidingListStyles = {
   },
 }
 
-export const CanvasSlidingList = _.flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
+export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
   handleOnReliderChange = (handles) => {
     const {onItemPicked, canvases} = this.props
     const {value: position} = handles.find(handle => !handle.readOnly)

@@ -2,7 +2,7 @@ import {lighten, fade} from '@material-ui/core/styles/colorManipulator'
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme'
 //import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme'
 //import lightBaseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import merge from 'lodash/merge'
+import merge from 'lodash-es/merge'
 import grey from '@material-ui/core/colors/grey'
 import green from '@material-ui/core/colors/green'
 
