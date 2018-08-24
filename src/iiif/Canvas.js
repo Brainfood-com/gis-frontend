@@ -569,9 +569,9 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
       const index = position + offset
       const className = classes[`container${absOffset}`]
       if (index < 0) {
-        return <div key={`in-${absOffset}`} className={className}>[lead-in-blank{offset}:{index}]</div>
+        return <div key={`in-${absOffset}`} className={className}/>
       } else if (index >= canvases.size) {
-        return <div key={`out-${absOffset}`} className={className}>[lead-out-blank{offset}:{index}]</div>
+        return <div key={`out-${absOffset}`} className={className}/>
       } else if (canvases) {
         const item = canvases.get(index)
         if (item) {
