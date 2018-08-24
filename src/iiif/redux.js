@@ -1,5 +1,5 @@
 import Enum from 'es6-enum'
-import Immutable from 'immutable'
+import {Map, OrderedMap, fromJS} from 'immutable'
 
 import GeometryUtil from 'leaflet-geometryutil'
 
@@ -29,18 +29,18 @@ export const MODEL = Enum(
   'picked',
 )
 
-const defaultState = Immutable.Map().withMutations(map => {
-  map.set(MODEL['collection'], Immutable.OrderedMap())
-  map.set(MODEL['manifest'], Immutable.OrderedMap())
-  map.set(MODEL['range'], Immutable.OrderedMap())
-  map.set(MODEL['range_points'], Immutable.OrderedMap())
-  map.set(MODEL['canvas'], Immutable.OrderedMap())
-  map.set(MODEL['picked'], Immutable.Map().withMutations(map => {
+const defaultState = Map().withMutations(map => {
+  map.set(MODEL['collection'], OrderedMap())
+  map.set(MODEL['manifest'], OrderedMap())
+  map.set(MODEL['range'], OrderedMap())
+  map.set(MODEL['range_points'], OrderedMap())
+  map.set(MODEL['canvas'], OrderedMap())
+  map.set(MODEL['picked'], Map().withMutations(map => {
     const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
     Object.keys(picked).forEach(key => {
       const {[key]: value} = picked
       if (!!value) {
-        map.set(key, Immutable.Map({id: key, value}))
+        map.set(key, Map({id: key, value}))
       }
     })
   }))
@@ -124,7 +124,7 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
         if (!!!item) debugger
         const {id} = item
         const currentValue = map.get(id)
-        const immutableItem = Immutable.fromJS(item).delete('_busy')
+        const immutableItem = fromJS(item).delete('_busy')
         let newValue
         if (!currentValue) {
           newValue = immutableItem
@@ -141,7 +141,7 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
       itemHandler = (map, id) => {
         const currentValue = map.get(id)
         if (!currentValue) {
-          return map.set(id, Immutable.fromJS({_busy: 1}))
+          return map.set(id, fromJS({_busy: 1}))
         } else {
           return map.set(id, currentValue.set('_busy', (currentValue.get('_busy') || 0) + 1))
         }
@@ -357,7 +357,7 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
   })
   points[points.length - 1].bearing = points[points.length - 2].bearing
 
-  const pointsMap = Immutable.OrderedMap().withMutations(map => points.forEach(point => map.set(point.id, point)))
+  const pointsMap = OrderedMap().withMutations(map => points.forEach(point => map.set(point.id, point)))
 
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: {id: rangeId, canvases: canvases.map(canvas => canvas.id)}})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvases})

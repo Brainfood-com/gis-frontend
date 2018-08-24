@@ -13,7 +13,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction'
 import ListItemText from '@material-ui/core/ListItemText'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
-import Immutable from 'immutable'
+import {Map} from 'immutable'
 
 const styles = theme => ({
   root: {},
@@ -27,7 +27,7 @@ const styles = theme => ({
 export default withStyles(styles)(class ExpandoList extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
-    items: Immutable.Map(),
+    items: Map(),
   }
 
   constructor(props) {
@@ -80,7 +80,8 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           const id = item.get('id')
           const label = item.get('label')
           const type = item.get('type')
-          return <MenuItem key={id} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]({type})</MenuItem>
+          const extra = item.get('_extra')
+          return <MenuItem key={id} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>{label}[{id}.{index}]({type}){extra}</MenuItem>
         })}
       </Menu>
     </List>

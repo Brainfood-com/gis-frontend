@@ -1,5 +1,4 @@
 import flow from 'lodash-es/flow'
-import Immutable from 'immutable'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'

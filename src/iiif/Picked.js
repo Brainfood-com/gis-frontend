@@ -1,4 +1,4 @@
-import Immutable from 'immutable'
+import {List} from 'immutable'
 import React from 'react'
 
 import connectHelper from '../connectHelper'
@@ -87,20 +87,20 @@ export const picked = picked => Component => {
             switch (type) {
               case 'collection':
                 // .members
-                result.manifests = pickedValue.get('manifests', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
+                result.manifests = pickedValue.get('manifests', List()).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
                 break
               case 'manifest':
                 // .ranges
                 // .rangesWithCanvases
-                result.ranges = pickedValue.get('ranges', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
-                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', Immutable.List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.ranges = pickedValue.get('ranges', List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
                 break
               case 'range':
                 // .canvases
                 // .points
                 //console.log('rangeCanvases', rangeCanvases)
                 result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
-                result.canvases = pickedValue.get('canvases', Immutable.List()).map(id => {
+                result.canvases = pickedValue.get('canvases', List()).map(id => {
                   return iiif.getIn([iiifRedux.MODEL.canvas, id])
                 })
                 break
