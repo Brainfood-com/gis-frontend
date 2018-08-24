@@ -426,6 +426,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
       <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
       <CanvasStreetView canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
       <Dialog
+        keepMounted={true}
         onWheel={this.handleOnWheel_}
         fullScreen
         open={this.state.dialogOpen}
