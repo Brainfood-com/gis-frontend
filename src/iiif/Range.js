@@ -1,6 +1,7 @@
 import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import Radio from '@material-ui/core/Radio'
@@ -19,6 +20,7 @@ import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
+import {makeUrl} from '../api'
 
 const rangeFormStyles = {
   root: {
@@ -67,6 +69,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
     }
 
     return <Paper className={classnames(rootClasses, className)}>
+      <a target='blank' href={makeUrl('api', `range/${range.get('id')}/geoJSON`)}>Get GeoJSON</a><br />
       <FormControl>
         <FormLabel>Orientation</FormLabel>
         <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>
