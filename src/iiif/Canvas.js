@@ -317,11 +317,12 @@ export const CanvasStreetView = withStyles(canvasStreetViewStyles)(class CanvasS
   }
 
   render() {
-    const {className, classes, canvas, selected} = this.props
+    const {className, classes, range, canvas, selected} = this.props
     const {rangePoint, loading} = this.state
     if (!rangePoint) {
       return <div/>
     }
+    const fovOrientation = range.get('fovOrientation', 'left')
     const wantedClasses = {
       [classes.root]: true,
       [classes.selected]: selected,
@@ -330,7 +331,7 @@ export const CanvasStreetView = withStyles(canvasStreetViewStyles)(class CanvasS
     }
     return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
       <Card className={classes.card} onClick={this.handleOnClick}>
-        <GoogleStreetView location={rangePoint.latlng} bearing={location.bearing}/>
+        <GoogleStreetView location={rangePoint.latlng} heading={rangePoint.bearing + (fovOrientation === 'left' ? -90 : 90)}/>
       </Card>
     </div>
   }
@@ -410,7 +411,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
   }
 
   render() {
-    const {className, classes, canvases, points, canvas, selected, onItemPicked} = this.props
+    const {className, classes, range, canvases, points, canvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.get('image')
@@ -423,7 +424,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
 
     return <Paper className={classnames(rootClasses, className)}>
       <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
-      <CanvasStreetView canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
+      <CanvasStreetView range={range} canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
       <Dialog
         keepMounted={true}
         onWheel={this.handleOnWheel_}

@@ -22,7 +22,7 @@ export default withStyles(styles)(class GoogleStreetView extends React.Component
 
   render() {
     const {location, heading, fov, size} = this.props
-    if (true || !location) return <div/>
+    if (!location) return <div/>
     const parameters = new URLSearchParams()
     Object.entries({
       size,
@@ -35,6 +35,7 @@ export default withStyles(styles)(class GoogleStreetView extends React.Component
         parameters.set(key, value)
       }
     })
-    return <img src={`https://maps.googleapis.com/maps/api/streetview?${parameters.toString()}`}/>
+    return <a target='googlestreetview' href={`https://maps.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.lat},${location.lng}&heading=${heading}`}>Google Street View</a>
+
   }
 })
