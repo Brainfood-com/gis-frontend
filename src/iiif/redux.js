@@ -25,6 +25,7 @@ export const MODEL = Enum(
   'range',
   'canvas',
 
+  'buildings',
   'range_points',
   'picked',
 )
@@ -35,6 +36,7 @@ const defaultState = Map().withMutations(map => {
   map.set(MODEL['range'], OrderedMap())
   map.set(MODEL['range_points'], OrderedMap())
   map.set(MODEL['canvas'], OrderedMap())
+  map.set(MODEL['buildings'], OrderedMap())
   map.set(MODEL['picked'], Map().withMutations(map => {
     const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
     Object.keys(picked).forEach(key => {
@@ -201,6 +203,7 @@ export const startOfDay = () => async (dispatch, getState) => {
   dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range']})
   dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range_points']})
   dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['canvas']})
+  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['buildings']})
   const collections = await fetch(makeUrl('api', 'collection')).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collections})
   getState().iiif.get(MODEL['picked']).reduce((fetchers, value, key, picked) => {
@@ -261,6 +264,15 @@ const busyCall = (modelName, chain) => id => {
   }
 }
 
+export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch, getState) => {
+  const buildings = getState().iiif.get(MODEL['buildings'])
+  const wantedOgcFids = ogcFids.filter(ogcFid => buildings.get(ogcFid))
+  const apiUrl = new URL(makeUrl('api', `buildings`))
+  wantedOgcFids.forEach(ogcFid => apiUrl.searchParams.append('id', ogcFid))
+  const buildingResults = await fetch(apiUrl).then(data => data.json())
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['buildings'], itemOrItems: buildingResults})
+})
+
 export const getCollection = requiredId(busyCall('collection', collectionId => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests})
@@ -313,7 +325,10 @@ export const getRange = requiredId(busyCall('range', rangeId => async dispatch =
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail})
 }))
 
-export const updateRange = buildUpdater(MODEL['range'], ['notes', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), getRange)
+export const updateRange = buildUpdater(MODEL['range'], ['notes', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
+  dispatch(getRange(rangeId))
+  dispatch(getRangePoints(rangeId))
+})
 
 const REGEXES = [
   /^http:\/\/(media.getty.edu\/iiif\/research\/archives\/[^\/]+?(?:_thumb)?)$/,
@@ -325,7 +340,6 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
 
   const canvases = new Array(canvasPoints.length)
   const points = new Array()
-  const bearingPoints = new Array(2)
   const iiifLocalCache = service => {
     for (const regex of REGEXES) {
       const match = service.match(regex)
@@ -336,26 +350,29 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
     return service
   }
 
+  const wantedBuildings = {}
   canvasPoints.forEach((canvasPoint, index) => {
-    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, notes, exclude, hole, ...canvasPointRest} = canvasPoint
+    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...canvasPointRest} = canvasPoint
     canvases[index] = {
       id, format, height, width, externalId, label, overrides, notes, exclude, hole,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
     }
     if (point) {
-      const latlng = bearingPoints[1] = {
+      const latlng = {
         lat: point.coordinates[1],
         lng: point.coordinates[0],
       }
-      points.push({id, point, latlng, ...canvasPointRest})
-      if (points.length > 1) {
-        points[points.length - 2].bearing = GeometryUtil.bearing(...bearingPoints)
-      }
-      bearingPoints[0] = bearingPoints[1]
+      points.push({id, point, buildings, latlng, ...canvasPointRest})
+    }
+    if (buildings) {
+      buildings.forEach(id => wantedBuildings[id] = true)
     }
   })
-  points[points.length - 1].bearing = points[points.length - 2].bearing
+  const buildingIds = Object.keys(wantedBuildings)
+  if (buildingIds) {
+    dispatch(ensureBuildings(buildingIds))
+  }
 
   const pointsMap = OrderedMap().withMutations(map => points.forEach(point => map.set(point.id, point)))
 

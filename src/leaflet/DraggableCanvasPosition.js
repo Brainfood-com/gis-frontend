@@ -6,6 +6,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
 import 'font-awesome/css/font-awesome.css'
 import 'leaflet-geometryutil'
 import { FeatureGroup } from 'react-leaflet'
+import GISGeoJSON from '../GISGeoJSON'
 import RotatableMarker from './RotatableMarker'
 
 import * as apiRedux from '../api/redux'
@@ -78,11 +79,16 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
   }
   
   render() {
-    const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
+    const {selected, canvas, rangePoint, buildings, isFirst, isLast, zoom, fovOrientation} = this.props
     const overrides = canvas.get('overrides') || []
-    const {bearing, point} = rangePoint
+    const {bearing, point, camera} = rangePoint
 
-    const overridePoint = (overrides || []).find(override => override.get('point'))
+    const overridePoint = (overrides || []).find(override => {
+      if (!override.get) {
+        debugger
+      }
+      return override.get('point')
+    })
     const hasOverridePoint = !!overridePoint
     const isFullOpacity = selected || isFirst || isLast || hasOverridePoint
 
@@ -91,7 +97,10 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     if (isHidden && !isFullOpacity) return <div />
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
+
     return <FeatureGroup>
+      { selected && camera ? <GISGeoJSON data={camera}/> : null }
+      { selected && buildings ? buildings.map(building => <GISGeoJSON key={building.id} data={building.geojson}/>) : null }
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}

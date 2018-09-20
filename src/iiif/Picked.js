@@ -99,6 +99,7 @@ export const picked = picked => Component => {
                 // .canvases
                 // .points
                 //console.log('rangeCanvases', rangeCanvases)
+                result.buildings = iiif.get(iiifRedux.MODEL['buildings'])
                 result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
                 result.canvases = pickedValue.get('canvases', List()).map(id => {
                   return iiif.getIn([iiifRedux.MODEL.canvas, id])
