@@ -41,7 +41,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
     if (!range || !points || !canvases) return <div/>
     const fovOrientation = range.get('fovOrientation', 'left')
     const selected = canvas ? canvas.get('id') : null
-    const {camera, buildings: pointBuildings} = canvas ? points.get(selected) : {}
+    const {camera, buildings: pointBuildings} = canvas && points.get(selected) || {}
     const notNullCanvases = canvases.filter(canvas => canvas && points.get(canvas.get('id')))
 
 //    const {bearing, point, camera} = rangePoint
