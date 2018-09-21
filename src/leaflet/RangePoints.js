@@ -1,8 +1,9 @@
 import React from 'react'
 
-import { FeatureGroup } from 'react-leaflet'
+import { FeatureGroup, GeoJSON } from 'react-leaflet'
 import { picked } from '../iiif/Picked'
 import DraggableCanvasPosition from './DraggableCanvasPosition'
+import GISGeoJSON from '../GISGeoJSON'
 
 export default picked(['range', 'canvas'])(class RangePoints extends React.Component {
   onUpdatePoint = (canvas, point) => {
@@ -17,19 +18,25 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
     if (!range || !points || !canvases) return <div/>
     const fovOrientation = range.get('fovOrientation', 'left')
     const selected = canvas ? canvas.get('id') : null
+    const {camera, buildings: pointBuildings} = canvas ? points.get(selected) : {}
     const notNullCanvases = canvases.filter(canvas => canvas && points.get(canvas.get('id')))
+
+//    const {bearing, point, camera} = rangePoint
+//      { selected && camera ? <GISGeoJSON data={camera}/> : null }
+//      { selected && buildings ? buildings.map(building => <GISGeoJSON key={building.id} data={building.geojson}/>) : null }
+
     return <FeatureGroup>
+      { camera ? <GISGeoJSON data={camera}/> : null }
+      { pointBuildings && pointBuildings.map(id => {
+        const building = buildings.get(id)
+        return building ? <GeoJSON key={id} data={building.get('geojson').toJS()}/> : null
+      }) }
       {notNullCanvases.map((canvas, index) => {
         const id = canvas.get('id')
         const rangePoint = points.get(id)
-        const pointBuildings = buildings ? (rangePoint.buildings || []).map(id => {
-          const building = buildings.get(id)
-          return building ? building.toJS() : null
-        }).filter(building => building) : []
         const isFirst = index === 0
         const isLast = index === notNullCanvases.length - 1
-        //console.log('canvasBuildings', pointBuildings)
-        return <DraggableCanvasPosition key={id} zoom={zoom} buildings={pointBuildings} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
+        return <DraggableCanvasPosition key={id} zoom={zoom} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
 
       })}
     </FeatureGroup>

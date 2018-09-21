@@ -79,9 +79,9 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
   }
   
   render() {
-    const {selected, canvas, rangePoint, buildings, isFirst, isLast, zoom, fovOrientation} = this.props
+    const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
     const overrides = canvas.get('overrides') || []
-    const {bearing, point, camera} = rangePoint
+    const {bearing, point} = rangePoint
 
     const overridePoint = (overrides || []).find(override => {
       if (!override.get) {
@@ -99,8 +99,6 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
 
     return <FeatureGroup>
-      { selected && camera ? <GISGeoJSON data={camera}/> : null }
-      { selected && buildings ? buildings.map(building => <GISGeoJSON key={building.id} data={building.geojson}/>) : null }
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
