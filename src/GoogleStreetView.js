@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
+import Button from '@material-ui/core/Button'
 
 const styles = {
 }
@@ -35,7 +36,7 @@ export default withStyles(styles)(class GoogleStreetView extends React.Component
         parameters.set(key, value)
       }
     })
-    return <a target='googlestreetview' href={`https://maps.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.lat},${location.lng}&heading=${heading}`}>Google Street View</a>
+    return <Button fullWidth variant='raised' target='googlestreetview' href={`https://maps.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.lat},${location.lng}&heading=${heading}`}>Google Street View</Button>
 
   }
 })

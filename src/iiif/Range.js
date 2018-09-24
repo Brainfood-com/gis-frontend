@@ -69,7 +69,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <a target='blank' href={makeUrl('api', `range/${range.get('id')}/geoJSON`)}>Get GeoJSON</a><br />
+      <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.get('id')}/geoJSON`)}>Get GeoJSON</Button>
       <FormControl>
         <FormLabel>Orientation</FormLabel>
         <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>
