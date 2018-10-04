@@ -115,6 +115,10 @@ const canvasCardBaseStyles = {
     right:6,
     top:6,
   },
+  upperRightContent: {
+  },
+  upperRightItem: {
+  },
   draggingOverlay: {
     position: 'absolute',
     zIndex:1,
@@ -245,7 +249,9 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
         <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
       </Card>
       <div className={classes.upperRight}>
-        <CanvasStreetView mini variant='fab' canvas={canvas}><StreetviewIcon/></CanvasStreetView>
+        <div className={classes.upperRightContent}>
+          <CanvasStreetView className={classes.upperRightItem} mini variant='fab' canvas={canvas}><StreetviewIcon/></CanvasStreetView>
+        </div>
       </div>
     </div>
     return isDraggable ? connectDragSource(result) : result
@@ -505,22 +511,39 @@ const canvasSlidingListStyles = {
   container0: {
     display: 'inline-block',
     width: '20%',
+    '& $cardUpperRightContent': {
+    },
   },
   container1: {
     display: 'inline-block',
     width: '15%',
+    '& $cardUpperRightContent': {
+      transform: 'scale(0.85)',
+    },
   },
   container2: {
     display: 'inline-block',
     width: '11%',
+    '& $cardUpperRightContent': {
+      transform: 'scale(0.70)',
+    },
   },
   container3: {
     display: 'inline-block',
     width: '8%',
+    '& $cardUpperRightContent': {
+      transform: 'scale(0.60)',
+    },
   },
   container4: {
     display: 'inline-block',
     width: '6%',
+    '& $cardUpperRightContent': {
+      transform: 'scale(0.50)',
+    },
+  },
+  cardUpperRightContent: {
+    transformOrigin: ['top', 'right'],
   },
   handleDefault: {
   },
@@ -563,7 +586,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
         const item = canvases.get(index)
         if (item) {
           const id = item.get('id')
-          return <div key={`canvas-${id}`} className={className}><CanvasCard points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
+          return <div key={`canvas-${id}`} className={className}><CanvasCard classes={{upperRightContent: classes.cardUpperRightContent}} points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }
