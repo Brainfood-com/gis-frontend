@@ -53,6 +53,12 @@ const canvasCardBaseStyles = {
   root: {
     paddingBottom: '56.25%',
     position: 'relative',
+    '&$isDragging > $draggingOverlay': {
+      display: 'block',
+    },
+    '&$isDraggable': {
+      cursor: 'grab',
+    },
   },
   card: {
     position: 'absolute',
@@ -109,6 +115,19 @@ const canvasCardBaseStyles = {
     right:6,
     top:6,
   },
+  draggingOverlay: {
+    position: 'absolute',
+    zIndex:1,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0.8,
+    backgroundColor: 'black',
+    display: 'none',
+  },
+  isDraggable: {},
+  isDragging: {},
   hole: {},
   loading: {},
 /*
@@ -131,9 +150,23 @@ const canvasHasOverride = canvas => {
   return false
 }
 
-const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase extends React.Component {
+const CanvasCardType = Symbol('CanvasCard')
+
+const canvasCardSource = {
+  beginDrag(props, monitor) {
+    const {canvas, selected} = props
+    return {canvas, selected}
+  },
+}
+
+const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  connectDragPreview: connect.dragPreview(),
+  isDragging: monitor.isDragging(),
+})), withStyles(canvasCardBaseStyles))(class CanvasCardBase extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
+    isDraggable: false,
   }
 
   constructor(props) {
@@ -142,6 +175,17 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
     this.state = {
       loading: true,
       image: canvas ? canvas.get('image') : null,
+    }
+  }
+
+  componentDidMount() {
+    const { connectDragPreview } = this.props
+    if (connectDragPreview) {
+      connectDragPreview(getEmptyImage(), {
+        //anchorX: 0.5,
+        //anchorY: 0.5,
+        captureDraggingState: false,
+      })
     }
   }
 
@@ -168,7 +212,7 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
   }
 
   render() {
-    const {className, classes, canvas, points, selected} = this.props
+    const {className, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected} = this.props
     const {image, loading} = this.state
     if (!image) {
       return <div/>
@@ -190,8 +234,11 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
       [classes.exclude]: canvas.get('exclude'),
       [classes.hole]: canvas.get('hole'),
       [classes.loading]: loading,
+      [classes.isDraggable]: isDraggable,
+      [classes.isDragging]: isDragging,
     }
-    return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
+    const result = <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
+       <div className={classes.draggingOverlay}/>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
       <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
@@ -201,6 +248,7 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
         <CanvasStreetView mini variant='fab' canvas={canvas}><StreetviewIcon/></CanvasStreetView>
       </div>
     </div>
+    return isDraggable ? connectDragSource(result) : result
   }
 })
 
@@ -231,70 +279,14 @@ const CanvasCardDragPreview = withStyles(canvasCardDragPreviewStyles)(class Canv
   }
 })
 
-const canvasCardStyles = {
-  root: {
-    position: 'relative',
-    '&$isDragging > $draggingOverlay': {
-      display: 'block',
-    },
-    cursor: 'grab',
-  },
-  draggingOverlay: {
-    position: 'absolute',
-    zIndex:1,
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    opacity: 0.8,
-    backgroundColor: 'black',
-    display: 'none',
-  },
-  isDragging: {},
-}
-
-const CanvasCardType = Symbol('CanvasCard')
-
-const canvasCardSource = {
-  beginDrag(props, monitor) {
-    const {canvas, selected} = props
-    return {canvas, selected}
-  },
-}
-
-export const CanvasCard = DragSource(CanvasCardType, canvasCardSource, (connect, monitor) => ({
-  connectDragSource: connect.dragSource(),
-  connectDragPreview: connect.dragPreview(),
-  isDragging: monitor.isDragging(),
-}))(withStyles(canvasCardStyles)(class CanvasCard extends React.Component {
+export class CanvasCard extends React.Component {
   static TYPE = CanvasCardType
   static PREVIEW = CanvasCardDragPreview
 
-  componentDidMount() {
-    const { connectDragPreview } = this.props
-    if (connectDragPreview) {
-      connectDragPreview(getEmptyImage(), {
-        //anchorX: 0.5,
-        //anchorY: 0.5,
-        captureDraggingState: false,
-      })
-    }
-  }
-
   render() {
-    const {connectDragSource, isDragging, className, classes, ...props} = this.props
-    const wantedClasses = {
-      [classes.root]: true,
-      [classes.isDragging]: isDragging,
-    }
-    return connectDragSource(
-      <div className={classnames(wantedClasses, className)}>
-        <div className={classes.draggingOverlay}/>
-        <CanvasCardBase {...props}/>
-      </div>
-    )
+    return <CanvasCardBase {...this.props} isDraggable={true}/>
   }
-}))
+}
 
 const canvasStreetViewStyles = {
 }
