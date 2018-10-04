@@ -17,6 +17,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import StreetviewIcon from '@material-ui/icons/Streetview';
 import {DragSource} from 'react-dnd'
 import {getEmptyImage} from 'react-dnd-html5-backend'
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
@@ -101,6 +102,12 @@ const canvasCardBaseStyles = {
     content: '',
     background: 'linear-gradient(to bottom right, rgba(255, 0,0,0) calc(50% - 2px), #F00, rgba(255, 0,0,0) calc(50% + 2px) )',
     width: '100%',
+  },
+  upperRight: {
+    zIndex: 1,
+    position:'absolute',
+    right:6,
+    top:6,
   },
   hole: {},
   loading: {},
@@ -187,9 +194,12 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
     return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
-      <Card className={classes.card} onClick={this.handleOnClick} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
-        <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad}/>
+      <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
+        <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
       </Card>
+      <div className={classes.upperRight}>
+        <CanvasStreetView mini variant='fab' canvas={canvas}><StreetviewIcon/></CanvasStreetView>
+      </div>
     </div>
   }
 })
@@ -289,7 +299,7 @@ export const CanvasCard = DragSource(CanvasCardType, canvasCardSource, (connect,
 const canvasStreetViewStyles = {
 }
 
-export const CanvasStreetView = withStyles(canvasStreetViewStyles)(class CanvasStreetView extends React.Component {
+export const CanvasStreetView = flow(picked(['range']), withStyles(canvasStreetViewStyles))(class CanvasStreetView extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
   }
@@ -299,51 +309,26 @@ export const CanvasStreetView = withStyles(canvasStreetViewStyles)(class CanvasS
     const {canvas, points} = props
     const rangePoint = points && canvas && points.get(canvas.get('id'))
     this.state = {
-      loading: true,
       rangePoint: rangePoint,
     }
-  }
-
-  handleOnWheel = event => {
-    const {canvases, canvas, onItemPicked} = this.props
-    handleCanvasWheel({canvases, canvas, onItemPicked, event})
-  }
-
-  handleOnLoad = event => {
-    this.setState({loading: false})
   }
 
   componentWillReceiveProps(nextProps) {
     const {points, canvas} = nextProps
     const rangePoint = points && canvas && points.get(canvas.get('id'))
     if (this.state.rangePoint !== rangePoint) {
-      this.setState({rangePoint, loading: true})
+      this.setState({rangePoint})
     }
   }
 
-  handleOnClick = event => {
-    const {canvas, onItemPicked} = this.props
-    onItemPicked(canvas.get("id"))
-  }
-
   render() {
-    const {className, classes, range, canvas, selected} = this.props
-    const {rangePoint, loading} = this.state
+    const {buildings, range, points, canvases, canvas, updateOwner, updateRange, onItemPicked, ...props} = this.props
+    const {rangePoint} = this.state
     if (!rangePoint) {
       return <div/>
     }
     const fovOrientation = range.get('fovOrientation', 'left')
-    const wantedClasses = {
-      [classes.root]: true,
-      [classes.selected]: selected,
-      [classes.override]: canvasHasOverride(canvas),
-      [classes.loading]: loading,
-    }
-    return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
-      <Card className={classes.card} onClick={this.handleOnClick}>
-        <GoogleStreetView location={rangePoint.latlng} heading={rangePoint.bearing + (fovOrientation === 'left' ? -90 : 90)}/>
-      </Card>
-    </div>
+    return <GoogleStreetView {...props} location={rangePoint.latlng} heading={rangePoint.bearing + (fovOrientation === 'left' ? -90 : 90)}/>
   }
 })
 
@@ -434,7 +419,6 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
 
     return <Paper className={classnames(rootClasses, className)}>
       <CanvasCard points={points} canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
-      <CanvasStreetView range={range} canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
       <Dialog
         keepMounted={true}
         onWheel={this.handleOnWheel_}

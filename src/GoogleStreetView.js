@@ -13,30 +13,15 @@ export default withStyles(styles)(class GoogleStreetView extends React.Component
       lng: PropTypes.number.isRequired,
     }).isRequired,
     heading: PropTypes.number,
-    fov: PropTypes.number,
-    size: PropTypes.string,
   }
 
   static defaultProps = {
-    size: '400x225',
+    children: 'Google Street View',
   }
 
   render() {
-    const {location, heading, fov, size} = this.props
+    const {children, location, heading, ...props} = this.props
     if (!location) return <div/>
-    const parameters = new URLSearchParams()
-    Object.entries({
-      size,
-      source: 'outdoor',
-      heading,
-      fov,
-      location: `${location.lat},${location.lng}`,
-    }).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        parameters.set(key, value)
-      }
-    })
-    return <Button fullWidth variant='raised' target='googlestreetview' href={`https://maps.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.lat},${location.lng}&heading=${heading}`}>Google Street View</Button>
-
+    return <Button {...props} target='googlestreetview' href={`https://maps.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.lat},${location.lng}&heading=${heading}`}>{children}</Button>
   }
 })
