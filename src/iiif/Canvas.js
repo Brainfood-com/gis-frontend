@@ -161,11 +161,21 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
   }
 
   render() {
-    const {className, classes, canvas, selected} = this.props
+    const {className, classes, canvas, points, selected} = this.props
     const {image, loading} = this.state
     if (!image) {
       return <div/>
     }
+    const rangePoint = points && canvas && points.get(canvas.get('id')) || {}
+    const {
+      googleVision: {
+        rgb: [
+          red = 0,
+          green = 0,
+          blue = 0,
+        ] = [],
+      } = {},
+    } = rangePoint
     const wantedClasses = {
       [classes.root]: true,
       [classes.selected]: selected,
@@ -177,7 +187,7 @@ const CanvasCardBase = withStyles(canvasCardBaseStyles)(class CanvasCardBase ext
     return <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
-      <Card className={classes.card} onClick={this.handleOnClick}>
+      <Card className={classes.card} onClick={this.handleOnClick} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
         <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad}/>
       </Card>
     </div>
@@ -423,7 +433,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
+      <CanvasCard points={points} canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
       <CanvasStreetView range={range} canvases={canvases} points={points} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} size='400x225'/>
       <Dialog
         keepMounted={true}
@@ -485,10 +495,10 @@ const canvasListStyles = {
 }
 export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends React.Component {
   render() {
-    const {className, classes, canvases, selected, onItemPicked} = this.props
+    const {className, classes, canvases, points, selected, onItemPicked} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard key={canvas.id} canvases={canvases} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
+      {canvases.map(canvas => <CanvasCard key={canvas.id} points={points} canvases={canvases} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
     </div>
   }
 })
@@ -560,7 +570,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
   }
 
   render() {
-    const {className, classes, canvases, canvas, onItemPicked} = this.props
+    const {className, classes, canvases, canvas, points, onItemPicked} = this.props
     if (!!!canvases) return <div/>
     const position = canvases.findIndex(item => item === canvas)
     if (position === -1) return <div/>
@@ -577,7 +587,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
         const item = canvases.get(index)
         if (item) {
           const id = item.get('id')
-          return <div key={`canvas-${id}`} className={className}><CanvasCard canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
+          return <div key={`canvas-${id}`} className={className}><CanvasCard points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }
