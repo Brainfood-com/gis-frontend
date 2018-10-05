@@ -471,6 +471,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.get('image')
     const point = canvas.get('point')
+    const canvasPoint = points && points.get(canvas.get('id'))
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -495,6 +496,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
       </Dialog>
       <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
       {point}
+      <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
           <Checkbox name='exclude' checked={!!canvas.get('exclude')} onChange={this.handleInputChange}/>
