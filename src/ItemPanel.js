@@ -67,6 +67,8 @@ const styles = {
   },
   name: {
     color:'black',
+    userSelect: 'text',
+    cursor: 'initial',
   },
   title: {
     color:'black',
@@ -140,7 +142,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
-            <Typography variant='body2' classes={{body2: classes.name}}>{name}</Typography>
+            <Typography onClick={e => e.stopPropagation()} variant='body2' classes={{body2: classes.name}}>{name}</Typography>
             <Typography variant='body2' classes={{body2: classes.title}}>{title}</Typography>
           </div>
         </ExpansionPanelSummary>
