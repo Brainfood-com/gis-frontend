@@ -141,7 +141,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
         <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
             <Typography variant='body2' classes={{body2: classes.name}}>{name}</Typography>
-            <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
+            <Typography variant='body2' classes={{body2: classes.title}}>{title}</Typography>
           </div>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.details}>
