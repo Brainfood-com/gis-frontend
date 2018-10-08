@@ -65,6 +65,9 @@ const styles = {
     paddingRight: 0,
     backgroundColor:'white',
   },
+  name: {
+    color:'black',
+  },
   title: {
     color:'black',
   },
@@ -129,14 +132,17 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
   }
 
   render() {
-    const {className, classes, title, pick, form, expanded} = this.props
+    const {className, classes, name, title, pick, form, expanded} = this.props
     const {busy} = this.state
 
     return <div className={classnames(classes.root, className)}>
       <BusyPane isBusy={busy}>
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
-          <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
+          <div>
+            <Typography variant='body2' classes={{body2: classes.name}}>{name}</Typography>
+            <Typography variant='title' classes={{title: classes.title}}>{title}</Typography>
+          </div>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.details}>
           {React.cloneElement(pick)}
