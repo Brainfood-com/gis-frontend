@@ -306,14 +306,14 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       </Card>
       <div className={classes.upperLeft}>
         <div className={classes.upperLeftContent}>
-          <Button className={classes.excludeButton} mini variant='fab' name='exclude' onClick={this.handleOnToggleClick}><BlockIcon className={classes.excludeIcon}/></Button>
-          <Button className={classes.holeButton} mini variant='fab' name='hole' onClick={this.handleOnToggleClick}><LocationDisabledIcon className={classes.holeIcon}/></Button>
-          <Button className={classes.overrideButton} mini variant='fab' name='override' onClick={this.handleRemoveOverride}><PlaceIcon className={classes.overrideIcon}/></Button>
+          <Button className={classes.excludeButton} mini variant='fab' name='exclude' onClick={this.handleOnToggleClick}><BlockIcon titleAccess='Exclude' className={classes.excludeIcon}/></Button>
+          <Button className={classes.holeButton} mini variant='fab' name='hole' onClick={this.handleOnToggleClick}><LocationDisabledIcon titleAccess='Hole' className={classes.holeIcon}/></Button>
+          <Button className={classes.overrideButton} mini variant='fab' name='override' onClick={this.handleRemoveOverride}><PlaceIcon titleAccess='Override' className={classes.overrideIcon}/></Button>
         </div>
       </div>
       <div className={classes.upperRight}>
         <div className={classes.upperRightContent}>
-          <CanvasStreetView className={classes.upperRightItem} mini variant='fab' canvas={canvas}><StreetviewIcon/></CanvasStreetView>
+          <CanvasStreetView className={classes.upperRightItem} mini variant='fab' canvas={canvas}><StreetviewIcon titleAccess='Street View'/></CanvasStreetView>
         </div>
       </div>
     </div>
