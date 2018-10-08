@@ -5,7 +5,7 @@ import Typography from '@material-ui/core/Typography'
 import {ManifestPanel} from './iiif/Manifest'
 import {CollectionPanel} from './iiif/Collection'
 import {RangePanel} from './iiif/Range'
-import {CanvasForm} from './iiif/Canvas'
+import {CanvasPanel} from './iiif/Canvas'
 
 export class IIIFTree extends React.Component {
   render() {
@@ -14,8 +14,7 @@ export class IIIFTree extends React.Component {
       <CollectionPanel/>
       <ManifestPanel/>
       <RangePanel/>
-      <Typography variant='title'>Canvas</Typography>
-      <CanvasForm/>
+      <CanvasPanel/>
     </div>
   }
 }

@@ -28,6 +28,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
 import 'font-awesome/css/font-awesome.css'
 
 
+import ItemPanel from '../ItemPanel'
 import GoogleStreetView from '../GoogleStreetView'
 import CanvasLeaflet from './CanvasLeaflet'
 import classnames from 'classnames'
@@ -728,6 +729,15 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
   }
 })
 
+export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends React.Component {
+  render() {
+    const {className, range, canvas} = this.props
+
+    if (!range) return <div/>
+    const title = canvas ? canvas.get('label') : 'Canvas'
+    return <ItemPanel className={className} name='canvas' title={title} form={<CanvasForm/>} busy={canvas && canvas.get('_busy')}/>
+  }
+})
 /*
 	handleOnChange = (handles) => {
     const {onPositionChange} = this.props

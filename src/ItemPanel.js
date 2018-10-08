@@ -85,13 +85,14 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
   static propTypes = {
     name: PropTypes.string.isRequired,
     title: PropTypes.string,
-    pick: PropTypes.element.isRequired,
+    pick: PropTypes.element,
     form: PropTypes.element.isRequired,
     busy: PropTypes.number,
   }
 
   static defaultProps = {
     expanded: true,
+    pick: <div/>,
   }
 
   constructor(props) {
