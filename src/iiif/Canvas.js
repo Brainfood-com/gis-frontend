@@ -575,6 +575,7 @@ const canvasSlidingListStyles = {
   container0: {
     display: 'inline-block',
     width: '20%',
+    overflow: 'hidden',
     '& $cardUpperLeftContent': {
     },
     '& $cardUpperRightContent': {
@@ -583,6 +584,7 @@ const canvasSlidingListStyles = {
   container1: {
     display: 'inline-block',
     width: '15%',
+    overflow: 'hidden',
     '& $cardUpperLeftContent': {
       transform: 'scale(0.85)',
     },
@@ -593,6 +595,7 @@ const canvasSlidingListStyles = {
   container2: {
     display: 'inline-block',
     width: '11%',
+    overflow: 'hidden',
     '& $cardUpperLeftContent': {
       transform: 'scale(0.70)',
     },
@@ -603,6 +606,7 @@ const canvasSlidingListStyles = {
   container3: {
     display: 'inline-block',
     width: '8%',
+    overflow: 'hidden',
     '& $cardUpperLeftContent': {
       transform: 'scale(0.60)',
     },
@@ -613,6 +617,7 @@ const canvasSlidingListStyles = {
   container4: {
     display: 'inline-block',
     width: '6%',
+    overflow: 'hidden',
     '& $cardUpperLeftContent': {
       transform: 'scale(0.50)',
     },
