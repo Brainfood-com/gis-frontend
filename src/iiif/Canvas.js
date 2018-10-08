@@ -735,7 +735,9 @@ export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends
 
     if (!range) return <div/>
     const title = canvas ? canvas.get('label') : 'Canvas'
-    return <ItemPanel className={className} name='canvas' title={title} form={<CanvasForm/>} busy={canvas && canvas.get('_busy')}/>
+    const image = canvas && canvas.get('image')
+    const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
+    return <ItemPanel className={className} name={`canvas ${lastImagePart}`} title={title} form={<CanvasForm/>} busy={canvas && canvas.get('_busy')}/>
   }
 })
 /*
