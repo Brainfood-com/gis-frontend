@@ -1,3 +1,5 @@
+import debounce from 'lodash-es/debounce'
+import memoize from 'lodash-es/memoize'
 import React from 'react'
 
 import L from 'leaflet'
@@ -10,6 +12,7 @@ import GISGeoJSON from '../GISGeoJSON'
 import RotatableMarker from './RotatableMarker'
 
 import * as apiRedux from '../api/redux'
+import {makeUrl} from '../api'
 import connectHelper from '../connectHelper'
 
 const overriddenIcon = L.AwesomeMarkers.icon({
@@ -51,6 +54,44 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     onCanvasSelect(id) { },
   }
 
+  constructor(props) {
+    super(props)
+    const {point} = props.rangePoint.point
+    this.state = {
+      dragLatLng: null,
+      pointEdge: [],
+    }
+  }
+
+  flushDrag = () => {
+    this.setState((state, props) => {
+      const {dragLatLng} = state
+      if (!dragLatLng) {
+        return
+      }
+      fetch(makeUrl('api', 'edge/by-point'), {
+        method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+				},
+				body: JSON.stringify({
+					point: {
+            type: 'Point',
+            coordinates: [dragLatLng.lng, dragLatLng.lat],
+          }
+        }),
+      }).then(data => data.json()).then(result => {
+        this.setState((state, props) => {
+          if (state.dragLatLng) {
+            return {pointEdge: result.edge}
+          }
+        })
+      })
+    })
+  }
+
+  debouncedDrag = debounce(this.flushDrag, 200)
+
   handleOnClick = event => {
     const {onCanvasSelect, canvas, rangePoint, setPoint} = this.props
     onCanvasSelect(canvas.get('id'))
@@ -63,21 +104,21 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
   }
 
   handleOnDrag = (event) => {
-    const {allPoints, setPoint} = this.props
-    //console.log('drag', event)
-    const {latlng, target} = event
-    const {_map: map} = target
+    const {latlng, target: {_map: map}} = event
 
-    const fixedLatlng = L.GeometryUtil.closest(map, allPoints, latlng)
-    //target.setLatLng(fixedLatlng)
-    //setPoint(latlng)
+    this.setState({dragLatLng: latlng})
+    this.debouncedDrag()
   }
 
   handleOnDragEnd = (event) => {
     const {onUpdatePoint, canvas} = this.props
     onUpdatePoint(canvas, event.target.getLatLng())
+    this.setState({dragLatLng: null, pointEdge: []})
+    this.debouncedDrag.cancel()
   }
-  
+
+  position = memoize(point => point ? [point.coordinates[1], point.coordinates[0]] : null)
+
   render() {
     const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
     const overrides = canvas.get('overrides') || []
@@ -99,12 +140,13 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
 
     return <FeatureGroup>
+      <GISGeoJSON data={this.state.pointEdge}/>
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
         draggable={isFullOpacity || !isHidden}
         opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
-        position={point ? [point.coordinates[1], point.coordinates[0]] : null}
+        position={this.position(point)}
         onClick={this.handleOnClick}
         onDragstart={this.handleOnDragStart}
         onDrag={this.handleOnDrag}
