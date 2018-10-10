@@ -16,6 +16,7 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
+import DebouncedForm from '../DebouncedForm'
 
 const collectionFormStyles = {
   root: {
@@ -27,14 +28,13 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const CollectionForm = flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends React.Component {
+export const CollectionForm = flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
   static defaultProps = {
     updateCollection(id, data) {},
   }
 
-  handleInputChange = event => {
+  flushInputChange = (name, value, checked) => {
     const {collection, updateCollection} = this.props
-    const {name, value} = event.currentTarget
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
     const currentValue = collection.get(name)
@@ -51,8 +51,8 @@ export const CollectionForm = flow(picked(['collection']), withStyles(collection
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={collection.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={collection.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

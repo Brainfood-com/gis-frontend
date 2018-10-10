@@ -15,6 +15,7 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
+import DebouncedForm from '../DebouncedForm'
 
 const manifestFormStyles = {
   root: {
@@ -26,14 +27,13 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
-export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends React.Component {
+export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
     updateManifest(id, data) {},
   }
 
-  handleInputChange = event => {
+  flushInputChange = (name, value, checked) => {
     const {manifest, updateManifest} = this.props
-    const {name, value} = event.currentTarget
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
     const currentValue = manifest.get(name)
@@ -50,8 +50,8 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={manifest.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={manifest.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

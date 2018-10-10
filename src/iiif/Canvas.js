@@ -37,6 +37,7 @@ import Relider from 'relider'
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
+import DebouncedForm from '../DebouncedForm'
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -424,7 +425,7 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends React.Component {
+export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -433,7 +434,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
 
   constructor(props) {
     super(props)
-    this.state = {dialogOpen: false}
+    this.state = {...this.state, dialogOpen: false}
   }
 
   handleOnWheel = event => {
@@ -441,9 +442,8 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     handleCanvasWheel({canvases, canvas, onItemPicked, event})
   }
 
-  handleInputChange = event => {
+  flushInputChange = (name, value, checked) => {
     const {canvas, updateCanvas} = this.props
-    const {name, value, checked} = event.currentTarget
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const processedValue = inputProcessor(value, checked)
     const currentValue = canvas.get(name)
@@ -500,17 +500,17 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
-          <Checkbox name='exclude' checked={!!canvas.get('exclude')} onChange={this.handleInputChange}/>
+          <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault(canvas, 'exclude', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Hole' control={
-          <Checkbox name='hole' checked={!!canvas.get('hole')} onChange={this.handleInputChange}/>
+          <Checkbox name='hole' checked={!!this.checkOverrideValueDefault(canvas, 'hole', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Override' control={
           <Checkbox name='override' disabled={!hasOverride} checked={!!hasOverride} onChange={this.handleRemoveOverride}/>
         }/>
       </FormGroup>
-      <TextField name='notes' fullWidth label='Notes' value={canvas.get('notes') || ''} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={canvas.get('tags', []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
