@@ -7,7 +7,7 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
 import 'font-awesome/css/font-awesome.css'
 import 'leaflet-geometryutil'
-import { FeatureGroup } from 'react-leaflet'
+import { FeatureGroup, Tooltip } from 'react-leaflet'
 import GISGeoJSON from '../GISGeoJSON'
 import RotatableMarker from './RotatableMarker'
 
@@ -59,7 +59,7 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const {point} = props.rangePoint.point
     this.state = {
       dragLatLng: null,
-      pointEdge: [],
+      dragResult: null,
     }
   }
 
@@ -83,7 +83,9 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
       }).then(data => data.json()).then(result => {
         this.setState((state, props) => {
           if (state.dragLatLng) {
-            return {pointEdge: result.edge}
+            const {number, fullname, zipcode, point, edge} = result
+            const dragResult = {number, fullname, zipcode, point, position: this.position(point), edge}
+            return {dragResult}
           }
         })
       })
@@ -113,7 +115,7 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
   handleOnDragEnd = (event) => {
     const {onUpdatePoint, canvas} = this.props
     onUpdatePoint(canvas, event.target.getLatLng())
-    this.setState({dragLatLng: null, pointEdge: []})
+    this.setState({dragLatLng: null, dragResult: null})
     this.debouncedDrag.cancel()
   }
 
@@ -123,6 +125,7 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
     const overrides = canvas.get('overrides') || []
     const {bearing, point} = rangePoint
+    const {dragResult} = this.state
 
     const overridePoint = (overrides || []).find(override => {
       if (!override.get) {
@@ -140,7 +143,8 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
 
     return <FeatureGroup>
-      <GISGeoJSON data={this.state.pointEdge}/>
+      {dragResult ? <GISGeoJSON data={dragResult.edge}/> : null}
+      {dragResult ? <RotatableMarker icon={markerIcon} position={dragResult.position}/> : null}
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
@@ -152,7 +156,11 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
         onDrag={this.handleOnDrag}
         onDragend={this.handleOnDragEnd}
         onViewportChange={this.onViewportChange}
-        />
+        >
+        {dragResult ? <Tooltip><div>
+          {dragResult.number} {dragResult.fullname} {dragResult.zipcode}
+        </div></Tooltip> : null}
+      </RotatableMarker>
     </FeatureGroup>
   }
 })
