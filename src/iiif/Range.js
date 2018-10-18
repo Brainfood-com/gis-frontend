@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
+import Checkbox from '@material-ui/core/Checkbox';
 import Radio from '@material-ui/core/Radio'
 import RadioGroup from '@material-ui/core/RadioGroup'
 import FormGroup from '@material-ui/core/FormGroup'
@@ -32,6 +33,9 @@ const rangeFormStyles = {
 }
 
 const fieldInputProcessors = {
+  reverse(value, checked) {
+    return checked
+  },
   fovAngle(value) {
     return value === '' ? null : parseInt(value)
   },
@@ -50,8 +54,8 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
 
   flushInputChange = (name, value, checked) => {
     const {range, updateRange} = this.props
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    const processedValue = inputProcessor(value)
+    const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
+    const processedValue = inputProcessor(value, checked)
     const currentValue = range.get(name)
     if (currentValue !== processedValue) {
       updateRange(range.get('id'), {[name]: processedValue})
@@ -67,6 +71,11 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
 
     return <Paper className={classnames(rootClasses, className)}>
       <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.get('id')}/geoJSON`)}>Get GeoJSON</Button>
+      <FormGroup row>
+        <FormControlLabel label='Reverse' control={
+          <Checkbox name='reverse' checked={!!this.checkOverrideValueDefault(range, 'reverse', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
+        }/>
+      </FormGroup>
       <FormControl>
         <FormLabel>Orientation</FormLabel>
         <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>

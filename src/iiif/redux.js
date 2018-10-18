@@ -325,7 +325,7 @@ export const getRange = requiredId(busyCall('range', rangeId => async dispatch =
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail})
 }))
 
-export const updateRange = buildUpdater(MODEL['range'], ['notes', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
+export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
   dispatch(getRange(rangeId))
   dispatch(getRangePoints(rangeId))
 })

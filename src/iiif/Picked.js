@@ -104,6 +104,9 @@ export const picked = picked => Component => {
                 result.canvases = pickedValue.get('canvases', List()).map(id => {
                   return iiif.getIn([iiifRedux.MODEL.canvas, id])
                 })
+                if (pickedValue.get('reverse', false)) {
+                  result.canvases = result.canvases.reverse()
+                }
                 break
             }
           }
