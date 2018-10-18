@@ -365,6 +365,7 @@ class GISMap extends React.Component {
 		const dallas_center = [32.781132, -96.797271]
 		const la_center = [34.0522, -118.2437]
 
+        //<CanvasDragResult target={dragLatLng}/>
     return <div className={classes.root}>
       <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
         <CanvasDropTarget/>

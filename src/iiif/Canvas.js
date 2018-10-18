@@ -204,6 +204,10 @@ const canvasCardSource = {
     const {canvas, selected} = props
     return {canvas, selected}
   },
+  endDrag(props, monitor, component) {
+    const didDrop = monitor.didDrop()
+    console.log('endDrag', component)
+  },
 }
 
 const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connect, monitor) => ({

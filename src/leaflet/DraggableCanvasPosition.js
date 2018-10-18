@@ -1,5 +1,3 @@
-import debounce from 'lodash-es/debounce'
-import memoize from 'lodash-es/memoize'
 import React from 'react'
 
 import L from 'leaflet'
@@ -7,13 +5,12 @@ import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
 import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
 import 'font-awesome/css/font-awesome.css'
 import 'leaflet-geometryutil'
-import { FeatureGroup, Tooltip } from 'react-leaflet'
-import GISGeoJSON from '../GISGeoJSON'
+import { FeatureGroup } from 'react-leaflet'
 import RotatableMarker from './RotatableMarker'
 
 import * as apiRedux from '../api/redux'
-import {makeUrl} from '../api'
 import connectHelper from '../connectHelper'
+import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
 
 const overriddenIcon = L.AwesomeMarkers.icon({
   markerColor: 'red',
@@ -59,40 +56,8 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const {point} = props.rangePoint.point
     this.state = {
       dragLatLng: null,
-      dragResult: null,
     }
   }
-
-  flushDrag = () => {
-    this.setState((state, props) => {
-      const {dragLatLng} = state
-      if (!dragLatLng) {
-        return
-      }
-      fetch(makeUrl('api', 'edge/by-point'), {
-        method: 'POST',
-				headers: {
-					'content-type': 'application/json',
-				},
-				body: JSON.stringify({
-					point: {
-            type: 'Point',
-            coordinates: [dragLatLng.lng, dragLatLng.lat],
-          }
-        }),
-      }).then(data => data.json()).then(result => {
-        this.setState((state, props) => {
-          if (state.dragLatLng) {
-            const {number, fullname, zipcode, point, edge} = result
-            const dragResult = {number, fullname, zipcode, point, position: this.position(point), edge}
-            return {dragResult}
-          }
-        })
-      })
-    })
-  }
-
-  debouncedDrag = debounce(this.flushDrag, 200)
 
   handleOnClick = event => {
     const {onCanvasSelect, canvas, rangePoint, setPoint} = this.props
@@ -106,26 +71,22 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
   }
 
   handleOnDrag = (event) => {
-    const {latlng, target: {_map: map}} = event
+    const {latlng} = event
 
     this.setState({dragLatLng: latlng})
-    this.debouncedDrag()
   }
 
   handleOnDragEnd = (event) => {
     const {onUpdatePoint, canvas} = this.props
     onUpdatePoint(canvas, event.target.getLatLng())
-    this.setState({dragLatLng: null, dragResult: null})
-    this.debouncedDrag.cancel()
+    this.setState({dragLatLng: null})
   }
-
-  position = memoize(point => point ? [point.coordinates[1], point.coordinates[0]] : null)
 
   render() {
     const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
     const overrides = canvas.get('overrides') || []
     const {bearing, point} = rangePoint
-    const {dragResult} = this.state
+    const {dragLatLng} = this.state
 
     const overridePoint = (overrides || []).find(override => {
       if (!override.get) {
@@ -143,23 +104,19 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
 
     return <FeatureGroup>
-      {dragResult ? <GISGeoJSON data={dragResult.edge}/> : null}
-      {dragResult ? <RotatableMarker icon={markerIcon} position={dragResult.position}/> : null}
+      <CanvasDragResult target={dragLatLng}/>
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
         draggable={isFullOpacity || !isHidden}
         opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
-        position={this.position(point)}
+        position={getGeoJSONPoint(point)}
         onClick={this.handleOnClick}
         onDragstart={this.handleOnDragStart}
         onDrag={this.handleOnDrag}
         onDragend={this.handleOnDragEnd}
         onViewportChange={this.onViewportChange}
         >
-        {dragResult ? <Tooltip><div>
-          {dragResult.number} {dragResult.fullname} {dragResult.zipcode}
-        </div></Tooltip> : null}
       </RotatableMarker>
     </FeatureGroup>
   }

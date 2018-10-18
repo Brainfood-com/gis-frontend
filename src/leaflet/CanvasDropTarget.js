@@ -1,5 +1,3 @@
-import debounce from 'lodash-es/debounce'
-import memoize from 'lodash-es/memoize'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
@@ -7,15 +5,13 @@ import { withStyles } from '@material-ui/core/styles'
 
 import L from 'leaflet'
 import {DropTarget} from 'react-dnd'
-import { FeatureGroup, Marker, PropTypes as LeafletPropTypes, Tooltip } from 'react-leaflet'
+import { FeatureGroup, PropTypes as LeafletPropTypes } from 'react-leaflet'
 
 import * as apiRedux from '../api/redux'
-import {makeUrl} from '../api'
 import connectHelper from '../connectHelper'
 import {CanvasCard} from '../iiif/Canvas'
 import { picked } from '../iiif/Picked'
-import GISGeoJSON from '../GISGeoJSON'
-import RotatableMarker from './RotatableMarker'
+import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
 
 const overriddenIcon = L.AwesomeMarkers.icon({
   markerColor: 'red',
@@ -39,51 +35,17 @@ class CanvasDropTarget extends React.Component {
     super(props)
     this.state = {
       dragLatLng: null,
-      dragResult: null,
+      isOver: false,
     }
   }
-
-  flushHover = dragLatLng => {
-    if (dragLatLng) {
-      fetch(makeUrl('api', 'edge/by-point'), {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          point: {
-            type: 'Point',
-            coordinates: [dragLatLng.lng, dragLatLng.lat],
-          }
-        }),
-      }).then(data => data.json()).then(result => {
-        this.setState((state, props) => {
-          if (state.dragLatLng === dragLatLng) {
-            const {number, fullname, zipcode, point, edge} = result
-            const dragResult = {number, fullname, zipcode, point, position: this.position(point), edge}
-            return {dragResult}
-          } else {
-            return {dragResult: null}
-          }
-        })
-      })
-      return {dragLatLng}
-    } else {
-      return {dragLatLng, dragResult: null}
-    }
-  }
-
-  debouncedHover = debounce(this.flushHover, 200)
 
   handleOnHover(monitor) {
     const dragLatLng = this.monitorToPoint(monitor)
+    const isOver = monitor.isOver()
     this.setState((state, props) => {
-      return {dragLatLng}
+      return {dragLatLng: isOver ? dragLatLng : null}
     })
-    this.debouncedHover(dragLatLng)
   }
-
-  position = memoize(point => point ? [point.coordinates[1], point.coordinates[0]] : null)
 
   onUpdatePoint = (canvas, point) => {
     const {range, setRangePoint} = this.props
@@ -97,10 +59,11 @@ class CanvasDropTarget extends React.Component {
     const clientRect = ReactDOM.findDOMNode(this).getBoundingClientRect()
     const dropClientOffset = monitor.getClientOffset()
     const containerPoint = L.point(dropClientOffset.x - clientRect.x, dropClientOffset.y - clientRect.y)
-    return map.containerPointToLatLng(containerPoint)
+    return getGeoJSONPoint(map.containerPointToLatLng(containerPoint))
   }
 
   handleOnCanvasDrop(props, monitor) {
+    console.log('handleOnCanvasDrop')
     const point = this.monitorToPoint(monitor)
 
     const {range, setRangePoint} = props
@@ -111,36 +74,33 @@ class CanvasDropTarget extends React.Component {
 
     setRangePoint(rangeId, canvasId, {sourceId: 'web', priority: 1, point})
     this.setState((state, props) => {
-      return {dragLatLng: null, dragResult: null}
+      return {dragLatLng: null}
     })
+  }
+  componentDidUpdate(prevProps, prevState) {
+    const {canDrop, isOver, isOverCurrent} = this.props
+    const {dragLatLng} = this.state
+    if (!canDrop && dragLatLng) {
+      this.setState({dragLatLng: null})
+      return
+    }
   }
 
   render() {
     const {className, classes, children, connectDropTarget} = this.props
+    const {isOver, isOverCurrent} = this.props
     const {context: {map}} = this
 
     const wantedClasses = {
       [classes.root]: true,
     }
-    const {dragResult} = this.state
-    return connectDropTarget(
-      <div className={classnames(wantedClasses, className)}>
-        <FeatureGroup>
-          {dragResult ? <GISGeoJSON data={dragResult.edge}/> : null}
-          {dragResult ? <Marker icon={overriddenIcon} position={dragResult.position} title="foo" alt="bar">
-            <Tooltip><div>
-              {dragResult.number} {dragResult.fullname} {dragResult.zipcode}
-            </div></Tooltip>
-          </Marker>
-          : null}
-          {dragResult ?<Tooltip position={dragResult.position}><div>
-            {dragResult.number} {dragResult.fullname} {dragResult.zipcode}
-          </div></Tooltip>
-          : null}
-          {children}
-        </FeatureGroup>
-      </div>
-    )
+    const {dragLatLng} = this.state
+    return connectDropTarget(<div className={classnames(wantedClasses, className)} style={{zIndex:1000}}>
+      <FeatureGroup>
+        <CanvasDragResult target={dragLatLng}/>
+        <div style={{zIndex: 1000}}>{children}</div>
+      </FeatureGroup>
+    </div>)
   }
 }
 
