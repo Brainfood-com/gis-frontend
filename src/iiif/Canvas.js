@@ -3,10 +3,14 @@ import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemText from '@material-ui/core/ListItemText'
 import Card from '@material-ui/core/Card'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Dialog from '@material-ui/core/Dialog'
+import DialogContent from '@material-ui/core/DialogContent'
+import DialogTitle from '@material-ui/core/DialogTitle'
 import AppBar from '@material-ui/core/AppBar'
 import CloseIcon from '@material-ui/icons/Close'
 import IconButton from '@material-ui/core/IconButton'
@@ -18,6 +22,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import PlaceIcon from '@material-ui/icons/Place';
+import InfoIcon from '@material-ui/icons/Info';
 import LocationDisabledIcon from '@material-ui/icons/LocationDisabled';
 import BlockIcon from '@material-ui/icons/Block';
 import StreetviewIcon from '@material-ui/icons/Streetview';
@@ -125,6 +130,7 @@ const canvasCardBaseStyles = {
   },
   holeButton: {},
   holeIcon: {},
+  infoIcon: {},
   excludeTopLeft: {
     zIndex: 1,
     display:'none',
@@ -162,6 +168,16 @@ const canvasCardBaseStyles = {
   upperRightContent: {
   },
   upperRightItem: {
+  },
+  lowerLeft: {
+    zIndex: 1,
+    position:'absolute',
+    left:6,
+    bottom:6,
+  },
+  lowerLeftContent: {
+  },
+  lowerLeftItem: {
   },
   draggingOverlay: {
     position: 'absolute',
@@ -226,6 +242,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     this.state = {
       loading: true,
       image: canvas ? canvas.get('image') : null,
+      infoDialogOpen: false,
     }
   }
 
@@ -271,6 +288,17 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     updateCanvas(canvas.get('id'), {[name]: processedValue})
   }
 
+  handleOnOpenDialog = event => {
+    const {name} = event.currentTarget
+    const propName = `${name}DialogOpen`
+    this.setState({[propName]: true})
+  }
+
+  handleOnCloseDialog = (event, name) => {
+    const propName = `${name}DialogOpen`
+    this.setState({[propName]: false})
+  }
+
   handleRemoveOverride = (event) => {
     const {range, canvas, deleteRangePoint} = this.props
     deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
@@ -278,7 +306,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
 
   render() {
     const {className, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected} = this.props
-    const {image, loading} = this.state
+    const {infoDialogOpen, image, loading} = this.state
     if (!image) {
       return <div/>
     }
@@ -321,8 +349,65 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
           <CanvasStreetView className={classes.upperRightItem} mini variant='fab' canvas={canvas}><StreetviewIcon titleAccess='Street View'/></CanvasStreetView>
         </div>
       </div>
+      <div className={classes.lowerLeft}>
+        <div className={classes.lowerLeftContent}>
+          <Button className={classes.lowerLeftItem} mini variant='fab' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Button>
+        </div>
+      </div>
+      <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} canvas={canvas}/>
     </div>
     return isDraggable ? connectDragSource(result) : result
+  }
+})
+
+const canvasInfoStyles = {
+}
+
+export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(class CanvasInfo extends React.Component {
+  static defaultProps = {
+    onClose(event, name) {},
+  }
+
+  onClose = event => {
+    this.props.onClose(event, this.props.name)
+  }
+
+  render() {
+    const {name, className, classes, range, canvases, updateOwner, updateRange, onItemPicked, buildings, points, canvas, ...props} = this.props
+    const canvasPoint = points && points.get(canvas.get('id')) || {}
+    const canvasLocation = canvasPoint && canvasPoint.point
+    const canvasBuildings = (canvasPoint.buildings || []).map(id => buildings.get(id))
+    return <Dialog {...props} onClose={this.onClose}>
+      <DialogTitle>Canvas {canvas.get('label')}</DialogTitle>
+      <DialogContent>
+        <List>
+          <ListItem><ListItemText primary='coordinates'/>
+            Lat: {canvasLocation && canvasLocation.coordinates[1]}
+            Long: {canvasLocation && canvasLocation.coordinates[0]}
+          </ListItem>
+          <ListItem><CanvasStreetView canvas={canvas}/></ListItem>
+          <ListItem><ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/></ListItem>
+          <ListItem>
+            <ListItemText primary='Tax Lots'/>
+            <List>
+              {canvasBuildings.map(building => {
+                if (!building) {
+                  return null
+                }
+                const taxdata = building.get('taxdata')
+                if (!taxdata) {
+                  // seems to happen with courtyards
+                  return null
+                }
+                const ain = building.get('ain')
+                const yearbuilt = taxdata.get('year_built')
+                return <ListItem key={ain}><ListItemText primary={`ain: ${ain}`} secondary={`built: ${yearbuilt}`}/></ListItem>
+              })}
+            </List>
+          </ListItem>
+        </List>
+      </DialogContent>
+    </Dialog>
   }
 })
 
@@ -585,6 +670,8 @@ const canvasSlidingListStyles = {
     },
     '& $cardUpperRightContent': {
     },
+    '& $cardLowerLeftContent': {
+    },
   },
   container1: {
     display: 'inline-block',
@@ -594,6 +681,9 @@ const canvasSlidingListStyles = {
       transform: 'scale(0.85)',
     },
     '& $cardUpperRightContent': {
+      transform: 'scale(0.85)',
+    },
+    '& $cardLowerLeftContent': {
       transform: 'scale(0.85)',
     },
   },
@@ -607,6 +697,9 @@ const canvasSlidingListStyles = {
     '& $cardUpperRightContent': {
       transform: 'scale(0.70)',
     },
+    '& $cardLowerLeftContent': {
+      transform: 'scale(0.70)',
+    },
   },
   container3: {
     display: 'inline-block',
@@ -616,6 +709,9 @@ const canvasSlidingListStyles = {
       transform: 'scale(0.60)',
     },
     '& $cardUpperRightContent': {
+      transform: 'scale(0.60)',
+    },
+    '& $cardLowerLeftContent': {
       transform: 'scale(0.60)',
     },
   },
@@ -629,6 +725,9 @@ const canvasSlidingListStyles = {
     '& $cardUpperRightContent': {
       transform: 'scale(0.50)',
     },
+    '& $cardLowerLeftContent': {
+      transform: 'scale(0.50)',
+    },
   },
   cardUpperLeftContent: {
     width: 500,
@@ -636,6 +735,10 @@ const canvasSlidingListStyles = {
   },
   cardUpperRightContent: {
     transformOrigin: ['top', 'right'],
+  },
+  cardLowerLeftContent: {
+    width: 500,
+    transformOrigin: ['bottom', 'left'],
   },
   handleDefault: {
   },
@@ -681,6 +784,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
           const cardClasses = {
             upperLeftContent: classes.cardUpperLeftContent,
             upperRightContent: classes.cardUpperRightContent,
+            lowerLeftContent: classes.cardLowerLeftContent,
           }
           return <div key={`canvas-${id}`} className={className}><CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
         } else {
