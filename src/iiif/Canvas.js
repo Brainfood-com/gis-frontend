@@ -377,34 +377,54 @@ export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(
     const canvasPoint = points && points.get(canvas.get('id')) || {}
     const canvasLocation = canvasPoint && canvasPoint.point
     const canvasBuildings = (canvasPoint.buildings || []).map(id => buildings.get(id))
+    const image = canvas.get('image')
+    const {
+      googleVision: {
+        rgb: [
+          red = 0,
+          green = 0,
+          blue = 0,
+        ] = [],
+      } = {},
+    } = canvasPoint
+
     return <Dialog {...props} onClose={this.onClose}>
       <DialogTitle>Canvas {canvas.get('label')}</DialogTitle>
       <DialogContent>
-        <List>
-          <ListItem><ListItemText primary='coordinates'/>
-            Lat: {canvasLocation && canvasLocation.coordinates[1]}
-            Long: {canvasLocation && canvasLocation.coordinates[0]}
+        <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
+          <img src={`${image}/full/400,/0/default.jpg`}/>
+        </Card>
+        <List dense>
+          <ListItem>
+            <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
           </ListItem>
-          <ListItem><CanvasStreetView canvas={canvas}/></ListItem>
-          <ListItem><ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/></ListItem>
+          <ListItem>
+            <ListItemText inset={false} primary={<CanvasStreetView mini canvas={canvas}/>}/>
+          </ListItem>
+          <ListItem>
+            <ListItemText primary={`
+            Lat: ${canvasLocation && canvasLocation.coordinates[1]}
+            Long: ${canvasLocation && canvasLocation.coordinates[0]}
+            `}/>
+          </ListItem>
           <ListItem>
             <ListItemText primary='Tax Lots'/>
-            <List>
-              {canvasBuildings.map(building => {
-                if (!building) {
-                  return null
-                }
-                const taxdata = building.get('taxdata')
-                if (!taxdata) {
-                  // seems to happen with courtyards
-                  return null
-                }
-                const ain = building.get('ain')
-                const yearbuilt = taxdata.get('year_built')
-                return <ListItem key={ain}><ListItemText primary={`ain: ${ain}`} secondary={`built: ${yearbuilt}`}/></ListItem>
-              })}
-            </List>
           </ListItem>
+          <List>
+            {canvasBuildings.map(building => {
+              if (!building) {
+                return null
+              }
+              const taxdata = building.get('taxdata')
+              if (!taxdata) {
+                // seems to happen with courtyards
+                return null
+              }
+              const ain = building.get('ain')
+              const yearbuilt = taxdata.get('year_built')
+              return <ListItem key={ain}><ListItemText primary={`ain: ${ain}`} secondary={`built: ${yearbuilt}`}/></ListItem>
+            })}
+          </List>
         </List>
       </DialogContent>
     </Dialog>
