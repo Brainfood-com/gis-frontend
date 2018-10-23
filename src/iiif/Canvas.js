@@ -741,23 +741,24 @@ const canvasSlidingListStyles = {
     overflow: 'hidden',
     '& $cardUpperLeftContent': {
       transform: 'scale(0.50)',
+      display: 'none',
     },
     '& $cardUpperRightContent': {
       transform: 'scale(0.50)',
+      display: 'none',
     },
     '& $cardLowerLeftContent': {
       transform: 'scale(0.50)',
+      display: 'none',
     },
   },
   cardUpperLeftContent: {
-    width: 500,
     transformOrigin: ['top', 'left'],
   },
   cardUpperRightContent: {
     transformOrigin: ['top', 'right'],
   },
   cardLowerLeftContent: {
-    width: 500,
     transformOrigin: ['bottom', 'left'],
   },
   handleDefault: {
