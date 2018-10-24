@@ -23,6 +23,7 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
 import DebouncedForm from '../DebouncedForm'
+import IIIFTagEditor from './Tags'
 
 const rangeFormStyles = {
   root: {
@@ -47,6 +48,8 @@ const fieldInputProcessors = {
   },
 }
 
+const rangeTagSuggestions = ['Random Images', 'Disjoint Sequence', 'Routing Glitch', 'Needs Review', 'Placed', 'Validated']
+
 export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {
     updateRange(id, data) {},
@@ -63,7 +66,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
   }
 
   render() {
-    const {className, classes, range, onRemoveOverride} = this.props
+    const {className, classes, range, updateRange, onRemoveOverride} = this.props
     if (!range) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -90,7 +93,8 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <Typography variant='subheading' color='textSecondary'>Tags</Typography>
+      <IIIFTagEditor owner={range} updateOwner={updateRange} name='tags' suggestions={rangeTagSuggestions}/>
     </Paper>
   }
 })

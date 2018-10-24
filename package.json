@@ -66,6 +66,7 @@
     "react-router": "^4.2.0",
     "react-router-dom": "^4.3.1",
     "react-router-redux": "^4.0.8",
+    "react-tag-input": "^5.2.3",
     "redux": "^4.0.0",
     "redux-thunk": "^2.2.0",
     "relider": "github:Brainfood-com/relider#master",
