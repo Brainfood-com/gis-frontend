@@ -275,16 +275,25 @@ export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch,
 
 export const getCollection = requiredId(busyCall('collection', collectionId => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildLabel)})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionDetail})
 }))
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags'], id => makeUrl('api', `collection/${id}`), getCollection)
 
+function manifestBuildLabel(manifest) {
+  const {tags = [], label, ...rest} = manifest
+  const tagFlags = []
+  if (tags.find(tag => tag === 'Claimed')) {
+    tagFlags.push('Claimed')
+  }
+  return {...rest, label: `${label}(${tagFlags.join('/')})`, tags}
+}
+
 export const getManifest = requiredId(busyCall('manifest', manifestId => async dispatch => {
   const manifestDetail = await fetch(makeUrl('api', `manifest/${manifestId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestDetail})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestDetail)})
 }))
 
 export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags'], id => makeUrl('api', `manifest/${id}`), getManifest)
