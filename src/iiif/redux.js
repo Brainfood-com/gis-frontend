@@ -302,14 +302,15 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
   const manifestStructures = await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())
   const ranges = []
   const rangesWithCanvases = []
-  const foundCanvasIds = {}
+  const allCanvases = []
   manifestStructures.forEach(structure => {
     const {id} = structure
+    const canvases = structure.canvases || []
     if (structure.canvases) {
       structure.label += `(${structure.canvases.length})`
       if (structure.canvases.length) {
         rangesWithCanvases.push(id)
-        structure.canvases.forEach(id => foundCanvasIds[id] = id)
+        allCanvases.splice(-1, 0, structure.canvases)
       }
     }
     if (structure.pointOverrideCount) {
@@ -318,7 +319,7 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
     ranges.push(id)
   })
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: Object.values(foundCanvasIds).map(id => ({id, type: 'canvas'}))})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: allCanvases})
   const manifestDetail = {
     id: manifestId,
     ranges,
