@@ -299,11 +299,10 @@ export const getManifest = requiredId(busyCall('manifest', manifestId => async d
 export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags'], id => makeUrl('api', `manifest/${id}`), getManifest)
 
 export const getManifestStructures = requiredId(busyCall('manifest', manifestId => async dispatch => {
-  const manifestStructures = await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())
   const ranges = []
   const rangesWithCanvases = []
   const allCanvases = []
-  manifestStructures.forEach(structure => {
+  const manifestStructures = (await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())).map(structure => {
     const {id} = structure
     const canvases = structure.canvases || []
     if (structure.canvases) {
@@ -317,6 +316,11 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
       structure.label += `(p=${structure.pointOverrideCount})`
     }
     ranges.push(id)
+    const _extra = [
+      {name: 'canvases', value: canvases.length},
+      {name: 'points', value: structure.pointOverrideCount || 0},
+    ]
+    return {...structure, _extra}
   })
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: allCanvases})
