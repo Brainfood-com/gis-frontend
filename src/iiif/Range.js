@@ -48,7 +48,7 @@ const fieldInputProcessors = {
   },
 }
 
-const rangeTagSuggestions = ['Random Images', 'Disjoint Sequence', 'Routing Glitch', 'Needs Review', 'Placed', 'Validated']
+const rangeTagSuggestions = ['Claimed', 'Random Images', 'Disjoint Sequence', 'Routing Glitch', 'Needs Review', 'Placed', 'Validated']
 
 export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {

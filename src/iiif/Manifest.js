@@ -16,6 +16,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
+import IIIFTagEditor from './Tags'
 
 const manifestFormStyles = {
   root: {
@@ -27,6 +28,9 @@ const fieldInputProcessors = {
     return value.split(/\n+/)
   },
 }
+
+const manifestTagSuggestions = ['Claimed']
+
 export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
     updateManifest(id, data) {},
@@ -43,7 +47,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
   }
 
   render() {
-    const {className, classes, manifest, onRemoveOverride} = this.props
+    const {className, classes, manifest, updateManifest, onRemoveOverride} = this.props
     if (!manifest) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -51,7 +55,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor owner={manifest} updateOwner={updateManifest} name='tags' suggestions={manifestTagSuggestions}/>
     </Paper>
   }
 })
