@@ -43,6 +43,7 @@ import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import DebouncedForm from '../DebouncedForm'
+import IIIFTagEditor from './Tags'
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -58,6 +59,8 @@ export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
     onItemPicked(canvases.get(nextPosition).get('id'))
   }
 }
+
+const canvasTagSuggestions = ['Broken Image']
 
 const canvasCardBaseStyles = {
   root: {
@@ -619,7 +622,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor owner={canvas} updateOwner={updateCanvas} name='tags' suggestions={canvasTagSuggestions}/>
     </Paper>
   }
 })
