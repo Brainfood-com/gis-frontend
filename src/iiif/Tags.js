@@ -3,6 +3,7 @@ import memoize from 'lodash-es/memoize'
 import PropTypes from 'prop-types'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
+import Typography from '@material-ui/core/Typography'
 import {WithOutContext as ReactTags} from 'react-tag-input'
 
 const styles = theme => {
@@ -124,7 +125,10 @@ class IIIFTagEditor extends React.Component {
       return <div/>
     }
     const tags = owner.get('tags', new Immutable.List()).toJS()
-    return <ReactTags inline={false} className={className} classNames={classes} name={name} tags={stringArrayHelper(tags)} suggestions={stringArrayHelper(filteredSuggestions)} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
+    return <div>
+      <Typography variant='subheading' color='textSecondary'>Tags</Typography>
+      <ReactTags inline={false} className={className} classNames={classes} name={name} tags={stringArrayHelper(tags)} suggestions={stringArrayHelper(filteredSuggestions)} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
+    </div>
   }
 }
 

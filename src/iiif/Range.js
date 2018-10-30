@@ -93,7 +93,6 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <Typography variant='subheading' color='textSecondary'>Tags</Typography>
       <IIIFTagEditor owner={range} updateOwner={updateRange} name='tags' suggestions={rangeTagSuggestions}/>
     </Paper>
   }
