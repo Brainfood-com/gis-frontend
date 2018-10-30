@@ -4,6 +4,8 @@ import React from 'react'
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 
+const emptyList = List()
+
 export const picked = picked => Component => {
   const ownerPick = picked[0]
   const primaryPick = picked[picked.length - 1]
@@ -95,13 +97,13 @@ export const picked = picked => Component => {
             switch (type) {
               case 'collection':
                 // .members
-                result.manifests = pickedValue.get('manifests', List()).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
+                result.manifests = pickedValue.get('manifests', emptyList).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
                 break
               case 'manifest':
                 // .ranges
                 // .rangesWithCanvases
-                result.ranges = pickedValue.get('ranges', List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
-                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', List()).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.ranges = pickedValue.get('ranges', emptyList).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', emptyList).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
                 break
               case 'range':
                 // .canvases
@@ -109,7 +111,7 @@ export const picked = picked => Component => {
                 //console.log('rangeCanvases', rangeCanvases)
                 result.buildings = iiif.get(iiifRedux.MODEL['buildings'])
                 result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
-                result.canvases = pickedValue.get('canvases', List()).map(id => {
+                result.canvases = pickedValue.get('canvases', emptyList).map(id => {
                   return iiif.getIn([iiifRedux.MODEL.canvas, id])
                 })
                 if (pickedValue.get('reverse', false)) {
