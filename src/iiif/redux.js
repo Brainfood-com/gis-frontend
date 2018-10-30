@@ -320,7 +320,7 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
       {name: 'canvases', value: canvases.length},
       {name: 'points', value: structure.pointOverrideCount || 0},
     ]
-    return {...structure, _extra}
+    return {...structure, canvases: canvases.map(item => item.id), _extra}
   })
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: allCanvases})
