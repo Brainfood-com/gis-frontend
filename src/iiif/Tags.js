@@ -73,7 +73,7 @@ const emptyList = new Immutable.List()
 
 function applyTagMutation(props, mutator) {
   const {owner, updateOwner} = props
-  const tags = [].concat(owner.get('tags').toJS())
+  const tags = [].concat(owner.get('tags', emptyList).toJS())
   mutator(tags)
   updateOwner(owner.get('id'), {tags})
 }
