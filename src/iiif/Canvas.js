@@ -1,3 +1,4 @@
+import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -44,6 +45,8 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
+
+const emptyList = Immutable.List()
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -92,7 +95,7 @@ const canvasCardBaseStyles = {
       borderBottomColor: 'white',
     },
     '$override > &': {
-      borderColor: 'red',
+      borderColor: 'green',
     },
     '$loading > &': {
       backgroundColor: '#aaaaaa',
@@ -106,7 +109,7 @@ const canvasCardBaseStyles = {
   },
   overrideButton: {
     display: 'none',
-    backgroundColor: 'red',
+    backgroundColor: 'green',
   },
   overrideIcon: {
     color: 'white',
@@ -674,6 +677,9 @@ const canvasSlidingListStyles = {
       borderStyle: 'solid',
       backgroundColor:'white',
     },
+    '& $handleCurrent$handleNeedsReview': {
+      borderColor:['white', '!important'],
+    },
     '& $handleCurrent$handleOverride': {
       borderColor:['white', '!important'],
     },
@@ -681,12 +687,16 @@ const canvasSlidingListStyles = {
       borderColor:['white', '!important'],
     },
     '& $handleOverride': {
-      backgroundColor:'red',
-      borderColor:'red',
+      backgroundColor:'green',
+      borderColor:'green',
     },
     '& $handleExclude': {
       backgroundColor:'black',
       borderColor: 'black',
+    },
+    '& $handleNeedsReview': {
+      backgroundColor:'red',
+      borderColor:'red',
     },
   },
   container0: {
@@ -772,6 +782,8 @@ const canvasSlidingListStyles = {
   },
   handleCurrent: {
   },
+  handleNeedsReview: {
+  },
   handleOverride: {
   },
   handleExclude: {
@@ -792,12 +804,21 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
       const hasOverrides = item.get('overrides')
       const isExcluded = item.get('exclude')
       const isCurrent = item === canvas
+      const tags = item.get('tags', emptyList)
+      const needsReview = tags.find(tag => tag === 'Needs Review')
+      const wantedClasses = {
+        [classes.handleDefault]: true,
+        [classes.handleOverride]: hasOverrides,
+        [classes.handleExclude]: isExcluded,
+        [classes.handleCurrent]: isCurrent,
+        [classes.handleNeedsReview]: needsReview,
+      }
       const result = {
         value: index,
         readOnly: !isCurrent,
-        className: classnames(classes.handleDefault, hasOverrides && classes.handleOverride, isExcluded && classes.handleExclude, isCurrent && classes.handleCurrent),
+        className: classnames(wantedClasses),
       }
-      return hasOverrides || isExcluded || isCurrent ? result : null
+      return needsReview || hasOverrides || isExcluded || isCurrent ? result : null
     }).filter(item => item).sort((a, b) => {
       if (a.readOnly === false) {
         return -1
