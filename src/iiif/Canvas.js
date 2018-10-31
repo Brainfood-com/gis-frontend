@@ -62,6 +62,8 @@ export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
 
 const canvasTagSuggestions = [
   commonTagDefinitions.BROKEN_IMAGE,
+  commonTagDefinitions.DISJOINT_SEQUENCE,
+  commonTagDefinitions.NEEDS_REVIEW,
 ]
 
 const canvasCardBaseStyles = {
