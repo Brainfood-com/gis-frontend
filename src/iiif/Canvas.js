@@ -43,7 +43,7 @@ import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import DebouncedForm from '../DebouncedForm'
-import IIIFTagEditor from './Tags'
+import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -60,7 +60,9 @@ export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   }
 }
 
-const canvasTagSuggestions = ['Broken Image']
+const canvasTagSuggestions = [
+  commonTagDefinitions.BROKEN_IMAGE,
+]
 
 const canvasCardBaseStyles = {
   root: {

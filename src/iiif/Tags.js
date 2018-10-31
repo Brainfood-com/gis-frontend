@@ -6,6 +6,17 @@ import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import {WithOutContext as ReactTags} from 'react-tag-input'
 
+export const commonTagDefinitions = {
+  CLAIMED: 'Claimed',
+  RANDOM_IMAGES: 'Random Images',
+  DISJOINT_SEQUENCE: 'Disjoint Sequence',
+  ROUTING_GLITCH: 'Routing Glitch',
+  NEEDS_REVIEW: 'Needs Review',
+  PLACED: 'Placed',
+  VALIDATED: 'Validated',
+  BROKEN_IMAGE: 'Broken Image',
+}
+
 const styles = theme => {
   return {
     tags: {},

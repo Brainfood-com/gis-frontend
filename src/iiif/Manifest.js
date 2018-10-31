@@ -16,7 +16,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
-import IIIFTagEditor from './Tags'
+import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 const manifestFormStyles = {
   root: {
@@ -29,7 +29,9 @@ const fieldInputProcessors = {
   },
 }
 
-const manifestTagSuggestions = ['Claimed']
+const manifestTagSuggestions = [
+  commonTagDefinitions.CLAIMED,
+]
 
 export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {

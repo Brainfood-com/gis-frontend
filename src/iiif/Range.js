@@ -23,7 +23,7 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
 import DebouncedForm from '../DebouncedForm'
-import IIIFTagEditor from './Tags'
+import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 const rangeFormStyles = {
   root: {
@@ -48,7 +48,15 @@ const fieldInputProcessors = {
   },
 }
 
-const rangeTagSuggestions = ['Claimed', 'Random Images', 'Disjoint Sequence', 'Routing Glitch', 'Needs Review', 'Placed', 'Validated']
+const rangeTagSuggestions = [
+  commonTagDefinitions.CLAIMED,
+  commonTagDefinitions.RANDOM_IMAGES,
+  commonTagDefinitions.DISJOINT_SEQUENCE,
+  commonTagDefinitions.ROUTING_GLITCH,
+  commonTagDefinitions.NEEDS_REVIEW,
+  commonTagDefinitions.PLACED,
+  commonTagDefinitions.VALIDATED,
+]
 
 export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {
