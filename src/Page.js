@@ -9,6 +9,8 @@ import MenuIcon from '@material-ui/icons/Menu'
 import Toolbar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
 
+import Stats from './Stats'
+
 const styles = {
   root: {
     display: 'flex',
@@ -22,6 +24,9 @@ const styles = {
   appbar: {
     flex: 0,
     flexBasis: 64,
+  },
+  grow: {
+    flexGrow: 1,
   },
 	body: {
 		flex: 2,
@@ -50,7 +55,8 @@ class Page extends React.Component {
 					<IconButton className={classes.menuButton} color='inherit' aria-label='Menu'>
             <MenuIcon />
           </IconButton>
-          <Typography variant='title'>GIS</Typography>
+          <Typography className={classes.grow} variant='title'>GIS</Typography>
+          <Stats/>
         </Toolbar>
       </AppBar>
       <div className={classes.body}>

@@ -6,8 +6,9 @@ import GeometryUtil from 'leaflet-geometryutil'
 import {decrBusy as globalDecrBusy, incrBusy as globalIncrBusy} from '../application-redux'
 import {makeUrl} from '../api'
 import {immutableEmptyMap, immutableEmptyOrderedMap} from '../constants'
+import {getStats} from './stats'
 
-const ACTION = Enum(
+export const ACTION = Enum(
   'set',
   'delete',
   'clear',
@@ -29,6 +30,7 @@ export const MODEL = Enum(
   'buildings',
   'range_points',
   'picked',
+  'stats',
 )
 
 const defaultState = immutableEmptyMap.withMutations(map => {
@@ -46,6 +48,9 @@ const defaultState = immutableEmptyMap.withMutations(map => {
         map.set(key, immutableEmptyMap.merge({id: key, value}))
       }
     })
+  }))
+  map.set(MODEL['stats'], immutableEmptyMap.withMutations(map => {
+    map.set('range', immutableEmptyMap)
   }))
 })
 
@@ -221,6 +226,7 @@ export const startOfDay = () => async (dispatch, getState) => {
     range: [getRange, getRangePoints],
     canvas: [getCanvas],
   })
+  dispatch(getStats('range'))
 }
 
 const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async (dispatch, getState) => {
@@ -343,6 +349,7 @@ export const getRange = requiredId(busyCall('range', rangeId => async dispatch =
 export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
   dispatch(getRange(rangeId))
   dispatch(getRangePoints(rangeId))
+  dispatch(getStats('range'))
 })
 
 const REGEXES = [
