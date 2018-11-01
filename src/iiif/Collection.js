@@ -1,3 +1,4 @@
+import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -17,16 +18,20 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
+import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 const collectionFormStyles = {
   root: {
   },
 }
 
+const collectionTagSuggestions = [
+  commonTagDefinitions.CLAIMED,
+]
+
+const emptyList = Immutable.List()
+
 const fieldInputProcessors = {
-  tags(value) {
-    return value.split(/\n+/)
-  },
 }
 export const CollectionForm = flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
   static defaultProps = {
@@ -52,7 +57,7 @@ export const CollectionForm = flow(picked(['collection']), withStyles(collection
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <TextField name='tags' fullWidth label='Tags' value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, []).join("\n")} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
