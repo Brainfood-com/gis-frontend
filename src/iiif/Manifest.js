@@ -1,3 +1,4 @@
+import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -24,14 +25,13 @@ const manifestFormStyles = {
 }
 
 const fieldInputProcessors = {
-  tags(value) {
-    return value.split(/\n+/)
-  },
 }
 
 const manifestTagSuggestions = [
   commonTagDefinitions.CLAIMED,
 ]
+
+const emptyList = Immutable.List()
 
 export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
@@ -49,7 +49,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
   }
 
   render() {
-    const {className, classes, manifest, updateManifest, onRemoveOverride} = this.props
+    const {className, classes, manifest, onRemoveOverride} = this.props
     if (!manifest) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -57,7 +57,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor owner={manifest} updateOwner={updateManifest} name='tags' suggestions={manifestTagSuggestions}/>
+      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

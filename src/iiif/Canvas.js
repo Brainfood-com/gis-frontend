@@ -533,9 +533,6 @@ const canvasFormStyles = {
   override: {},
 }
 const fieldInputProcessors = {
-  tags(value) {
-    return value.split(/\n+/)
-  },
   exclude(value, checked) {
     return checked
   },
@@ -629,7 +626,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor owner={canvas} updateOwner={updateCanvas} name='tags' suggestions={canvasTagSuggestions}/>
+      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

@@ -1,5 +1,4 @@
 import Immutable from 'immutable'
-import memoize from 'lodash-es/memoize'
 import PropTypes from 'prop-types'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -67,15 +66,13 @@ const styles = theme => {
   }
 }
 
-const stringArrayHelper = memoize(stringArray => stringArray.map(s => ({id: s, text: s})), stringArray => JSON.stringify([...stringArray].sort()))
 
 const emptyList = new Immutable.List()
 
 function applyTagMutation(props, mutator) {
-  const {owner, updateOwner} = props
-  const tags = [].concat(owner.get('tags', emptyList).toJS())
-  mutator(tags)
-  updateOwner(owner.get('id'), {tags})
+  const {name, onChange, value} = props
+  const newValue = mutator(value)
+  onChange({currentTarget: {name, value: newValue}})
 }
 
 
@@ -85,60 +82,63 @@ class IIIFTagEditor extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     suggestions: PropTypes.arrayOf(PropTypes.string),
-    onUpdate: PropTypes.func,
-    owner: PropTypes.object,
-    updateOwner: PropTypes.func,
+    value: PropTypes.instanceOf(Immutable.List),
+    onChange: PropTypes.func,
   }
 
   static defaultProps = {
-    onUpdate(name, tags) {},
+    value: emptyList,
     suggestions: [],
-    updateOwner(id, fields) {},
+    onChange(event) {},
   }
 
   static getDerivedStateFromProps(props, state) {
-    const {owner, suggestions} = props
-    if (owner.get('id') === undefined) {
-      return {tags: null, suggestions: null, filteredSuggestions: []}
+    const {value} = props
+    if (value === undefined) {
+      return {value: null, tags: null, suggestions: null, filteredSuggestions: []}
     }
-    const tags = owner.get('tags', emptyList)
+    const tags = value.toJS().sort().map(s => ({id: s, text: s}))
+    const suggestions = [].concat(props.suggestions).sort()
     if (tags === state.tags && suggestions == state.suggestions) {
       return {}
     }
-    const tagLookup = tags.toJS().reduce((accum, tag) => {accum[tag] = true; return accum}, {})
-    const filteredSuggestions = props.suggestions.filter(suggestion => !tagLookup[suggestion])
-    return {tags, suggestions, filteredSuggestions}
+    const tagLookup = tags.reduce((accum, tag) => {accum[tag.id] = true; return accum}, {})
+    const filteredSuggestions = suggestions.filter(suggestion => !tagLookup[suggestion]).map(s => ({id: s, text: s}))
+    return {
+      value,
+      suggestions,
+      tags,
+      filteredSuggestions,
+    }
   }
 
 	handleDelete = index => {
     applyTagMutation(this.props, tags => {
-      tags.splice(index, 1)
+      return tags.delete(index)
     })
   }
 
   handleAddition = tagObject => {
     applyTagMutation(this.props, tags => {
-      tags.push(tagObject.id)
+      return tags.push(tagObject.id)
     })
   }
 
   handleDrag = (tagObject, oldPosition, newPosition) => {
     applyTagMutation(this.props, tags => {
-      tags.splice(oldPosition, 1)
-      tags.splice(newPosition, 0, tagObject.id)
+      return tags.delete(oldPosition).insert(newPosition, tagObject.id)
     })
   }
 
   render() {
-    const {className, classes, name, owner, suggestions} = this.props
-    const {filteredSuggestions} = this.state
-    if (owner.get('id') === undefined) {
+    const {className, classes, name, suggestions, value} = this.props
+    const {tags, filteredSuggestions} = this.state
+    if (value === undefined) {
       return <div/>
     }
-    const tags = owner.get('tags', new Immutable.List()).toJS()
     return <div>
       <Typography variant='subheading' color='textSecondary'>Tags</Typography>
-      <ReactTags inline={false} className={className} classNames={classes} name={name} tags={stringArrayHelper(tags)} suggestions={stringArrayHelper(filteredSuggestions)} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
+      <ReactTags inline={false} className={className} classNames={classes} name={name} tags={tags} suggestions={filteredSuggestions} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
     </div>
   }
 }

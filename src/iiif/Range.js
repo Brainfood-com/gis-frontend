@@ -1,3 +1,4 @@
+import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -25,6 +26,8 @@ import {makeUrl} from '../api'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
+const emptyList = Immutable.List()
+
 const rangeFormStyles = {
   root: {
   },
@@ -42,9 +45,6 @@ const fieldInputProcessors = {
   },
   fovDepth(value) {
     return value === '' ? null : parseInt(value)
-  },
-  tags(value) {
-    return value.split(/\n+/)
   },
 }
 
@@ -74,7 +74,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
   }
 
   render() {
-    const {className, classes, range, updateRange, onRemoveOverride} = this.props
+    const {className, classes, range, onRemoveOverride} = this.props
     if (!range) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -101,7 +101,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <IIIFTagEditor owner={range} updateOwner={updateRange} name='tags' suggestions={rangeTagSuggestions}/>
+      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
