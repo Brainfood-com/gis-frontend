@@ -1,12 +1,12 @@
 import Enum from 'es6-enum'
-import {Map} from 'immutable'
+import {immutableEmptyMap} from './constants'
 
 const ACTION = Enum(
   'incrBusy',
   'decrBusy',
 )
 
-const defaultState = Map().withMutations(map => {
+const defaultState = immutableEmptyMap.withMutations(map => {
   map.set('busy', 0)
 })
 

@@ -1,4 +1,3 @@
-import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -19,6 +18,7 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
+import {immutableEmptyList} from '../constants'
 
 const collectionFormStyles = {
   root: {
@@ -28,8 +28,6 @@ const collectionFormStyles = {
 const collectionTagSuggestions = [
   commonTagDefinitions.CLAIMED,
 ]
-
-const emptyList = Immutable.List()
 
 const fieldInputProcessors = {
 }
@@ -57,7 +55,7 @@ export const CollectionForm = flow(picked(['collection']), withStyles(collection
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

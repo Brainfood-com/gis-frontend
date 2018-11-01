@@ -20,7 +20,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction'
 import ListItemText from '@material-ui/core/ListItemText'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
-import {List as imList, Map} from 'immutable'
+import {immutableEmptyList, immutableEmptyMap} from './constants'
 
 const styles = theme => ({
   root: {},
@@ -55,12 +55,10 @@ const styles = theme => ({
   },
 })
 
-const emptyList = new imList()
-
 export default withStyles(styles)(class ExpandoList extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
-    items: Map(),
+    items: immutableEmptyMap,
   }
 
   constructor(props) {
@@ -113,9 +111,9 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           const id = item.get('id')
           const label = item.get('label')
           const type = item.get('type')
-          const extra = item.get('_extra', emptyList)
+          const extra = item.get('_extra', immutableEmptyList)
           const secondaryItems = [`${id}.${index}`, type]
-          const tags = item.get('tags', emptyList)
+          const tags = item.get('tags', immutableEmptyList)
           const tagFlags = {}
           tags.forEach(tag => {
             tagFlags[tag.toLowerCase()] = true

@@ -1,4 +1,3 @@
-import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -25,8 +24,7 @@ import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
-
-const emptyList = Immutable.List()
+import {immutableEmptyList} from '../constants'
 
 const rangeFormStyles = {
   root: {
@@ -101,7 +99,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

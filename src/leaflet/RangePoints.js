@@ -1,12 +1,10 @@
 import React from 'react'
 
-import { Map } from 'immutable'
 import { FeatureGroup, GeoJSON, Popup } from 'react-leaflet'
 import { picked } from '../iiif/Picked'
 import DraggableCanvasPosition from './DraggableCanvasPosition'
 import GISGeoJSON from '../GISGeoJSON'
-
-const emptyMap = Map()
+import {immutableEmptyMap} from '../constants'
 
 class Building extends React.Component {
   render() {
@@ -15,7 +13,7 @@ class Building extends React.Component {
       return null
     }
     const geojson = building.get('geojson').toJS()
-    const taxdata = building.get('taxdata', emptyMap)
+    const taxdata = building.get('taxdata', immutableEmptyMap)
     return <GeoJSON data={geojson}>
       <Popup>
         <div>

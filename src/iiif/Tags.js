@@ -1,9 +1,9 @@
-import Immutable from 'immutable'
 import PropTypes from 'prop-types'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import {WithOutContext as ReactTags} from 'react-tag-input'
+import {immutableEmptyList} from '../constants'
 
 export const commonTagDefinitions = {
   CLAIMED: 'Claimed',
@@ -66,9 +66,6 @@ const styles = theme => {
   }
 }
 
-
-const emptyList = new Immutable.List()
-
 function applyTagMutation(props, mutator) {
   const {name, onChange, value} = props
   const newValue = mutator(value)
@@ -82,12 +79,12 @@ class IIIFTagEditor extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     suggestions: PropTypes.arrayOf(PropTypes.string),
-    value: PropTypes.instanceOf(Immutable.List),
+    value: PropTypes.instanceOf(immutableEmptyList.constructor),
     onChange: PropTypes.func,
   }
 
   static defaultProps = {
-    value: emptyList,
+    value: immutableEmptyList,
     suggestions: [],
     onChange(event) {},
   }

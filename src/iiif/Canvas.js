@@ -1,4 +1,3 @@
-import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -45,8 +44,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
-
-const emptyList = Immutable.List()
+import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -626,7 +624,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -801,7 +799,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
       const hasOverrides = item.get('overrides')
       const isExcluded = item.get('exclude')
       const isCurrent = item === canvas
-      const tags = item.get('tags', emptyList)
+      const tags = item.get('tags', immutableEmptyList)
       const needsReview = tags.find(tag => tag === 'Needs Review')
       const wantedClasses = {
         [classes.handleDefault]: true,

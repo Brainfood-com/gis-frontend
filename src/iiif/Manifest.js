@@ -1,4 +1,3 @@
-import Immutable from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -18,6 +17,7 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
+import {immutableEmptyList} from '../constants'
 
 const manifestFormStyles = {
   root: {
@@ -30,8 +30,6 @@ const fieldInputProcessors = {
 const manifestTagSuggestions = [
   commonTagDefinitions.CLAIMED,
 ]
-
-const emptyList = Immutable.List()
 
 export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
@@ -57,7 +55,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, emptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

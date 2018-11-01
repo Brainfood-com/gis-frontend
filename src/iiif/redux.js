@@ -1,10 +1,11 @@
 import Enum from 'es6-enum'
-import {Map, OrderedMap, fromJS} from 'immutable'
+import {fromJS} from 'immutable'
 
 import GeometryUtil from 'leaflet-geometryutil'
 
 import {decrBusy as globalDecrBusy, incrBusy as globalIncrBusy} from '../application-redux'
 import {makeUrl} from '../api'
+import {immutableEmptyMap, immutableEmptyOrderedMap} from '../constants'
 
 const ACTION = Enum(
   'set',
@@ -30,19 +31,19 @@ export const MODEL = Enum(
   'picked',
 )
 
-const defaultState = Map().withMutations(map => {
-  map.set(MODEL['collection'], OrderedMap())
-  map.set(MODEL['manifest'], OrderedMap())
-  map.set(MODEL['range'], OrderedMap())
-  map.set(MODEL['range_points'], OrderedMap())
-  map.set(MODEL['canvas'], OrderedMap())
-  map.set(MODEL['buildings'], OrderedMap())
-  map.set(MODEL['picked'], Map().withMutations(map => {
+const defaultState = immutableEmptyMap.withMutations(map => {
+  map.set(MODEL['collection'], immutableEmptyOrderedMap)
+  map.set(MODEL['manifest'], immutableEmptyOrderedMap)
+  map.set(MODEL['range'], immutableEmptyOrderedMap)
+  map.set(MODEL['range_points'], immutableEmptyOrderedMap)
+  map.set(MODEL['canvas'], immutableEmptyOrderedMap)
+  map.set(MODEL['buildings'], immutableEmptyOrderedMap)
+  map.set(MODEL['picked'], immutableEmptyMap.withMutations(map => {
     const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
     Object.keys(picked).forEach(key => {
       const {[key]: value} = picked
       if (!!value) {
-        map.set(key, Map({id: key, value}))
+        map.set(key, immutableEmptyMap.merge({id: key, value}))
       }
     })
   }))
@@ -388,7 +389,7 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
     dispatch(ensureBuildings(buildingIds))
   }
 
-  const pointsMap = OrderedMap().withMutations(map => points.forEach(point => map.set(point.id, point)))
+  const pointsMap = immutableEmptyOrderedMap.withMutations(map => points.forEach(point => map.set(point.id, point)))
 
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: {id: rangeId, canvases: canvases.map(canvas => canvas.id)}})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvases})
