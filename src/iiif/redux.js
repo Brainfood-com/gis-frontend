@@ -258,16 +258,20 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
 }
 
 const requiredId = chain => id => !!id ? chain(id) : async dispatch => {}
+async function busyCallWrapper(modelName, id, dispatch, next) {
+  dispatch(globalIncrBusy())
+  dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
+  try {
+    return await next()
+  } finally {
+    dispatch(globalDecrBusy())
+    dispatch({type: 'redux-iiif', actionType: ACTION.decrBusy, modelType: MODEL[modelName], itemOrItems: id})
+  }
+}
+
 const busyCall = (modelName, chain) => id => {
   return async (dispatch, getState) => {
-    dispatch(globalIncrBusy())
-    dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
-    try {
-      return await chain(id)(dispatch, getState)
-    } finally {
-      dispatch(globalDecrBusy())
-      dispatch({type: 'redux-iiif', actionType: ACTION.decrBusy, modelType: MODEL[modelName], itemOrItems: id})
-    }
+    return busyCallWrapper(modelName, id, dispatch, () => chain(id)(dispatch, getState))
   }
 }
 
@@ -409,7 +413,7 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
   }
 }))
 
-export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) => async dispatch => {
+export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) => dispatch => busyCallWrapper('canvas', canvasId, dispatch, async () => {
   try {
 		await fetch(makeUrl('api', `canvas/${canvasId}/point/${sourceId}`), {
       method: 'POST',
@@ -430,9 +434,9 @@ export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) =>
     }
     dispatch(getCanvas(canvasId))
   }
-}
+})
 
-export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => async dispatch => {
+export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => dispatch => busyCallWrapper('canvas', canvasId, dispatch, async () => {
   try {
 		await fetch(makeUrl('api', `canvas/${canvasId}/point/${sourceId}`), {
       method: 'DELETE',
@@ -443,7 +447,7 @@ export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => async dispatc
     }
     dispatch(getCanvas(canvasId))
   }
-}
+})
 
 export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatch => {
   const canvasDetail = await fetch(makeUrl('api', `canvas/${canvasId}`)).then(data => data.json())
