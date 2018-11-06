@@ -28,10 +28,6 @@ import BlockIcon from '@material-ui/icons/Block';
 import StreetviewIcon from '@material-ui/icons/Streetview';
 import {DragSource} from 'react-dnd'
 import {getEmptyImage} from 'react-dnd-html5-backend'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
-import 'font-awesome/css/font-awesome.css'
-
 
 import ItemPanel from '../ItemPanel'
 import GoogleStreetView from '../GoogleStreetView'

@@ -3,16 +3,13 @@ import debounce from 'lodash-es/debounce'
 import memoize from 'lodash-es/memoize'
 import React from 'react'
 
-import L from 'leaflet'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
-import 'font-awesome/css/font-awesome.css'
+import AwesomeMarkers from '../leaflet/AwesomeMarkers'
 import { FeatureGroup, Marker, PropTypes as LeafletPropTypes, Tooltip } from 'react-leaflet'
 import GISGeoJSON from '../GISGeoJSON'
 
 import {makeUrl} from '../api'
 
-export const dragIcon = L.AwesomeMarkers.icon({
+export const dragIcon = AwesomeMarkers.icon({
   markerColor: 'red',
   prefix: 'fa',
   icon: 'camera-retro',

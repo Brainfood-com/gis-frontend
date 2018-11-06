@@ -1,9 +1,6 @@
 import React from 'react'
 
-import L from 'leaflet'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers'
-import 'leaflet.awesome-markers/dist/leaflet.awesome-markers.css'
-import 'font-awesome/css/font-awesome.css'
+import AwesomeMarkers from '../leaflet/AwesomeMarkers'
 import 'leaflet-geometryutil'
 import { FeatureGroup } from 'react-leaflet'
 import RotatableMarker from './RotatableMarker'
@@ -12,24 +9,24 @@ import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
 import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
 
-const overriddenIcon = L.AwesomeMarkers.icon({
+const overriddenIcon = AwesomeMarkers.icon({
   markerColor: 'red',
   prefix: 'fa',
   icon: 'camera-retro',
 })
-const selectedIcon = L.AwesomeMarkers.icon({
+const selectedIcon = AwesomeMarkers.icon({
   markerColor: 'white',
   prefix: 'fa',
   iconColor: 'black',
   icon: 'car',
 })
-const selectedOverridenIcon = L.AwesomeMarkers.icon({
+const selectedOverridenIcon = AwesomeMarkers.icon({
   markerColor: 'red',
   prefix: 'fa',
   iconColor: 'black',
   icon: 'car',
 })
-const defaultIcon = L.AwesomeMarkers.icon({
+const defaultIcon = AwesomeMarkers.icon({
   markerColor: 'blue',
   prefix: 'fa',
   icon: 'film',
