@@ -23,7 +23,11 @@ const styles = {
   root: {
     width: '100%',
     height: '100%',
-    zIndex: 1000,
+    zIndex: 0,
+    position: 'relative',
+  },
+  isOver: {
+    zIndex: 400,
   },
 }
 class CanvasDropTarget extends React.Component {
@@ -93,12 +97,13 @@ class CanvasDropTarget extends React.Component {
 
     const wantedClasses = {
       [classes.root]: true,
+      [classes.isOver]: isOver,
     }
     const {dragLatLng} = this.state
-    return connectDropTarget(<div className={classnames(wantedClasses, className)} style={{zIndex:1000}}>
+    return connectDropTarget(<div className={classnames(wantedClasses, className)}>
       <FeatureGroup>
         <CanvasDragResult target={dragLatLng}/>
-        <div style={{zIndex: 1000}}>{children}</div>
+        <div>{children}</div>
       </FeatureGroup>
     </div>)
   }
