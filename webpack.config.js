@@ -132,7 +132,7 @@ plugins = plugins.map(function(pluginOrRef) {
 
 module.exports = {
     mode: 'development',
-    entry: ['babel-polyfill', 'whatwg-fetch', './src/app.js'],
+    entry: ['babel-polyfill', 'whatwg-fetch', './src/index.js'],
     module: {
         rules: [
             {
