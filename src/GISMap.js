@@ -85,7 +85,7 @@ const overlayLayers = [
 
   {name: 'lariac_buildings', workspace: 'gis', layers: 'gis:lariac_buildings', type: 'wms'},
   {name: 'tiger-edges', workspace: 'gis', layers: 'gis:tl_2017_06037_edges', type: 'wms'},
-  {name: 'sunset_road_edge', workspace: 'gis', layers: 'gis:sunset_road_edges', type: 'geojson', checked: true},
+  {name: 'sunset_road_edge', workspace: 'gis', layers: 'gis:sunset_road_edges', type: 'geojson'},
   {name: 'sunset_road_edge_connected', workspace: 'gis', layers: 'gis:sunset_road_edges_connected', type: 'geojson', checked: false},
   {name: 'tiger-roads', workspace: 'gis', layers: 'gis:tl_2017_06037_roads', type: 'wms'},
   {name: 'sunset_buildings', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'wms'},
