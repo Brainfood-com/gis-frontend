@@ -44,14 +44,15 @@ import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
-  if (deltaX === 0) {
+  const delta = deltaX === 0 ? deltaY : deltaX
+  if (delta === 0) {
     return
   }
   event.preventDefault()
   if (!!!canvases) return
   const position = canvases.findIndex(item => item === canvas)
   if (position === -1) return
-  const nextPosition = position + Math.sign(deltaX)
+  const nextPosition = position + Math.sign(delta)
   if (nextPosition >= 0 && nextPosition < canvases.size) {
     onItemPicked(canvases.get(nextPosition).get('id'))
   }
