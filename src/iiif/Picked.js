@@ -1,8 +1,10 @@
+import flow from 'lodash-es/flow'
 import React from 'react'
 
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
-import {immutableEmptyList} from '../constants'
+import {immutableEmptyList, immutableEmptyMap} from '../constants'
+import {BusyPane} from '../GlobalBusy'
 
 export const picked = picked => Component => {
   const ownerPick = picked[0]
@@ -65,6 +67,14 @@ export const picked = picked => Component => {
       mapDispatchToProps.setRangePoint = iiifRedux.setRangePoint
       mapDispatchToProps.deleteRangePoint = iiifRedux.deleteRangePoint
       break
+    case 'pickedBuilding':
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
+        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
+          dispatch(iiifRedux.pick(primaryPick, id))
+        }
+        dispatch(iiifRedux.getBuilding(id))
+      }
+      break
   }
   switch (ownerPick) {
     case 'collection':
@@ -84,13 +94,26 @@ export const picked = picked => Component => {
   function mapStateToProps(store, props) {
     const {iiif} = store
     return picked.reduce((result, type) => {
+      let modelType = type
       const pickedId = iiif.getIn([iiifRedux.MODEL['picked'], type, 'value'])
+      if (type === 'pickedBuilding') {
+        //debugger
+      }
+      switch (type) {
+        case 'pickedBuilding':
+          modelType = 'buildings'
+          break
+      }
+      let busy = 0
+      const owner = props[ownerPick]
+      busy += owner ? owner.get('_busy', 0) : 0
       switch (type) {
         case 'root':
           result.collections = iiif.get(iiifRedux.MODEL['collection'])
           break
         default:
-          const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[type], pickedId])
+          const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[modelType], pickedId])
+          busy += pickedValue ? pickedValue.get('_busy', 0) : 0
           if (pickedValue) {
             switch (type) {
               case 'collection':
@@ -116,11 +139,21 @@ export const picked = picked => Component => {
                   result.canvases = result.canvases.reverse()
                 }
                 break
-            }
+              case 'pickedBuilding':
+                const canvasesByRange = result.canvasesByRange = iiif.getIn([iiifRedux.MODEL['building_canvases'], pickedId, 'canvasesByRange'], immutableEmptyMap)
+                result.rangesById = canvasesByRange.reduce((result, canvases, rangeId) => {
+                  result[rangeId] = iiif.getIn([iiifRedux.MODEL.range, parseInt(rangeId)])
+                  return result
+                }, {})
+                break
+             }
           }
       }
+      result.isBusy = busy > 0
       return result
     }, {})
   }
-  return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
+  return connectHelper({mapStateToProps, mapDispatchToProps})(function BusyWrapper({isBusy, ...props}) {
+    return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
+  })
 }

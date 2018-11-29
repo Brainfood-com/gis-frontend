@@ -8,6 +8,7 @@ import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 
 import GISMap from './GISMap'
+import GISResultsPane from './GISResultsPane'
 
 import {CanvasSlidingList} from './iiif/Canvas'
 import {IIIFTree} from './IIIF'
@@ -50,6 +51,7 @@ const styles = {
   mapViewRight: {
     maxWidth: '25%',
     minWidth: 100,
+    overflowY: 'scroll',
   },
   mapViewBottom: {
     display: 'flex',
@@ -87,6 +89,9 @@ class GISControl extends React.Component {
         </div>
         <div className={classes.mapViewMiddle}>
           <GISMap/>
+        </div>
+        <div className={classes.mapViewRight}>
+          <GISResultsPane/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>

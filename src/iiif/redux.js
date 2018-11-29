@@ -28,6 +28,7 @@ export const MODEL = Enum(
   'canvas',
 
   'buildings',
+  'building_canvases',
   'range_points',
   'picked',
   'stats',
@@ -40,6 +41,7 @@ const defaultState = immutableEmptyMap.withMutations(map => {
   map.set(MODEL['range_points'], immutableEmptyOrderedMap)
   map.set(MODEL['canvas'], immutableEmptyOrderedMap)
   map.set(MODEL['buildings'], immutableEmptyOrderedMap)
+  map.set(MODEL['building_canvases'], immutableEmptyMap)
   map.set(MODEL['picked'], immutableEmptyMap.withMutations(map => {
     const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
     Object.keys(picked).forEach(key => {
@@ -225,6 +227,7 @@ export const startOfDay = () => async (dispatch, getState) => {
     manifest: [getManifest, getManifestStructures],
     range: [getRange, getRangePoints],
     canvas: [getCanvas],
+    pickedBuilding: [getBuilding],
   })
   dispatch(getStats('range'))
 }
@@ -274,6 +277,25 @@ const busyCall = (modelName, chain) => id => {
     return busyCallWrapper(modelName, id, dispatch, () => chain(id)(dispatch, getState))
   }
 }
+
+export const getBuilding = busyCall('buildings', id => async (dispatch, getState) => {
+  if (id === null || id === undefined) {
+    return
+  }
+  console.log('getBuilding', id)
+  dispatch(ensureBuildings([id]))
+  const apiUrl = new URL(makeUrl('api', `buildings/${id}/canvases`))
+  const buildingCanvasesResults = await fetch(apiUrl).then(data => data.json())
+
+  const canvasesByRange = buildingCanvasesResults.reduce((result, canvas) => {
+    const {range_id: rangeId} = canvas
+    const rangeCanvases = result[rangeId] || (result[rangeId] = [])
+    rangeCanvases.push(canvas)
+    return result
+  }, {})
+  Object.keys(canvasesByRange).forEach(rangeId => dispatch(getRange(parseInt(rangeId))))
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
+})
 
 export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch, getState) => {
   const buildings = getState().iiif.get(MODEL['buildings'])

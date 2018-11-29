@@ -6,7 +6,17 @@ import DraggableCanvasPosition from './DraggableCanvasPosition'
 import GISGeoJSON from '../GISGeoJSON'
 import {immutableEmptyMap} from '../constants'
 
-class Building extends React.Component {
+const Building = picked(['pickedBuilding'])(class Building extends React.Component {
+  handleOnPopupOpen = () => {
+    const {building, onItemPicked} = this.props
+    onItemPicked(building.get('id'))
+  }
+
+  handleOnPopupClose = () => {
+    const {building, onItemPicked} = this.props
+    onItemPicked(null)
+  }
+
   render() {
     const {building} = this.props
     if (!building) {
@@ -15,7 +25,7 @@ class Building extends React.Component {
     const geojson = building.get('geojson').toJS()
     const taxdata = building.get('taxdata', immutableEmptyMap)
     return <GeoJSON data={geojson}>
-      <Popup>
+      <Popup onOpen={this.handleOnPopupOpen} onClose={this.handleOnPopupClose}>
         <div>
           <div>Roll Year: {taxdata && taxdata.get('roll_year')}</div>
           <div>Total Value: {taxdata && taxdata.get('total_value')}</div>
@@ -24,7 +34,7 @@ class Building extends React.Component {
       </Popup>
     </GeoJSON>
   }
-}
+})
 
 export default picked(['range', 'canvas'])(class RangePoints extends React.Component {
   onUpdatePoint = (canvas, point) => {

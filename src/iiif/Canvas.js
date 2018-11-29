@@ -84,6 +84,12 @@ const canvasCardBaseStyles = {
     '&$isDraggable': {
       cursor: 'grab',
     },
+    '&$readOnly $holeButton': {
+      display: 'none',
+    },
+    '&$readOnly $excludeButton': {
+      display: 'none',
+    },
   },
   card: {
     position: 'absolute',
@@ -219,6 +225,7 @@ const canvasCardBaseStyles = {
   isDraggable: {},
   isDragging: {},
   loading: {},
+  readOnly: {},
 /*
 .crossed {
     position: relative;
@@ -342,7 +349,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   render() {
-    const {className, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected, onCanvasNext, inspectCanvas} = this.props
+    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected, onCanvasNext, inspectCanvas} = this.props
     const {inspectDialogOpen, infoDialogOpen, image, loading} = this.state
     if (!image) {
       return <div/>
@@ -359,6 +366,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     } = rangePoint
     const wantedClasses = {
       [classes.root]: true,
+      [classes.readOnly]: readOnly,
       [classes.selected]: selected,
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.get('exclude'),
@@ -367,7 +375,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       [classes.isDraggable]: isDraggable,
       [classes.isDragging]: isDragging,
     }
-    const result = <div className={classnames(wantedClasses, className)} onWheel={this.handleOnWheel}>
+    const result = <div className={classnames(wantedClasses, className)} onWheel={readOnly ? null : this.handleOnWheel}>
        <div className={classes.draggingOverlay}/>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
@@ -506,7 +514,13 @@ export class CanvasCard extends React.Component {
   static PREVIEW = CanvasCardDragPreview
 
   render() {
-    return <CanvasCardBase {...this.props} isDraggable={true}/>
+    return <CanvasCardBase {...this.props} readOnly={false} isDraggable={true}/>
+  }
+}
+
+export class CanvasCardRO extends React.Component {
+  render() {
+    return <CanvasCardBase {...this.props} readOnly={true} isDraggable={false}/>
   }
 }
 

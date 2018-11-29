@@ -46,7 +46,7 @@ export const BusyPane = withStyles(busyPaneStyles)(class BusyPane extends React.
 
 export const GlobalBusy = connectHelper({
   mapStateToProps(store, props) {
-    const isBusy = !!(store.application.get('busy') || 0)
+    const isBusy = false && !!(store.application.get('busy') || 0)
     return {isBusy}
   },
 })(BusyPane)
