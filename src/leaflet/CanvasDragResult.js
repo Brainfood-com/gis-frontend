@@ -87,6 +87,10 @@ export function CanvasDragResultLookup(Clz) {
       this.debouncedDrag()
     }
 
+    componentWillUnmount() {
+      this.debouncedDrag.cancel()
+    }
+
     componentDidUpdate() {
       this.debouncedDrag()
     }
