@@ -26,6 +26,7 @@ import InfoIcon from '@material-ui/icons/Info';
 import LocationDisabledIcon from '@material-ui/icons/LocationDisabled';
 import BlockIcon from '@material-ui/icons/Block';
 import StreetviewIcon from '@material-ui/icons/Streetview';
+import ZoomInIcon from '@material-ui/icons/ZoomIn';
 import {DragSource} from 'react-dnd'
 import {getEmptyImage} from 'react-dnd-html5-backend'
 
@@ -42,13 +43,19 @@ import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
-export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
+import {createScrollHandler} from '../ScrollHelper'
+
+export function handleCanvasNext(event, onCanvasNext) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
   const delta = deltaX === 0 ? deltaY : deltaX
   if (delta === 0) {
     return
   }
   event.preventDefault()
+  onCanvasNext(delta)
+}
+
+export function onCanvasNext(delta, {canvases, canvas, onItemPicked}) {
   if (!!!canvases) return
   const position = canvases.findIndex(item => item === canvas)
   if (position === -1) return
@@ -56,6 +63,9 @@ export function handleCanvasWheel({canvases, canvas, onItemPicked, event}) {
   if (nextPosition >= 0 && nextPosition < canvases.size) {
     onItemPicked(canvases.get(nextPosition).get('id'))
   }
+}
+export function handleCanvasWheel({event, ...context}) {
+  return handleCanvasNext(event, delta => onCanvasNext(delta, context))
 }
 
 const canvasTagSuggestions = [
@@ -136,6 +146,7 @@ const canvasCardBaseStyles = {
   holeButton: {},
   holeIcon: {},
   infoIcon: {},
+  inspectIcon: {},
   excludeTopLeft: {
     zIndex: 1,
     display:'none',
@@ -183,6 +194,16 @@ const canvasCardBaseStyles = {
   lowerLeftContent: {
   },
   lowerLeftItem: {
+  },
+  lowerRight: {
+    zIndex: 1,
+    position:'absolute',
+    right:6,
+    bottom:6,
+  },
+  lowerRightContent: {
+  },
+  lowerRightItem: {
   },
   draggingOverlay: {
     position: 'absolute',
@@ -238,6 +259,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
 })), withStyles(canvasCardBaseStyles))(class CanvasCardBase extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
+    onInspectClose() {},
     isDraggable: false,
   }
 
@@ -248,6 +270,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       loading: true,
       image: canvas ? canvas.get('image') : null,
       infoDialogOpen: false,
+      inspectDialogOpen: false,
     }
   }
 
@@ -262,10 +285,10 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     }
   }
 
-  handleOnWheel = event => {
+  handleOnWheel = createScrollHandler(delta => {
     const {canvases, canvas, onItemPicked} = this.props
-    handleCanvasWheel({canvases, canvas, onItemPicked, event})
-  }
+    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+  })
 
   handleOnLoad = event => {
     this.setState({loading: false})
@@ -293,6 +316,15 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     updateCanvas(canvas.get('id'), {[name]: processedValue})
   }
 
+  handleOnInspectOpen = event => {
+    this.setState({inspectDialogOpen: true})
+  }
+
+  handleOnInspectClose = event => {
+    this.setState({inspectDialogOpen: false})
+    this.props.onInspectClose()
+  }
+
   handleOnOpenDialog = event => {
     const {name} = event.currentTarget
     const propName = `${name}DialogOpen`
@@ -310,8 +342,8 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   render() {
-    const {className, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected} = this.props
-    const {infoDialogOpen, image, loading} = this.state
+    const {className, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected, onCanvasNext, inspectCanvas} = this.props
+    const {inspectDialogOpen, infoDialogOpen, image, loading} = this.state
     if (!image) {
       return <div/>
     }
@@ -359,6 +391,12 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
           <Button className={classes.lowerLeftItem} mini variant='fab' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Button>
         </div>
       </div>
+      <div className={classes.lowerRight}>
+        <div className={classes.lowerRightContent}>
+          <Button className={classes.lowerRightItem} mini variant='fab' name='inspect' onClick={this.handleOnInspectOpen}><ZoomInIcon titleAccess='Inspect' className={classes.inspectcon}/></Button>
+        </div>
+      </div>
+      <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={inspectCanvas || canvas} onCanvasNext={onCanvasNext}/>
       <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} canvas={canvas}/>
     </div>
     return isDraggable ? connectDragSource(result) : result
@@ -548,10 +586,12 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     this.state = {...this.state, dialogOpen: false}
   }
 
-  handleOnWheel = event => {
+  handleOnCanvasNext = delta => {
     const {canvases, canvas, onItemPicked} = this.props
-    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+    onCanvasNext(delta, {canvases, canvas, onItemPicked})
   }
+
+  handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
 
   flushInputChange = (name, value, checked) => {
     const {canvas, updateCanvas} = this.props
@@ -568,12 +608,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
   }
 
-  largePhotoView = (event) => {
-    console.log('Large photo view')
-    this.setState({dialogOpen: true})
-  }
-
-  handleClose() {
+  handleClose = () => {
     this.setState({dialogOpen: false})
   }
 
@@ -591,22 +626,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} points={points} canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked}/>
-      <Dialog
-        keepMounted={true}
-        onWheel={this.handleOnWheel_}
-        fullScreen
-        open={this.state.dialogOpen}
-        onClose={() => this.handleClose()}
-      >
-        <AppBar style={{position: 'relative'}}>
-          <IconButton color="inherit" onClick={() => this.handleClose()} aria-label="Close">
-            <CloseIcon />
-          </IconButton>
-        </AppBar>
-        {this.state.dialogOpen ? <CanvasLeaflet canvases={canvases} canvas={canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} /> : null}
-      </Dialog>
-      <Button fullWidth variant='raised' onClick={this.largePhotoView}>Inspect</Button>
+      <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} points={points} canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext}/>
       {point}
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
@@ -623,6 +643,56 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
+  }
+})
+
+const canvasInspectDialogStyles = {
+}
+
+export const CanvasInspectDialog = withStyles(canvasInspectDialogStyles)(class CanvasInspectDialog extends React.Component {
+  static defaultProps = {
+    onCanvasNext(delta) {},
+    onClose() {},
+    open: false,
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    const {open} = props
+    const {propOpen, stateOpen} = state
+    return {
+      propOpen: open,
+      stateOpen: open !== propOpen ? open : stateOpen,
+    }
+  }
+
+  state = {
+    propOpen: false,
+    stateOpen: false,
+  }
+
+  handleOnCanvasNext = delta => this.props.onCanvasNext(delta)
+
+  handleClose = () => {
+    this.setState({stateOpen: false})
+    this.props.onClose()
+  }
+
+  render() {
+    const {canvas} = this.props
+    const {stateOpen} = this.state
+    return <Dialog
+      keepMounted={true}
+      fullScreen
+      open={stateOpen}
+      onClose={this.handleClose}
+    >
+      <AppBar style={{position: 'relative'}}>
+        <IconButton color="inherit" onClick={this.handleClose} aria-label="Close">
+          <CloseIcon />
+        </IconButton>
+      </AppBar>
+      {stateOpen ? <CanvasLeaflet canvas={canvas} onCanvasNext={this.handleOnCanvasNext} /> : null}
+    </Dialog>
   }
 })
 
@@ -701,6 +771,8 @@ const canvasSlidingListStyles = {
     },
     '& $cardLowerLeftContent': {
     },
+    '& $cardLowerRightContent': {
+    },
   },
   container1: {
     display: 'inline-block',
@@ -713,6 +785,9 @@ const canvasSlidingListStyles = {
       transform: 'scale(0.85)',
     },
     '& $cardLowerLeftContent': {
+      transform: 'scale(0.85)',
+    },
+    '& $cardLowerRightContent': {
       transform: 'scale(0.85)',
     },
   },
@@ -729,6 +804,9 @@ const canvasSlidingListStyles = {
     '& $cardLowerLeftContent': {
       transform: 'scale(0.70)',
     },
+    '& $cardLowerRightContent': {
+      transform: 'scale(0.70)',
+    },
   },
   container3: {
     display: 'inline-block',
@@ -741,6 +819,9 @@ const canvasSlidingListStyles = {
       transform: 'scale(0.60)',
     },
     '& $cardLowerLeftContent': {
+      transform: 'scale(0.60)',
+    },
+    '& $cardLowerRightContent': {
       transform: 'scale(0.60)',
     },
   },
@@ -760,6 +841,10 @@ const canvasSlidingListStyles = {
       transform: 'scale(0.50)',
       display: 'none',
     },
+    '& $cardLowerRightContent': {
+      transform: 'scale(0.50)',
+      display: 'none',
+    },
   },
   cardUpperLeftContent: {
     transformOrigin: ['top', 'left'],
@@ -769,6 +854,9 @@ const canvasSlidingListStyles = {
   },
   cardLowerLeftContent: {
     transformOrigin: ['bottom', 'left'],
+  },
+  cardLowerRightContent: {
+    transformOrigin: ['bottom', 'right'],
   },
   handleDefault: {
   },
@@ -823,7 +911,9 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
     return {canvases, classes, handles, position}
   }
 
-  state = {}
+  state = {
+    canvasInspectDelta: 0,
+  }
 
   handleOnReliderChange = (handles) => {
     const {onItemPicked, canvases} = this.props
@@ -832,18 +922,26 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
     onItemPicked(canvas.get('id'))
   }
 
-  handleOnWheel = event => {
+  handleOnWheel = createScrollHandler(delta => {
     const {canvases, canvas, onItemPicked} = this.props
-    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+  })
+
+  handleOnInspectClose = () => {
+    this.setState({canvasInspectDelta: 0})
+  }
+
+  handleOnCanvasNext = delta => {
+    this.setState({canvasInspectDelta: this.state.canvasInspectDelta + delta})
   }
 
   render() {
     const {className, classes, range, deleteRangePoint, updateCanvas, canvases, canvas, points, onItemPicked} = this.props
     if (!!!canvases) return <div/>
-    const {handles, position} = this.state
+    const {handles, position, canvasInspectDelta} = this.state
     if (position === -1) return <div/>
 
-    function pickCanvas(offset) {
+    const pickCanvas = offset => {
       const absOffset = Math.abs(offset)
       const index = position + offset
       const className = classes[`container${absOffset}`]
@@ -853,14 +951,16 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
         return <div key={`out-${absOffset}`} className={className}/>
       } else if (canvases) {
         const item = canvases.get(index)
+        const inspectCanvas = canvases.get(Math.max(index + canvasInspectDelta, Math.min(index + canvasInspectDelta, canvases.size - 1)))
         if (item) {
           const id = item.get('id')
           const cardClasses = {
             upperLeftContent: classes.cardUpperLeftContent,
             upperRightContent: classes.cardUpperRightContent,
             lowerLeftContent: classes.cardLowerLeftContent,
+            lowerRightContent: classes.cardLowerRightContent,
           }
-          return <div key={`canvas-${id}`} className={className}><CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked}/></div>
+          return <div key={`canvas-${id}`} className={className}><CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked} inspectCanvas={inspectCanvas} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }

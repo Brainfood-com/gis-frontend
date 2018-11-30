@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core/styles'
 import classnames from 'classnames'
 
 import IIIFViewer from 'react-leaflet-iiif-viewer'
-import { handleCanvasWheel } from './Canvas'
+import {createScrollHandler} from '../ScrollHelper'
 
 const canvasLeafletStyles = {
   root: {
@@ -30,10 +30,11 @@ const canvasLeafletStyles = {
 }
 
 export default withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React.Component {
-  handleOnWheel = event => {
-    const {canvases, canvas, onItemPicked} = this.props
-    handleCanvasWheel({canvases, canvas, onItemPicked, event})
+  static defaultProps = {
+    onCanvasNext(delta) {},
   }
+
+  handleOnWheel = createScrollHandler(delta => this.props.onCanvasNext(delta))
 
   render() {
     const {className, classes, canvas} = this.props
