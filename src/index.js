@@ -13,6 +13,7 @@ import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux
 import {reducer as itemPanelReducer} from './ItemPanel'
 import {reducer as applicationReducer} from './application-redux'
 import { reducer as gisSearchReducer, startOfDay as searchStartOfDay } from './GISSearch'
+import { reducer as userReducer } from './User'
 import * as apiRedux from './api/redux'
 import {GlobalBusy} from './GlobalBusy'
 import history from './history'
@@ -32,6 +33,7 @@ export const store = createStore(
     panel: itemPanelReducer,
     geoserver: apiRedux.reducer,
     search: gisSearchReducer,
+    user: userReducer,
   }),
   enhancer
 )
