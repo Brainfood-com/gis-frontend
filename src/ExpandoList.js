@@ -29,6 +29,8 @@ const styles = theme => ({
   nested: {
     paddingLeft: theme.spacing.unit * 1,
   },
+  menuItemRoot: {},
+  menuItemSelected: {},
   errorText: {
     color: '#ffaaaa',
   },
@@ -52,6 +54,27 @@ const styles = theme => ({
   },
   claimedIcon: {
     color: '#ffff00',
+  },
+  clientApprovedMenu: {
+    backgroundColor: 'rgba(0, 255, 0, 0.5)',
+    '&$menuItemRoot:hover': {
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      '& $clientApprovedText': {
+        color: '#000000',
+      },
+      '& $clientApprovedIcon': {
+        color: '#000000',
+      },
+    },
+    '&$menuItemSelected': {
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+    }
+  },
+  clientApprovedText: {
+    color: '#00ff00',
+  },
+  clientApprovedIcon: {
+    color: '#00ff00',
   },
 })
 
@@ -126,6 +149,9 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           } else if (tagFlags['routing glitch']) {
             icon = <ErrorIcon titleAccess='Routing Glitch'/>
             statusClasses.error = true
+          } else if (tagFlags['client approved']) {
+            icon = <CheckCircleIcon titleAccess='Client Approved'/>
+            statusClasses.clientApproved = true
           } else if (tagFlags.validated) {
             icon = <CheckCircleIcon titleAccess='Validated'/>
             statusClasses.validated = true
@@ -138,8 +164,9 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           } else {
             icon = <CheckBoxOutlineBlankIcon/>
           }
-          const iconClasses = {}, textClasses = {}
+          const menuClasses = {}, iconClasses = {}, textClasses = {}
           Object.keys(statusClasses).forEach(statusClass => {
+            menuClasses[classes[`${statusClass}Menu`]] = true
             iconClasses[classes[`${statusClass}Icon`]] = true
             textClasses[classes[`${statusClass}Text`]] = true
           })
@@ -148,7 +175,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
             const value = item.get('value')
             secondaryItems.push(`${name}=${value}`)
           })
-          return <MenuItem key={id} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>
+          return <MenuItem key={id} classes={{root: classes.menuItemRoot, selected: classes.menuItemSelected}} className={classnames(menuClasses)} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>
             <ListItemIcon className={classnames(iconClasses)}>{icon}</ListItemIcon>
             <ListItemText classes={{primary: classnames(textClasses)}} primary={label} secondary={secondaryItems.join(' ')}/>
           </MenuItem>

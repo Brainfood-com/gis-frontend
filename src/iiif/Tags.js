@@ -17,6 +17,7 @@ export const commonTagDefinitions = {
   PLACED: {roles: ['editor'], label: 'Placed'},
   VALIDATED: {roles: ['editor'], label: 'Validated'},
   BROKEN_IMAGE: {roles: ['editor'], label: 'Broken Image'},
+  CLIENT_APPROVED: {roles: ['client'], label: 'Client Approved'},
 }
 
 const styles = theme => {

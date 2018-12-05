@@ -56,6 +56,7 @@ const rangeTagSuggestions = [
   commonTagDefinitions.NEEDS_REVIEW,
   commonTagDefinitions.PLACED,
   commonTagDefinitions.VALIDATED,
+  commonTagDefinitions.CLIENT_APPROVED,
 ]
 
 function getDerivedStateFromProps(props, state) {
