@@ -18,6 +18,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
+import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 const collectionFormStyles = {
@@ -37,7 +38,7 @@ function getDerivedStateFromProps(props, state) {
   return {collection: collection instanceof imMap ? collection.toJS() : collection}
 }
 
-export const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
+export const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
   static defaultProps = {
     updateCollection(id, data) {},
   }
@@ -59,6 +60,14 @@ export const CollectionForm = flow(withStyles(collectionFormStyles))(class Colle
     }
   }
 
+  skipChange = (name, value, checked) => {
+    if (name === 'tags') {
+      return false
+    }
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'collection', name)
+  }
+
   render() {
     const {className, classes, onRemoveOverride} = this.props
     const {collection} = this.state
@@ -69,7 +78,7 @@ export const CollectionForm = flow(withStyles(collectionFormStyles))(class Colle
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='collection' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

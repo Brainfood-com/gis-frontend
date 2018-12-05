@@ -1,3 +1,4 @@
+import flow from 'lodash-es/flow'
 import React from 'react'
 
 import AwesomeMarkers from '../leaflet/AwesomeMarkers'
@@ -7,6 +8,7 @@ import RotatableMarker from './RotatableMarker'
 
 import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
+import {checkPermissions, picked as userPicked} from '../User'
 import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
 
 const overriddenIcon = AwesomeMarkers.icon({
@@ -42,7 +44,7 @@ const iconChooser = {
   },
 }
 
-export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDispatchToProps: apiRedux.mapDispatchToProps})(class DraggableCanvasPosition extends React.Component {
+export default flow(userPicked('permissions'), connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDispatchToProps: apiRedux.mapDispatchToProps}))(class DraggableCanvasPosition extends React.Component {
   static defaultProps = {
     onUpdatePoint(id, point) { },
     onCanvasSelect(id) { },
@@ -54,6 +56,11 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     this.state = {
       dragLatLng: null,
     }
+  }
+
+  skipChange = name => {
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'canvas', name)
   }
 
   handleOnClick = event => {
@@ -100,12 +107,13 @@ export default connectHelper({mapStateToProps: apiRedux.mapStateToProps, mapDisp
     //rotationAngle={hasOverridePoint ? 180 : 0}
     const rotationAngle = bearing + (fovOrientation === 'left' ? 90 : -90)
 
+    const isDraggable = (isFullOpacity || !isHidden) && !this.skipChange('override')
     return <FeatureGroup>
       <CanvasDragResult target={dragLatLng}/>
       <RotatableMarker
         icon={markerIcon}
         rotationAngle={rotationAngle}
-        draggable={isFullOpacity || !isHidden}
+        draggable={isDraggable}
         opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
         position={getGeoJSONPoint(point)}
         onClick={this.handleOnClick}

@@ -17,6 +17,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
+import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 
 const manifestFormStyles = {
@@ -36,7 +37,7 @@ function getDerivedStateFromProps(props, state) {
   return {manifest: manifest instanceof imMap ? manifest.toJS() : manifest}
 }
 
-export const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
+export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
     updateManifest(id, data) {},
   }
@@ -58,6 +59,14 @@ export const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestF
     }
   }
 
+  skipChange = (name, value, checked) => {
+    if (name === 'tags') {
+      return false
+    }
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'manifest', name)
+  }
+
   render() {
     const {className, classes, onRemoveOverride} = this.props
     const {manifest} = this.state
@@ -68,7 +77,7 @@ export const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestF
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='manifest' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

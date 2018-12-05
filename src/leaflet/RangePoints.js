@@ -67,7 +67,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
         const rangePoint = points.get(id)
         const isFirst = index === 0
         const isLast = index === notNullCanvases.length - 1
-        return <DraggableCanvasPosition key={id} zoom={zoom} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
+        return <DraggableCanvasPosition key={id} zoom={zoom} range={range} canvas={canvas} rangePoint={rangePoint} allPoints={allPoints} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
 
       })}
     </FeatureGroup>

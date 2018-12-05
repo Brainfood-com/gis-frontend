@@ -24,6 +24,7 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
 import DebouncedForm from '../DebouncedForm'
+import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList} from '../constants'
 
@@ -62,7 +63,7 @@ function getDerivedStateFromProps(props, state) {
   return {range: range instanceof imMap ? range.toJS() : range}
 }
 
-export const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
+export const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {
     updateRange(id, data) {},
   }
@@ -84,6 +85,15 @@ export const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm exten
     if (currentValue !== processedValue) {
       updateRange(range.id, {[name]: processedValue})
     }
+  }
+
+  skipChange = (name, value, checked) => {
+    if (name === 'tags') {
+      debugger
+      return false
+    }
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'range', name)
   }
 
   render() {
@@ -115,7 +125,7 @@ export const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm exten
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

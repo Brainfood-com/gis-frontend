@@ -47,6 +47,7 @@ import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 import {createScrollHandler} from '../ScrollHelper'
+import {checkPermissions, picked as userPicked} from '../User'
 
 export function handleCanvasNext(event, onCanvasNext) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -280,7 +281,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   connectDragSource: connect.dragSource(),
   connectDragPreview: connect.dragPreview(),
   isDragging: monitor.isDragging(),
-})), withStyles(canvasCardBaseStyles))(class CanvasCardBase extends React.Component {
+})), userPicked('permissions'), withStyles(canvasCardBaseStyles))(class CanvasCardBase extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
     onInspectClose() {},
@@ -316,6 +317,11 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     this.setState({loading: false})
   }
 
+  skipChange = name => {
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'canvas', name)
+  }
+
   handleOnClick = event => {
     const {onItemPicked} = this.props
     const {canvas} = this.state
@@ -326,6 +332,9 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     const {updateCanvas} = this.props
     const {canvas} = this.state
     const {name, value, checked} = event.currentTarget
+    if (this.skipChange(name)) {
+      return
+    }
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const currentValue = canvas[name]
     const processedValue = inputProcessor(value, !currentValue)
@@ -355,6 +364,9 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   handleRemoveOverride = (event) => {
     const {range, deleteRangePoint} = this.props
     const {canvas} = this.state
+    if (this.skipChange('override')) {
+      return
+    }
     deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
   }
 
@@ -418,7 +430,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={inspectCanvas || canvas} onCanvasNext={onCanvasNext}/>
       <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} canvas={canvas}/>
     </div>
-    return isDraggable ? connectDragSource(result) : result
+    return isDraggable && !this.skipChange('override') ? connectDragSource(result) : result
   }
 })
 
@@ -594,7 +606,7 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
+export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -627,7 +639,18 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
     }
   }
 
+  skipChange = (name, value, checked) => {
+    if (name === 'tags') {
+      return false
+    }
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', 'canvas', name)
+  }
+
   handleRemoveOverride = (event) => {
+    if (this.skipChange('override')) {
+      return
+    }
     const {range, deleteRangePoint} = this.props
     const {canvas} = this.state
     deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
@@ -667,7 +690,7 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
