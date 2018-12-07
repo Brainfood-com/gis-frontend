@@ -23,7 +23,7 @@ const styles = {
       flex: 1,
       flexBasis: 'auto',
     },
-    height: '100%',
+    //maxHeight: '100%',
   },
 }
 class GISResultsTaxdata extends React.Component {

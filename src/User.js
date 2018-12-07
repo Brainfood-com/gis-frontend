@@ -27,6 +27,8 @@ export const MODEL = Enum(
 
 const constantPermissions = {
   editor: imSet.of(
+    'iiif_tree',
+    'iiif_canvas_sliding_list',
     'editor_collection_notes',
     'editor_collection_tags',
     'freeform_collection_tags',
@@ -45,14 +47,23 @@ const constantPermissions = {
     'editor_canvas_override',
     'editor_canvas_tags',
     'freeform_canvas_tags',
+    'search_map',
+    'search_results',
   ).sort(),
   client: imSet.of(
+    'iiif_tree',
+    'iiif_canvas_sliding_list',
     'client_collection_tags',
     'client_manifest_tags',
     'client_range_tags',
     'client_canvas_tags',
+    'search_map',
+    'search_results',
   ).sort(),
   anonymous: imSet.of(
+    'iiif_canvas_sliding_list',
+    'search_map',
+    'search_results',
   ).sort(),
 }
 
@@ -64,6 +75,9 @@ const defaultState = immutableEmptyMap.withMutations(map => {
 })
 
 export function checkPermissions(permissions, role, model, attr) {
+  if (role === null) {
+    return permissions.has(`${model}_${attr}`)
+  }
   return permissions.has(`${role}_${model}_${attr}`)
 }
 

@@ -13,6 +13,7 @@ import {CurrentBuildingInfo} from './GISSearch'
 
 import {CanvasSlidingList} from './iiif/Canvas'
 import {IIIFTree} from './IIIF'
+import {checkPermissions, picked as userPicked} from './User'
 
 /*
  *  /---------------+--------\
@@ -33,12 +34,12 @@ const styles = {
     height: '100%',
   },
   mapViewLeft: {
-    width: '20%',
+    //width: '20%',
     maxWidth: '20%',
     height: 'auto',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'scroll',
+    overflowY: 'auto',
   },
   mapViewMiddle: {
     display: 'flex',
@@ -52,7 +53,8 @@ const styles = {
   mapViewRight: {
     maxWidth: '25%',
     //minWidth: 100,
-    overflowY: 'scroll',
+    overflowY: 'auto',
+    overflowX: 'auto',
   },
   mapViewBottom: {
     display: 'flex',
@@ -79,29 +81,43 @@ const styles = {
     width: '20%',
     minWidth: 100,
   },
+  hasIIIFTree: {},
+  hasIIIFCanvasSlidingList: {},
+  hasSearchMap: {},
+  hasSearchResults: {},
 }
 class GISControl extends React.Component {
   render() {
-    const {children, classes} = this.props
-    return <div className={classes.root}>
+    const {children, classes, permissions} = this.props
+    const hasIIIFTree = checkPermissions(permissions, null, 'iiif', 'tree')
+    const hasIIIFCanvasSlidingList = checkPermissions(permissions, null, 'iiif', 'canvas_sliding_list')
+    const hasSearchMap = checkPermissions(permissions, null, 'search', 'map')
+    const hasSearchResults = checkPermissions(permissions, null, 'search', 'results')
+    const rootClasses = {
+      [classes.hasIIIFTree]: hasIIIFTree,
+      [classes.hasIIIFCanvasSlidingList]: hasIIIFCanvasSlidingList,
+      [classes.hasSearchResults]: hasSearchResults,
+    }
+    console.log('gis-control', {foo: permissions.toJS(), hasIIIFTree, hasIIIFCanvasSlidingList, hasSearchResults})
+    return <div className={classnames(classes.root, rootClasses)}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>
-          <IIIFTree/>
+          {hasIIIFTree ? <IIIFTree/> : null}
         </div>
         <div className={classes.mapViewMiddle}>
-          <GISMap/>
+          {hasSearchMap ? <GISMap/> : null}
         </div>
         <div className={classes.mapViewRight}>
-          <CurrentBuildingInfo/>
+          {hasSearchResults ? <CurrentBuildingInfo/> : null}
         </div>
       </div>
       <div className={classes.mapViewBottom}>
         <div className={classes.mapViewBottomLeft}>
-          <CanvasSlidingList/>
+          {hasIIIFCanvasSlidingList ? <CanvasSlidingList/> : null}
         </div>
       </div>
     </div>
   }
 }
 
-export default flow(withStyles(styles))(GISControl)
+export default flow(userPicked('permissions'), withStyles(styles))(GISControl)
