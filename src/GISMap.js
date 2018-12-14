@@ -98,7 +98,6 @@ const overlayLayers = [
   {name: 'sunset_road_reduced-json', workspace: 'gis', layers: 'gis:sunset_road_reduced', type: 'geojson', checked: false},
   {name: 'sunset_road_problems-json', workspace: 'gis', layers: 'gis:sunset_road_problems', type: 'geojson', checked: false},
 //  {name: 'sunset_road_debug-json', workspace: 'gis', layers: 'gis:sunset_road_debug', type: 'geojson', checked: false, positioned: false},
-//  {name: 'sunset_road_merged-json', workspace: 'gis', layers: 'gis:sunset_road_merged', type: 'geojson', future: roadLine, checked: true,},
 //  {name: 'sunset_taxdata_2017-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017', type: 'geojson'},
 //  {name: 'sunset_taxdata_2017_buildings-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017_buildings', type: 'geojson'},
 ]
@@ -307,10 +306,6 @@ class GISMap extends React.Component {
       zoom: 11,
       ...this.processProps(props, {zoom: 11}),
     }
-    this.roadLine = geoserverUtil.fetch({server: 'app', workspace: 'gis', typeName: 'gis:sunset_road_merged'})
-    this.roadLine.then(({data, allSegments, allPoints, totalLength}) => {
-      this.setState({data, allSegments, allPoints, totalLength})
-    })
     this.iiifCanvasListLayer = L.geoJSON([], {
     })
   }
