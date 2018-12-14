@@ -17,6 +17,7 @@ import leafletMarkerIconShadow from 'leaflet/dist/images/marker-shadow.png'
 import CameraPosition from './leaflet/CameraPosition'
 import ViewGeoJSON from './leaflet/ViewGeoJSON'
 import CanvasDropTarget from './leaflet/CanvasDropTarget'
+import {MapAddresses} from './GISSearch'
 
 L.Marker.prototype.options.icon = L.icon({
   ...L.Icon.Default.prototype.options,
@@ -381,6 +382,9 @@ class GISMap extends React.Component {
           </LayersControl.Overlay>
           <LayersControl.Overlay name='view' checked={false}>
             <ViewGeoJSON/>
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name='search-addresses' checked={true}>
+            <MapAddresses/>
           </LayersControl.Overlay>
 			 	</LayersControl>
         <CameraPosition zoom={zoom}/>

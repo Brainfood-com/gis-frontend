@@ -9,6 +9,7 @@ import MenuIcon from '@material-ui/icons/Menu'
 import Toolbar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
 
+import { Search } from './GISSearch'
 import Stats from './Stats'
 
 const styles = {
@@ -55,7 +56,8 @@ class Page extends React.Component {
 					<IconButton className={classes.menuButton} color='inherit' aria-label='Menu'>
             <MenuIcon />
           </IconButton>
-          <Typography className={classes.grow} variant='title'>GIS</Typography>
+          <Typography variant='title'>GIS</Typography>
+          <Search className={classes.grow}/>
           <Stats/>
         </Toolbar>
       </AppBar>

@@ -12,6 +12,7 @@ import GISDragLayer from './GISDragLayer'
 import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux'
 import {reducer as itemPanelReducer} from './ItemPanel'
 import {reducer as applicationReducer} from './application-redux'
+import { reducer as gisSearchReducer } from './GISSearch'
 import * as apiRedux from './api/redux'
 import {GlobalBusy} from './GlobalBusy'
 
@@ -30,6 +31,7 @@ export const store = createStore(
     iiif: iiifReducer,
     panel: itemPanelReducer,
     geoserver: apiRedux.reducer,
+    search: gisSearchReducer,
   }),
   enhancer
 )
