@@ -299,12 +299,20 @@ class WithinAccuracy extends React.Component {
 }
 //261741105 220044581
 
+const dallas_center = [32.781132, -96.797271]
+const la_center = [34.0522, -118.2437]
+
 class GISMap extends React.Component {
+  static defaultProps = {
+    position: la_center,
+  }
+
   constructor(props) {
     super(props)
     this.state = {
       zoom: 11,
       ...this.processProps(props, {zoom: 11}),
+      center: la_center
     }
     this.iiifCanvasListLayer = L.geoJSON([], {
     })
@@ -326,10 +334,9 @@ class GISMap extends React.Component {
 
   processProps(props, prevState) {
     const {position, canvasList} = props
-    const {zoom} = prevState
     const nextState = {}
     if (prevState.position !== position) {
-      nextState.position = position
+      nextState.position = nextState.center = position
     }
     return nextState
   }
@@ -339,7 +346,7 @@ class GISMap extends React.Component {
   }
 
   onViewportChange = ({center, zoom}) => {
-    this.setState({zoom})
+    this.setState({center, zoom})
     // 14 = 26
     // 15 = 35
     // 16 = 50
@@ -355,14 +362,12 @@ class GISMap extends React.Component {
 
   render() {
     const {classes} = this.props
-    const {data, allPoints, zoom} = this.state
+    const {data, allPoints, center, zoom} = this.state
 
-		const dallas_center = [32.781132, -96.797271]
-		const la_center = [34.0522, -118.2437]
 
         //<CanvasDragResult target={dragLatLng}/>
     return <div className={classes.root}>
-      <Map className={classes.map} center={la_center} zoom={11} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
+      <Map className={classes.map} center={center} zoom={zoom} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
         <CanvasDropTarget/>
         <ScaleControl/>
 			 	<LayersControl>
