@@ -50,7 +50,7 @@ const styles = {
   },
   mapViewRight: {
     maxWidth: '25%',
-    minWidth: 100,
+    //minWidth: 100,
     overflowY: 'scroll',
   },
   mapViewBottom: {
@@ -91,7 +91,6 @@ class GISControl extends React.Component {
           <GISMap/>
         </div>
         <div className={classes.mapViewRight}>
-          <GISResultsPane/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>

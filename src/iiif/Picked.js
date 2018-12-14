@@ -72,7 +72,7 @@ export const picked = picked => Component => {
         if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
           dispatch(iiifRedux.pick(primaryPick, id))
         }
-        dispatch(iiifRedux.getBuilding(id))
+        //dispatch(iiifRedux.getBuilding(id))
       }
       break
   }

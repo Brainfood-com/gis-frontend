@@ -227,7 +227,7 @@ export const startOfDay = () => async (dispatch, getState) => {
     manifest: [getManifest, getManifestStructures],
     range: [getRange, getRangePoints],
     canvas: [getCanvas],
-    pickedBuilding: [getBuilding],
+    pickedBuilding: [/*getBuilding*/],
   })
   dispatch(getStats('range'))
 }
