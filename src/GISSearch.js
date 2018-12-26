@@ -183,7 +183,7 @@ const searchStyles = theme => ({
 
 export const Search = flow(withStyles(searchStyles), pick('search'))(class Search extends React.Component {
   state = {
-    address: null,
+    address: '',
   }
 
   handleOnKeyPress = event => {
@@ -221,10 +221,10 @@ export const Search = flow(withStyles(searchStyles), pick('search'))(class Searc
         onKeyPress={this.handleOnKeyPress}
         InputProps={{
           startAdornment: <InputAdornment position='start'>
-            <IconButton className={classes.searchButton} mini variant='fab' name='search' onClick={this.handleSearch}><SearchIcon/></IconButton>
+            <IconButton className={classes.searchButton} name='search' onClick={this.handleSearch}><SearchIcon/></IconButton>
           </InputAdornment>,
           endAdornment: <InputAdornment position='end'>
-            <IconButton className={classes.settingsButton} mini variant='fab' name='facets'><SettingsIcon/></IconButton>
+            <IconButton className={classes.settingsButton} name='facets'><SettingsIcon/></IconButton>
           </InputAdornment>,
         }}
       />
@@ -364,7 +364,7 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
         doneChoropleth={doneChoropleth}
         showBuilding={this.handleShowBuilding}
         isSelected={building.buildingId === requestCurrentBuilding}
-        />)}
+        />).toIndexedSeq()}
     </FeatureGroup>
   }
 })
