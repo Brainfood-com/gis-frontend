@@ -7,6 +7,7 @@ import {decrBusy as globalDecrBusy, incrBusy as globalIncrBusy} from '../applica
 import {makeUrl} from '../api'
 import {immutableEmptyMap, immutableEmptyOrderedMap} from '../constants'
 import {getStats} from './stats'
+import { refreshBuildings as searchRefreshBuildings } from '../GISSearch'
 
 export const ACTION = Enum(
   'set',
@@ -376,6 +377,7 @@ export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fo
   dispatch(getRange(rangeId))
   dispatch(getRangePoints(rangeId))
   dispatch(getStats('range'))
+  dispatch(searchRefreshBuildings({rangeId}))
 })
 
 const REGEXES = [
@@ -455,6 +457,7 @@ export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) =>
       dispatch(getRangePoints(rangeId))
     }
     dispatch(getCanvas(canvasId))
+    dispatch(searchRefreshBuildings({rangeId}))
   }
 })
 
@@ -468,6 +471,7 @@ export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => dispatch => b
       dispatch(getRangePoints(rangeId))
     }
     dispatch(getCanvas(canvasId))
+    dispatch(searchRefreshBuildings({rangeId}))
   }
 })
 
@@ -476,4 +480,7 @@ export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatc
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasDetail})
 }))
 
-export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), getCanvas)
+export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), id => dispatch => {
+  dispatch(getCanvas(id))
+  dispatch(searchRefreshBuildings())
+})
