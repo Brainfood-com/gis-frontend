@@ -68,10 +68,8 @@ export function reducer(state = defaultState, {type, action, ...rest}) {
             oldIds[key] = true
           }
         }
-        console.log('oldIds/newIds', {oldIds, newIds})
         map.merge(buildings)
         for (const key of Object.keys(oldIds).sort()) {
-          console.log('deleting', key)
           map.delete(key)
         }
       })
