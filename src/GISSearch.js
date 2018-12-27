@@ -7,12 +7,16 @@ import classnames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
 
 import TextField from '@material-ui/core/TextField'
+import CloseIcon from '@material-ui/icons/Close'
 import SettingsIcon from '@material-ui/icons/Settings'
 import SearchIcon from '@material-ui/icons/Search'
 import IconButton from '@material-ui/core/IconButton'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import InputAdornment from '@material-ui/core/InputAdornment'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemText from '@material-ui/core/ListItemText'
 
 import { FeatureGroup, GeoJSON, Popup, PropTypes as LeafletPropTypes } from 'react-leaflet'
 
@@ -25,12 +29,16 @@ const ACTION = Enum(
   'clear',
   'setAddresses',
   'setBuildings',
+  'requestCurrentBuilding',
+  'setCurrentBuilding',
 )
 
 const defaultState = immutableEmptyMap.withMutations(map => {
   map.set('addresses', immutableEmptyList)
   map.set('buildings', immutableEmptyMap)
   map.set('buildingStats', fromJS({rangeCount: {}, canvasCount: {}, claimedCount: {}, placedCount: {}}))
+  map.set('requestCurrentBuilding', null)
+  map.set('currentBuilding', null)
 })
 
 function adjustMinMax(stat, value) {
@@ -89,6 +97,21 @@ export function reducer(state = defaultState, {type, action, ...rest}) {
         })),
       })
       break
+    case ACTION.requestCurrentBuilding:
+      state = state.set('requestCurrentBuilding', rest.requestCurrentBuilding)
+      break
+    case ACTION.setCurrentBuilding:
+      const {currentBuilding} = rest
+      if (currentBuilding !== null) {
+        const {building: {id}} = currentBuilding
+        const requestCurrentBuilding = state.get('requestCurrentBuilding')
+        if (id === requestCurrentBuilding) {
+          state = state.set('currentBuilding', currentBuilding)
+        }
+      } else {
+        state = state.set('currentBuilding', currentBuilding)
+      }
+      break
   }
   return state
 }
@@ -141,7 +164,11 @@ const pick = (...picked) => Component => {
   picked.forEach(item => {
     switch (item) {
       case 'buildings':
+        mapDispatchToProps.showBuilding = showBuilding
         break
+      case 'currentBuilding':
+        mapDispatchToProps.clearCurrentBuilding = clearCurrentBuilding
+        break;
       case 'search':
         mapDispatchToProps.doSearch = doSearch
         break
@@ -160,12 +187,75 @@ const pick = (...picked) => Component => {
           result.buildings = search.get('buildings')
           result.buildingStats = search.get('buildingStats')
           break
+        case 'currentBuilding':
+          const requestCurrentBuilding = search.get('requestCurrentBuilding')
+          const currentBuilding = search.get('currentBuilding') || {}
+          if (requestCurrentBuilding !== null && (currentBuilding.building || {}).id === requestCurrentBuilding) {
+            result.currentBuilding = currentBuilding
+          }
+          break;
       }
     })
     return result
   }
 
   return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
+}
+
+export const showBuilding = id => async (dispatch, getState) => {
+  console.log('showBuilding', id)
+  dispatch({
+    type: 'gis-search',
+    action: ACTION.requestCurrentBuilding,
+    requestCurrentBuilding: id,
+  })
+  const searchURL = new URL(makeUrl('api', 'buildings'))
+  searchURL.search = new URLSearchParams({id})
+
+  const building = (await fetch(searchURL.toString()).then(data => data.json()))[0]
+  console.log('building', building)
+  const canvasesURL = new URL(makeUrl('api', 'buildings/' + id + '/canvases'))
+  const canvases = await fetch(canvasesURL.toString()).then(data => data.json())
+
+  const canvasesByRange = canvases.reduce((result, canvas) => {
+    const {range_id: rangeId} = canvas
+    const rangeCanvases = result[rangeId] || (result[rangeId] = [])
+    rangeCanvases.push(canvas)
+    return result
+  }, {})
+
+  const ranges = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json()).then(data => data[0])))
+
+  //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
+
+  //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail.structures})
+  //rangeDetail.ranges = rangeDetail.ranges.map(range => range.id)
+  dispatch({
+    type: 'gis-search',
+    action: ACTION.setCurrentBuilding,
+    currentBuilding: {
+      building,
+      canvases,
+      canvasesByRange: Object.entries(canvasesByRange).reduce((canvasesByRange, [rangeId, canvases]) => {
+        canvasesByRange[rangeId] = canvases.map(canvas => canvas.iiif_id)
+        return canvasesByRange
+      }, {}),
+      primaryCanvasByRange: Object.entries(canvasesByRange).reduce((primaryCanvasByRange, [rangeId, canvases]) => {
+        const distanceSortedCanvases = [].concat(canvases).sort((a, b) => a.point_building_distance - b.point_building_distance)
+        primaryCanvasByRange[rangeId] = distanceSortedCanvases[0]
+        return primaryCanvasByRange
+      }, {}),
+      ranges,
+    },
+  })
+}
+
+export const clearCurrentBuilding = () => async dispatch => {
+  dispatch({
+    type: 'gis-search',
+    action: ACTION.setCurrentBuilding,
+    currentBuilding: null,
+  })
 }
 
 const searchStyles = theme => ({
@@ -291,6 +381,10 @@ function makeChoropleth(scheme, min, max) {
 const MapBuilding = class MapBuilding extends React.Component {
   state = {buildingPoint: null}
 
+  static defaultProps = {
+    showBuilding(buildingId) {},
+  }
+
   static getDerivedStateFromProps(props, state) {
     const {isSelected} = props
     if (isSelected) {
@@ -301,6 +395,12 @@ const MapBuilding = class MapBuilding extends React.Component {
     } else {
       return {buildingPoint: null}
     }
+  }
+
+  handleOnClick = event => {
+    const {building, showBuilding} = this.props
+    const {buildingId} = building
+    showBuilding(buildingId)
   }
 
   render() {
@@ -319,7 +419,7 @@ const MapBuilding = class MapBuilding extends React.Component {
         position={buildingPoint}
         />
       }
-      <GISGeoJSON data={geojson} style={buildingStyle}/>
+      <GISGeoJSON data={geojson} style={buildingStyle} onClick={this.handleOnClick}/>
     </FeatureGroup>
   }
 }
@@ -350,7 +450,6 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     showBuilding(buildingId)
   }
 
-
   render() {
     const {className, classes, buildings, buildingStats, requestCurrentBuilding} = this.props
     const {rangeChoropleth, canvasChoropleth, doneChoropleth} = this.state
@@ -364,6 +463,61 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
         isSelected={building.buildingId === requestCurrentBuilding}
         />).toIndexedSeq()}
     </FeatureGroup>
+  }
+})
+
+const currentBuildingInfoStyles = {
+  root: {
+  },
+}
+
+class Taxdata extends React.Component {
+  handleOnClose = ev => {
+    const {clearCurrentBuilding} = this.props
+    clearCurrentBuilding()
+  }
+
+  render() {
+    const {taxdata} = this.props
+    console.log('taxdata', taxdata)
+    if (!taxdata) {
+      return <div />
+    }
+    return <List dense={true}>
+      <ListItem disableGutters>
+        <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemText primary={`AIN: ${taxdata.ain}`}/>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemText primary={`Effective Year Built: ${taxdata.effective_year_built}`}/>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemText primary={`Location: ${taxdata.property_location}`}/>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemText primary={`Land Value: ${taxdata.land_value}`}/>
+      </ListItem>
+    </List>
+  }
+}
+
+export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), pick('currentBuilding'))(class CurrentBuildingInfo extends React.Component {
+  render() {
+    const {classes, clearCurrentBuilding, currentBuilding} = this.props
+    if (!currentBuilding) {
+      return <div />
+    }
+    const {
+      building: {taxdata},
+      ranges,
+      canvasesByRange,
+      primaryCanvasByRange,
+    } = currentBuilding
+    return <div className={classes.root}>
+      <Taxdata taxdata={taxdata} clearCurrentBuilding={clearCurrentBuilding}/>
+    </div>
   }
 })
 

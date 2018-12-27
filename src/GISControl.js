@@ -9,6 +9,7 @@ import Button from '@material-ui/core/Button'
 
 import GISMap from './GISMap'
 import GISResultsPane from './GISResultsPane'
+import {CurrentBuildingInfo} from './GISSearch'
 
 import {CanvasSlidingList} from './iiif/Canvas'
 import {IIIFTree} from './IIIF'
@@ -91,6 +92,7 @@ class GISControl extends React.Component {
           <GISMap/>
         </div>
         <div className={classes.mapViewRight}>
+          <CurrentBuildingInfo/>
         </div>
       </div>
       <div className={classes.mapViewBottom}>
