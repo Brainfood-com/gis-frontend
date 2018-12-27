@@ -270,14 +270,18 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     isDraggable: false,
   }
 
-  constructor(props) {
-    super(props)
+  state = {
+    loading: true,
+    infoDialogOpen: false,
+    inspectDialogOpen: false,
+  }
+
+  static getDerivedStateFromProps(props, state) {
     const {canvas} = props
-    this.state = {
-      loading: true,
-      image: canvas ? canvas.get('image') : null,
-      infoDialogOpen: false,
-      inspectDialogOpen: false,
+    const image = canvas ? canvas.get('image') : null
+    return {
+      image,
+      loading: state.image !== image,
     }
   }
 
@@ -299,14 +303,6 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
 
   handleOnLoad = event => {
     this.setState({loading: false})
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {canvas} = nextProps
-    const image = canvas ? canvas.get('image') : null
-    if (this.state.image !== image) {
-      this.setState({image, loading: true})
-    }
   }
 
   handleOnClick = event => {
@@ -532,20 +528,13 @@ export const CanvasStreetView = flow(picked(['range']), withStyles(canvasStreetV
     onItemPicked(id) {},
   }
 
-  constructor(props) {
-    super(props)
+  state = {}
+
+  static getDerivedStateFromProps(props, state) {
     const {canvas, points} = props
     const rangePoint = points && canvas && points.get(canvas.get('id'))
-    this.state = {
-      rangePoint: rangePoint,
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {points, canvas} = nextProps
-    const rangePoint = points && canvas && points.get(canvas.get('id'))
-    if (this.state.rangePoint !== rangePoint) {
-      this.setState({rangePoint})
+    return {
+      rangePoint,
     }
   }
 
