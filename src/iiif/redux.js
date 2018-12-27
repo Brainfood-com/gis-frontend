@@ -3,6 +3,7 @@ import {fromJS} from 'immutable'
 
 import GeometryUtil from 'leaflet-geometryutil'
 
+import history from '../history'
 import {decrBusy as globalDecrBusy, incrBusy as globalIncrBusy} from '../application-redux'
 import {makeUrl} from '../api'
 import {immutableEmptyMap, immutableEmptyOrderedMap} from '../constants'
@@ -219,7 +220,11 @@ export const pickMany = toPick => async (dispatch, getState) => {
       return needsUnset
     }
   }, false)
-
+  function getExternalId(canvasId) {
+    return getState().iiif.getIn([MODEL['canvas'], canvasId, 'externalId'])
+  }
+  const existingCanvasId = getModelId('canvas')
+  const existingExternalId = getExternalId(existingCanvasId)
   const outstandingFetchers = []
   for (const {modelType, needsUnset, id} of modelTypeValues) {
     const currentId = getModelId(modelType)
@@ -241,7 +246,21 @@ export const pickMany = toPick => async (dispatch, getState) => {
       // TODO: unset items from redux
     }
   }
+  const pickedCanvasId = getModelId('canvas')
   await Promise.all(outstandingFetchers.map(dispatch))
+  const currentCanvasId = getModelId('canvas')
+  // check if we have been asked to change the canvas, and then make
+  // certain nothing else has changed it in the interim
+  if (existingCanvasId !== pickedCanvasId && pickedCanvasId === currentCanvasId) {
+    const currentExternalId = getExternalId(currentCanvasId)
+    if (existingExternalId !== currentExternalId) {
+      if (currentExternalId) {
+        history.replace(`/iiif?externalId=${encodeURIComponent(currentExternalId)}`)
+      } else {
+        history.replace('/')
+      }
+    }
+  }
 }
 
 export const startOfDay = () => async (dispatch, getState) => {
@@ -258,6 +277,31 @@ export const startOfDay = () => async (dispatch, getState) => {
   const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
   await dispatch(pickMany(picked))
   await dispatch(getStats('range'))
+}
+
+export const detectAndPick = context => async (dispatch, getState) => {
+  const {iiifId, externalId} = context
+  const typeInfo = await fetch(makeUrl('api', 'iiif/detectType'), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({iiifId, externalId}),
+  }).then(data => data.json())
+  const {allParents, iiifTypeId} = typeInfo
+  const toPick = {}
+  for (const modelName of modelOrder) {
+    const {[modelName]: [modelParentId] = []} = allParents
+    if (modelParentId) {
+      toPick[modelName] = modelParentId
+      if (modelName === iiifTypeId) {
+        break
+      }
+    } else {
+      break
+    }
+  }
+  await dispatch(pickMany(toPick))
 }
 
 const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async (dispatch, getState) => {

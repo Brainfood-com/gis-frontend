@@ -15,10 +15,10 @@ import {reducer as applicationReducer} from './application-redux'
 import { reducer as gisSearchReducer, startOfDay as searchStartOfDay } from './GISSearch'
 import * as apiRedux from './api/redux'
 import {GlobalBusy} from './GlobalBusy'
+import history from './history'
 
 import App from './App'
 
-const history = createHistory()
 const middleware = routerMiddleware(history)
 const enhancer = compose(
   applyMiddleware(middleware, thunk),

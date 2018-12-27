@@ -1,6 +1,7 @@
 import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
+import {Link} from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import List from '@material-ui/core/List'
@@ -13,6 +14,7 @@ import Dialog from '@material-ui/core/Dialog'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import AppBar from '@material-ui/core/AppBar'
+import LinkIcon from '@material-ui/icons/Link'
 import CloseIcon from '@material-ui/icons/Close'
 import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
@@ -405,6 +407,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       <div className={classes.lowerLeft}>
         <div className={classes.lowerLeftContent}>
           <Button className={classes.lowerLeftItem} mini variant='fab' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Button>
+          <Button className={classes.lowerLeftItem} mini variant='fab' name='link' component={Link} replace to={`/iiif?externalId=${encodeURIComponent(canvas.externalId)}`} onClick={this.handleOnClick}><LinkIcon titleAccess='Link' className={classes.linkIcon}/></Button>
         </div>
       </div>
       <div className={classes.lowerRight}>
