@@ -68,7 +68,8 @@ const styles = theme => {
 
 function applyTagMutation(props, mutator) {
   const {name, onChange, value} = props
-  const newValue = mutator(value)
+  const newValue = [].concat(value)
+  mutator(newValue)
   onChange({currentTarget: {name, value: newValue}})
 }
 
@@ -79,7 +80,7 @@ class IIIFTagEditor extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     suggestions: PropTypes.arrayOf(PropTypes.string),
-    value: PropTypes.instanceOf(immutableEmptyList.constructor),
+    value: PropTypes.array,
     onChange: PropTypes.func,
   }
 
@@ -94,7 +95,7 @@ class IIIFTagEditor extends React.Component {
     if (value === undefined) {
       return {value: null, tags: null, suggestions: null, filteredSuggestions: []}
     }
-    const tags = value.toJS().sort().map(s => ({id: s, text: s}))
+    const tags = value.sort().map(s => ({id: s, text: s}))
     const suggestions = [].concat(props.suggestions).sort()
     if (tags === state.tags && suggestions == state.suggestions) {
       return {}
@@ -111,19 +112,20 @@ class IIIFTagEditor extends React.Component {
 
 	handleDelete = index => {
     applyTagMutation(this.props, tags => {
-      return tags.delete(index)
+      tags.splice(index, 1)
     })
   }
 
   handleAddition = tagObject => {
     applyTagMutation(this.props, tags => {
-      return tags.push(tagObject.id)
+      tags.push(tagObject.id)
     })
   }
 
   handleDrag = (tagObject, oldPosition, newPosition) => {
     applyTagMutation(this.props, tags => {
-      return tags.delete(oldPosition).insert(newPosition, tagObject.id)
+      tags.splice(oldPosition, 1)
+      tags.splice(newPosition, 0, tagObject.id)
     })
   }
 

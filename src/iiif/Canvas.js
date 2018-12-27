@@ -1,3 +1,4 @@
+import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -66,6 +67,17 @@ export function onCanvasNext(delta, {canvases, canvas, onItemPicked}) {
 }
 export function handleCanvasWheel({event, ...context}) {
   return handleCanvasNext(event, delta => onCanvasNext(delta, context))
+}
+
+function getDerivedStateFromProps(props, state = {}) {
+  const {canvas} = props
+  const newCanvas = canvas instanceof imMap ? canvas.toJS() : canvas
+  const image = newCanvas ? newCanvas.image : null
+  return {
+    canvas: newCanvas,
+    image,
+    loading: state.image !== image,
+  }
 }
 
 const canvasTagSuggestions = [
@@ -239,9 +251,12 @@ const canvasCardBaseStyles = {
 }
 
 const canvasHasOverride = canvas => {
-  if (canvas) {
+  if (canvas instanceof imMap) {
     const overrides = canvas.get('overrides')
     return overrides && !!overrides.find(override => override.get('point'))
+  } else {
+    const overrides = canvas.overrides
+    return overrides && !!overrides.find(override => override.point)
   }
   return false
 }
@@ -276,14 +291,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     inspectDialogOpen: false,
   }
 
-  static getDerivedStateFromProps(props, state) {
-    const {canvas} = props
-    const image = canvas ? canvas.get('image') : null
-    return {
-      image,
-      loading: state.image !== image,
-    }
-  }
+  static getDerivedStateFromProps = getDerivedStateFromProps
 
   componentDidMount() {
     const { connectDragPreview } = this.props
@@ -297,7 +305,8 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   handleOnWheel = createScrollHandler(delta => {
-    const {canvases, canvas, onItemPicked} = this.props
+    const {canvases, onItemPicked} = this.props
+    const {canvas} = this.state
     onCanvasNext(delta, {canvases, canvas, onItemPicked})
   })
 
@@ -306,17 +315,19 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   handleOnClick = event => {
-    const {canvas, onItemPicked} = this.props
-    onItemPicked(canvas.get("id"))
+    const {onItemPicked} = this.props
+    const {canvas} = this.state
+    onItemPicked(canvas.id)
   }
 
   handleOnToggleClick = event => {
-    const {canvas, updateCanvas} = this.props
+    const {updateCanvas} = this.props
+    const {canvas} = this.state
     const {name, value, checked} = event.currentTarget
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
-    const currentValue = canvas.get(name)
+    const currentValue = canvas[name]
     const processedValue = inputProcessor(value, !currentValue)
-    updateCanvas(canvas.get('id'), {[name]: processedValue})
+    updateCanvas(canvas.id, {[name]: processedValue})
   }
 
   handleOnInspectOpen = event => {
@@ -340,17 +351,18 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   handleRemoveOverride = (event) => {
-    const {range, canvas, deleteRangePoint} = this.props
-    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
+    const {range, deleteRangePoint} = this.props
+    const {canvas} = this.state
+    deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
   }
 
   render() {
-    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, canvas, points, selected, onCanvasNext, inspectCanvas} = this.props
-    const {inspectDialogOpen, infoDialogOpen, image, loading} = this.state
+    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, inspectCanvas} = this.props
+    const {inspectDialogOpen, infoDialogOpen, canvas, image, loading} = this.state
     if (!image) {
       return <div/>
     }
-    const rangePoint = points && canvas && points.get(canvas.get('id')) || {}
+    const rangePoint = points && canvas && points.get(canvas.id) || {}
     const {
       googleVision: {
         rgb: [
@@ -365,8 +377,8 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       [classes.readOnly]: readOnly,
       [classes.selected]: selected,
       [classes.override]: canvasHasOverride(canvas),
-      [classes.exclude]: canvas.get('exclude'),
-      [classes.hole]: canvas.get('hole'),
+      [classes.exclude]: canvas.exclude,
+      [classes.hole]: canvas.hole,
       [classes.loading]: loading,
       [classes.isDraggable]: isDraggable,
       [classes.isDragging]: isDragging,
@@ -415,28 +427,27 @@ export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(
     onClose(event, name) {},
   }
 
+  state = {}
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
   onClose = event => {
     this.props.onClose(event, this.props.name)
   }
 
   render() {
-    const {name, className, classes, range, canvases, updateOwner, updateRange, onItemPicked, buildings, points, canvas, ...props} = this.props
-    const canvasPoint = points && points.get(canvas.get('id')) || {}
+    const {name, className, classes, range, canvases, updateOwner, updateRange, onItemPicked, buildings, points, canvas: undefined, ...props} = this.props
+    const {canvas, image} = this.state
+    const canvasPoint = points && points.get(canvas.id) || {googleVision: {rgb: [0, 0, 0]}}
     const canvasLocation = canvasPoint && canvasPoint.point
     const canvasBuildings = (canvasPoint.buildings || []).map(id => buildings.get(id))
-    const image = canvas.get('image')
     const {
       googleVision: {
-        rgb: [
-          red = 0,
-          green = 0,
-          blue = 0,
-        ] = [],
-      } = {},
+        rgb: [red, green, blue],
+      },
     } = canvasPoint
 
     return <Dialog {...props} onClose={this.onClose}>
-      <DialogTitle>Canvas {canvas.get('label')}</DialogTitle>
+      <DialogTitle>Canvas {canvas.label}</DialogTitle>
       <DialogContent>
         <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
           <img src={`${image}/full/400,/0/default.jpg`}/>
@@ -531,9 +542,12 @@ export const CanvasStreetView = flow(picked(['range']), withStyles(canvasStreetV
   state = {}
 
   static getDerivedStateFromProps(props, state) {
-    const {canvas, points} = props
-    const rangePoint = points && canvas && points.get(canvas.get('id'))
+    const nextState = getDerivedStateFromProps(props, state)
+    const {canvas} = nextState
+    const {points} = props
+    const rangePoint = points && canvas && points.get(canvas.id)
     return {
+      ...nextState,
       rangePoint,
     }
   }
@@ -577,16 +591,19 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
+export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
     onItemPicked(id) {},
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {...this.state, dialogOpen: false}
+  state = {dialogOpen: false}
+
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  getValue(model, name) {
+    return model[name]
   }
 
   handleOnCanvasNext = delta => {
@@ -597,18 +614,20 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
   handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
 
   flushInputChange = (name, value, checked) => {
-    const {canvas, updateCanvas} = this.props
+    const {updateCanvas} = this.props
+    const {canvas} = this.state
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const processedValue = inputProcessor(value, checked)
-    const currentValue = canvas.get(name)
+    const currentValue = canvas[name]
     if (currentValue !== processedValue) {
-      updateCanvas(canvas.get('id'), {[name]: processedValue})
+      updateCanvas(canvas.id, {[name]: processedValue})
     }
   }
 
   handleRemoveOverride = (event) => {
-    const {range, canvas, deleteRangePoint} = this.props
-    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
+    const {range, deleteRangePoint} = this.props
+    const {canvas} = this.state
+    deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
   }
 
   handleClose = () => {
@@ -616,12 +635,13 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
   }
 
   render() {
-    const {className, classes, range, deleteRangePoint, canvases, points, updateCanvas, canvas, selected, onItemPicked} = this.props
+    const {className, classes, range, deleteRangePoint, canvases, points, updateCanvas, selected, onItemPicked} = this.props
+    const {canvas} = this.state
     if (!canvas) return <div />
     const hasOverride = canvasHasOverride(canvas)
-    const image = canvas.get('image')
-    const point = canvas.get('point')
-    const canvasPoint = points && points.get(canvas.get('id'))
+    const image = canvas.image
+    const point = canvas.point
+    const canvasPoint = points && points.get(canvas.id)
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -644,7 +664,7 @@ export const CanvasForm = flow(picked(['range', 'canvas']), withStyles(canvasFor
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -1001,13 +1021,13 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
 
 export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends React.Component {
   render() {
-    const {className, range, canvas} = this.props
+    const {className, range, canvas, ...props} = this.props
 
     if (!range) return <div/>
     const title = canvas ? canvas.get('label') : 'Canvas'
     const image = canvas && canvas.get('image')
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
-    return <ItemPanel className={className} name={`canvas ${lastImagePart}`} title={title} form={<CanvasForm/>} busy={canvas && canvas.get('_busy')}/>
+    return <ItemPanel className={className} name={`canvas ${lastImagePart}`} title={title} form={<CanvasForm {...props} range={range} canvas={canvas}/>} busy={canvas && canvas.get('_busy')}/>
   }
 })
 /*

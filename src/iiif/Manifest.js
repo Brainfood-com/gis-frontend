@@ -1,3 +1,4 @@
+import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -17,7 +18,6 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
-import {immutableEmptyList} from '../constants'
 
 const manifestFormStyles = {
   root: {
@@ -31,23 +31,36 @@ const manifestTagSuggestions = [
   commonTagDefinitions.CLAIMED,
 ]
 
-export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
+function getDerivedStateFromProps(props, state) {
+  const {manifest} = props
+  return {manifest: manifest instanceof imMap ? manifest.toJS() : manifest}
+}
+
+export const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
   static defaultProps = {
     updateManifest(id, data) {},
   }
 
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  getValue(model, name) {
+    return model[name]
+  }
+
   flushInputChange = (name, value, checked) => {
-    const {manifest, updateManifest} = this.props
+    const {updateManifest} = this.props
+    const {manifest} = this.state
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
-    const currentValue = manifest.get(name)
+    const currentValue = manifest[name]
     if (currentValue !== processedValue) {
-      updateManifest(manifest.get('id'), {[name]: processedValue})
+      updateManifest(manifest.id, {[name]: processedValue})
     }
   }
 
   render() {
-    const {className, classes, manifest, onRemoveOverride} = this.props
+    const {className, classes, onRemoveOverride} = this.props
+    const {manifest} = this.state
     if (!manifest) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -55,7 +68,7 @@ export const ManifestForm = flow(picked(['manifest']), withStyles(manifestFormSt
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -70,10 +83,10 @@ export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPic
 
 export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPanel extends React.Component {
   render() {
-    const {className, collection, manifests, manifest} = this.props
+    const {className, collection, manifests, manifest, ...props} = this.props
 
     if (!collection) return <div/>
     const title = manifest ? manifest.get('label') : 'Manifest'
-    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm/>} busy={manifest && manifest.get('_busy')}/>
+    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm {...props} manifest={manifest}/>} busy={manifest && manifest.get('_busy')}/>
   }
 })

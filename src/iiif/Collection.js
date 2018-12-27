@@ -1,3 +1,4 @@
+import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -18,7 +19,6 @@ import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
-import {immutableEmptyList} from '../constants'
 
 const collectionFormStyles = {
   root: {
@@ -31,23 +31,37 @@ const collectionTagSuggestions = [
 
 const fieldInputProcessors = {
 }
-export const CollectionForm = flow(picked(['collection']), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
+
+function getDerivedStateFromProps(props, state) {
+  const {collection} = props
+  return {collection: collection instanceof imMap ? collection.toJS() : collection}
+}
+
+export const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
   static defaultProps = {
     updateCollection(id, data) {},
   }
 
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  getValue(model, name) {
+    return model[name]
+  }
+
   flushInputChange = (name, value, checked) => {
-    const {collection, updateCollection} = this.props
+    const {updateCollection} = this.props
+    const {collection} = this.state
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
-    const currentValue = collection.get(name)
+    const currentValue = collection[name]
     if (currentValue !== processedValue) {
-      updateCollection(collection.get('id'), {[name]: processedValue})
+      updateCollection(collection.id, {[name]: processedValue})
     }
   }
 
   render() {
-    const {className, classes, collection, onRemoveOverride} = this.props
+    const {className, classes, onRemoveOverride} = this.props
+    const {collection} = this.state
     if (!collection) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -55,7 +69,7 @@ export const CollectionForm = flow(picked(['collection']), withStyles(collection
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -69,9 +83,9 @@ export const CollectionPick = picked(['root', 'collection'])(class CollectionPic
 
 export const CollectionPanel = picked(['root', 'collection'])(class CollectionPanel extends React.Component {
   render() {
-    const {className, collections, collection} = this.props
+    const {className, collections, collection, ...props} = this.props
 
     const title = collection ? collection.get('label') : 'Collection'
-    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} form={<CollectionForm/>} busy={collection && collection.get('_busy')}/>
+    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} form={<CollectionForm {...props} collection={collection}/>} busy={collection && collection.get('_busy')}/>
   }
 })

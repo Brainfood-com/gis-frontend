@@ -1,3 +1,4 @@
+import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -56,30 +57,45 @@ const rangeTagSuggestions = [
   commonTagDefinitions.VALIDATED,
 ]
 
-export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
+function getDerivedStateFromProps(props, state) {
+  const {range} = props
+  return {range: range instanceof imMap ? range.toJS() : range}
+}
+
+export const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {
     updateRange(id, data) {},
   }
 
+  state = {}
+
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  getValue(model, name) {
+    return model[name]
+  }
+
   flushInputChange = (name, value, checked) => {
-    const {range, updateRange} = this.props
+    const {updateRange} = this.props
+    const {range} = this.state
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const processedValue = inputProcessor(value, checked)
-    const currentValue = range.get(name)
+    const currentValue = range[name]
     if (currentValue !== processedValue) {
-      updateRange(range.get('id'), {[name]: processedValue})
+      updateRange(range.id, {[name]: processedValue})
     }
   }
 
   render() {
-    const {className, classes, range, onRemoveOverride} = this.props
+    const {className, classes, onRemoveOverride} = this.props
+    const {range} = this.state
     if (!range) return <div/>
     const rootClasses = {
       [classes.root]: true,
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.get('id')}/geoJSON`)}>Get GeoJSON</Button>
+      <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button>
       <FormGroup row>
         <FormControlLabel label='Reverse' control={
           <Checkbox name='reverse' checked={!!this.checkOverrideValueDefault(range, 'reverse', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
@@ -87,7 +103,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
       </FormGroup>
       <FormControl>
         <FormLabel>Orientation</FormLabel>
-        <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>
+        <RadioGroup row name='fovOrientation' value={range.fovOrientation} onChange={this.handleInputChange} margin='dense'>
           <FormControlLabel value='left' control={<Radio color='primary' />} label='Left' margin='dense'/>
           <FormControlLabel value='right' control={<Radio color='primary' />} label='Right' margin='dense'/>
         </RadioGroup>
@@ -99,7 +115,7 @@ export const RangeForm = flow(picked(['range']), withStyles(rangeFormStyles))(cl
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, immutableEmptyList)} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -114,10 +130,10 @@ export const RangePick = picked(['manifest', 'range'])(class RangePick extends R
 
 export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends React.Component {
   render() {
-    const {className, manifest, rangesWithCanvases, range} = this.props
+    const {className, manifest, rangesWithCanvases, range, ...props} = this.props
 
     if (!manifest) return <div/>
     const title = range ? range.get('label') : 'Range'
-    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm/>} busy={range && range.get('_busy')}/>
+    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm {...props} range={range}/>} busy={range && range.get('_busy')}/>
   }
 })
