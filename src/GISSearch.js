@@ -24,6 +24,9 @@ import { makeUrl } from './api'
 import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
+import { RangeBrief } from './iiif/Range'
+import { CanvasCardRO } from './iiif/Canvas'
+import { detectAndPick } from './iiif/redux'
 
 const ACTION = Enum(
   'clear',
@@ -168,6 +171,7 @@ const pick = (...picked) => Component => {
         break
       case 'currentBuilding':
         mapDispatchToProps.clearCurrentBuilding = clearCurrentBuilding
+        mapDispatchToProps.showRange = showRange
         break;
       case 'search':
         mapDispatchToProps.doSearch = doSearch
@@ -256,6 +260,11 @@ export const clearCurrentBuilding = () => async dispatch => {
     action: ACTION.setCurrentBuilding,
     currentBuilding: null,
   })
+}
+
+export const showRange = (rangeId, canvasId) => async (dispatch, getState) => {
+  console.log('showRange', rangeId, canvasId)
+  dispatch(detectAndPick({iiifId: rangeId, childId: canvasId}))
 }
 
 const searchStyles = theme => ({
@@ -504,6 +513,12 @@ class Taxdata extends React.Component {
 }
 
 export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), pick('currentBuilding'))(class CurrentBuildingInfo extends React.Component {
+  handleRangeSelection = id => {
+    const {showRange, showCanvas, currentBuilding: {primaryCanvasByRange}} = this.props
+    const primaryCanvas = primaryCanvasByRange[id]
+    showRange(id, primaryCanvas.iiif_id)
+  }
+
   render() {
     const {classes, clearCurrentBuilding, currentBuilding} = this.props
     if (!currentBuilding) {
@@ -517,6 +532,15 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
     } = currentBuilding
     return <div className={classes.root}>
       <Taxdata taxdata={taxdata} clearCurrentBuilding={clearCurrentBuilding}/>
+      {ranges.map(range => {
+        const {id} = range
+        const rangeCanvases = canvasesByRange[id]
+        const primaryCanvas = primaryCanvasByRange[id]
+        return <React.Fragment key={id}>
+          <RangeBrief range={range} onItemPicked={this.handleRangeSelection}/>
+          <CanvasCardRO canvas={primaryCanvas}/>
+        </React.Fragment>
+      })}
     </div>
   }
 })

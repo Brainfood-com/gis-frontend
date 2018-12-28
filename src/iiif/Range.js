@@ -120,6 +120,44 @@ export const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm exten
   }
 })
 
+const rangeBriefStyles = {
+  root: {
+  },
+}
+
+export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief extends React.Component {
+  state = {}
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  static propTypes = {
+  }
+
+  static defaultProps = {
+    onItemPicked(id) {},
+  }
+
+  handleOnClick = event => {
+    event.preventDefault()
+    const {onItemPicked} = this.props
+    const {range} = this.state
+    onItemPicked(range.id)
+  }
+
+  render() {
+    const {className, classes} = this.props
+    const {range} = this.state
+    if (!range) {
+      return <div />
+    }
+
+    const {id, label} = range
+    return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
+      <Typography>rangeId:{id}</Typography>
+      <Typography>{label}</Typography>
+    </Paper>
+  }
+})
+
 export const RangePick = picked(['manifest', 'range'])(class RangePick extends React.Component {
   render() {
     const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props

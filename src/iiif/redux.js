@@ -288,15 +288,22 @@ export const detectAndPick = context => async (dispatch, getState) => {
     },
     body: JSON.stringify({iiifId, externalId}),
   }).then(data => data.json())
-  const {allParents, iiifTypeId} = typeInfo
+  const {allParents} = typeInfo
+  let {iiifTypeId} = typeInfo
   const toPick = {}
   for (const modelName of modelOrder) {
     const {[modelName]: [modelParentId] = []} = allParents
     if (modelParentId) {
       toPick[modelName] = modelParentId
       if (modelName === iiifTypeId) {
-        break
+        iiifTypeId = null
       }
+    } else if (iiifTypeId === null) {
+      const {childId} = context
+      if (childId) {
+        toPick[modelName] = childId
+      }
+      break
     } else {
       break
     }
