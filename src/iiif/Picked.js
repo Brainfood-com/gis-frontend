@@ -13,47 +13,19 @@ export const picked = picked => Component => {
   const mapDispatchToProps = {}
   switch (primaryPick) {
     case 'collection':
-      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
-        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
-          dispatch(iiifRedux.pick(primaryPick, id))
-          dispatch(iiifRedux.pick('manifest', null))
-          dispatch(iiifRedux.pick('range', null))
-          dispatch(iiifRedux.pick('canvas', null))
-        }
-        dispatch(iiifRedux.getCollection(id))
-      }
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
       mapDispatchToProps.updateCollection = iiifRedux.updateCollection
       break
     case 'manifest':
-      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
-        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
-          dispatch(iiifRedux.pick(primaryPick, id))
-          dispatch(iiifRedux.pick('range', null))
-          dispatch(iiifRedux.pick('canvas', null))
-        }
-        dispatch(iiifRedux.getManifest(id))
-        dispatch(iiifRedux.getManifestStructures(id))
-      }
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
       mapDispatchToProps.updateManifest = iiifRedux.updateManifest
       break
     case 'range':
-      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
-        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
-          dispatch(iiifRedux.pick(primaryPick, id))
-          dispatch(iiifRedux.pick('canvas', null))
-        }
-        dispatch(iiifRedux.getRange(id))
-        dispatch(iiifRedux.getRangePoints(id))
-      }
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
       mapDispatchToProps.updateRange = iiifRedux.updateRange
       break
     case 'canvas':
-      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
-        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
-          dispatch(iiifRedux.pick(primaryPick, id))
-        }
-        //dispatch(iiifRedux.getCanvas(id))
-      }
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
       mapDispatchToProps.updateCanvas = (id, data) => (dispatch, getState) => {
         dispatch(iiifRedux.updateCanvas(id, data)).then(() => {
           if (data.exclude !== undefined) {
@@ -68,12 +40,7 @@ export const picked = picked => Component => {
       mapDispatchToProps.deleteRangePoint = iiifRedux.deleteRangePoint
       break
     case 'pickedBuilding':
-      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => {
-        if (getState().iiif.getIn([iiifRedux.MODEL['picked'], primaryPick, 'value']) !== id) {
-          dispatch(iiifRedux.pick(primaryPick, id))
-        }
-        //dispatch(iiifRedux.getBuilding(id))
-      }
+      mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
       break
   }
   switch (ownerPick) {

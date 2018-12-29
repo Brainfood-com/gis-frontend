@@ -16,6 +16,7 @@ export const ACTION = Enum(
   'incrBusy',
   'decrBusy',
 )
+const modelOrder = ['sc:Collection', 'sc:Manifest', 'sc:Range', 'sc:Canvas']
 const iiifTypeToModelType = {
   'sc:Collection': 'collection',
   'sc:Manifest': 'manifest',
@@ -43,15 +44,7 @@ const defaultState = immutableEmptyMap.withMutations(map => {
   map.set(MODEL['canvas'], immutableEmptyOrderedMap)
   map.set(MODEL['buildings'], immutableEmptyOrderedMap)
   map.set(MODEL['building_canvases'], immutableEmptyMap)
-  map.set(MODEL['picked'], immutableEmptyMap.withMutations(map => {
-    const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
-    Object.keys(picked).forEach(key => {
-      const {[key]: value} = picked
-      if (!!value) {
-        map.set(key, immutableEmptyMap.merge({id: key, value}))
-      }
-    })
-  }))
+  map.set(MODEL['picked'], immutableEmptyMap)
   map.set(MODEL['stats'], immutableEmptyMap.withMutations(map => {
     map.set('range', immutableEmptyMap)
   }))
@@ -196,41 +189,75 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
 const json = promise => promise.then(data => data.json())
 
 export const pick = (type, id) => {
-  if (!!id) {
-    if (typeof id !== 'number') {
-      debugger
-    }
-    return {type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: type, value: id}}
-  } else {
-    return {type: 'redux-iiif', actionType: ACTION.delete, modelType: MODEL['picked'], itemOrItems: {id: type}}
+  const toPick = {[type]: id}
+  return pickMany(toPick)
+}
+
+export const pickMany = toPick => async (dispatch, getState) => {
+  function getModelId(modelType) {
+    return getState().iiif.getIn([MODEL['picked'], modelType, 'value'])
   }
+  const toPickMapped = Object.entries(toPick).reduce((toPick, [key, value]) => {
+    toPick[iiifTypeToModelType[key] || key] = value
+    return toPick
+  }, {})
+  const modelTypeValues = modelOrder.map(modelName => {
+    const modelType = iiifTypeToModelType[modelName]
+    return {modelType, id: toPickMapped[modelType]}
+  })
+  modelTypeValues.reduce((needsUnset, modelTypeValue) => {
+    const {id} = modelTypeValue
+    if (id !== undefined) {
+      if (id === null) {
+        modelTypeValue.needsUnset = true
+      }
+      return true
+    } else if (needsUnset) {
+      modelTypeValue.needsUnset = true
+      return true
+    } else {
+      return needsUnset
+    }
+  }, false)
+
+  const outstandingFetchers = []
+  for (const {modelType, needsUnset, id} of modelTypeValues) {
+    const currentId = getModelId(modelType)
+    if (!!id) {
+      if (typeof id !== 'number') {
+        debugger
+      }
+      if (id === currentId) {
+        continue
+      }
+      console.log('pick/dispatch:set', modelType, id)
+      await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: id}})
+      outstandingFetchers.splice(-1, 0, ...modelTypeToFetchers[modelType].map(handler => handler(id)))
+    } else if (needsUnset) {
+      console.log('pick/dispatch:delete', modelType, currentId)
+      if (currentId !== undefined || currentId !== null) {
+        await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: null}})
+      }
+      // TODO: unset items from redux
+    }
+  }
+  await Promise.all(outstandingFetchers.map(dispatch))
 }
 
 export const startOfDay = () => async (dispatch, getState) => {
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['collection']})
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['manifest']})
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range']})
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range_points']})
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['canvas']})
-  dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['buildings']})
+  await Promise.all([
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['collection']}),
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['manifest']}),
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range']}),
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['range_points']}),
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['canvas']}),
+    dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['buildings']}),
+  ])
   const collections = await fetch(makeUrl('api', 'collection')).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collections})
-  getState().iiif.get(MODEL['picked']).reduce((fetchers, value, key, picked) => {
-    const id = value.get('value')
-    if (!!!id) {
-      return
-    }
-    const {[key]: handlers = [id => null]} = fetchers
-    handlers.forEach(handler => dispatch(handler(id)))
-    return fetchers
-  }, {
-    collection: [getCollection],
-    manifest: [getManifest, getManifestStructures],
-    range: [getRange, getRangePoints],
-    canvas: [getCanvas],
-    pickedBuilding: [/*getBuilding*/],
-  })
-  dispatch(getStats('range'))
+  await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collections})
+  const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
+  await dispatch(pickMany(picked))
+  await dispatch(getStats('range'))
 }
 
 const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async (dispatch, getState) => {
@@ -484,3 +511,11 @@ export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', '
   dispatch(getCanvas(id))
   dispatch(searchRefreshBuildings())
 })
+
+const modelTypeToFetchers = {
+  collection: [getCollection],
+  manifest: [getManifest, getManifestStructures],
+  range: [getRange, getRangePoints],
+  canvas: [/*getCanvas*/],
+  pickedBuilding: [/*getBuilding*/],
+}
