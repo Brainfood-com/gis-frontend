@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography'
 
 import { Search } from './GISSearch'
 import Stats from './Stats'
-import {DebugUser} from './User'
+import {DebugUser, LoginForm} from './User'
 
 const styles = {
   root: {
@@ -62,6 +62,7 @@ class Page extends React.Component {
           <Stats/>
         </Toolbar>
       </AppBar>
+      <LoginForm/>
       <DebugUser />
       <div className={classes.body}>
         <div className={classes.bodyContent}>

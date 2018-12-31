@@ -96,6 +96,7 @@ class GISControl extends React.Component {
     const rootClasses = {
       [classes.hasIIIFTree]: hasIIIFTree,
       [classes.hasIIIFCanvasSlidingList]: hasIIIFCanvasSlidingList,
+      [classes.hasSearchMap]: hasSearchMap,
       [classes.hasSearchResults]: hasSearchResults,
     }
     console.log('gis-control', {foo: permissions.toJS(), hasIIIFTree, hasIIIFCanvasSlidingList, hasSearchResults})

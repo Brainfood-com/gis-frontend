@@ -650,7 +650,9 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
       return false
     }
     const {permissions} = this.props
-    return !checkPermissions(permissions, 'editor', 'canvas', name)
+    const result = !checkPermissions(permissions, 'editor', 'canvas', name)
+    console.log('canvas:userPermissions', name, result)
+    return result
   }
 
   handleRemoveOverride = (event) => {

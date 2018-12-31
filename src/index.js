@@ -13,7 +13,7 @@ import {reducer as iiifReducer, startOfDay as iiifStartOfDay} from './iiif/redux
 import {reducer as itemPanelReducer} from './ItemPanel'
 import {reducer as applicationReducer} from './application-redux'
 import { reducer as gisSearchReducer, startOfDay as searchStartOfDay } from './GISSearch'
-import { reducer as userReducer } from './User'
+import { reducer as userReducer, startOfDay as userStartOfDay } from './User'
 import * as apiRedux from './api/redux'
 import {GlobalBusy} from './GlobalBusy'
 import history from './history'
@@ -40,6 +40,7 @@ export const store = createStore(
 
 store.dispatch(iiifStartOfDay())
 store.dispatch(searchStartOfDay())
+store.dispatch(userStartOfDay())
 store.dispatch(apiRedux.setTypeName('gis:tl_2017_06037_edges'))
 store.dispatch(apiRedux.setDistance(1500))
 
