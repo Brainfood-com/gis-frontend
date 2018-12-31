@@ -6,6 +6,12 @@ import * as iiifRedux from './redux'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 import {BusyPane} from '../GlobalBusy'
 
+function wrapWildcardImport(wildcardImport, name) {
+  return (...args) => {
+    return wildcardImport[name](...args)
+  }
+}
+
 export const picked = picked => Component => {
   const ownerPick = picked[0]
   const primaryPick = picked[picked.length - 1]
@@ -14,15 +20,15 @@ export const picked = picked => Component => {
   switch (primaryPick) {
     case 'collection':
       mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
-      mapDispatchToProps.updateCollection = iiifRedux.updateCollection
+      mapDispatchToProps.updateCollection = wrapWildcardImport(iiifRedux, 'updateCollection')
       break
     case 'manifest':
       mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
-      mapDispatchToProps.updateManifest = iiifRedux.updateManifest
+      mapDispatchToProps.updateManifest = wrapWildcardImport(iiifRedux, 'updateManifest')
       break
     case 'range':
       mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
-      mapDispatchToProps.updateRange = iiifRedux.updateRange
+      mapDispatchToProps.updateRange = wrapWildcardImport(iiifRedux, 'updateRange')
       break
     case 'canvas':
       mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
@@ -36,8 +42,8 @@ export const picked = picked => Component => {
           }
         })
       }
-      mapDispatchToProps.setRangePoint = iiifRedux.setRangePoint
-      mapDispatchToProps.deleteRangePoint = iiifRedux.deleteRangePoint
+      mapDispatchToProps.setRangePoint = wrapWildcardImport(iiifRedux, 'setRangePoint')
+      mapDispatchToProps.deleteRangePoint = wrapWildcardImport(iiifRedux, 'deleteRangePoint')
       break
     case 'pickedBuilding':
       mapDispatchToProps.onItemPicked = id => (dispatch, getState) => dispatch(iiifRedux.pick(primaryPick, id))
@@ -45,16 +51,16 @@ export const picked = picked => Component => {
   }
   switch (ownerPick) {
     case 'collection':
-      mapDispatchToProps.updateOwner = iiifRedux.updateCollection
+      mapDispatchToProps.updateOwner = wrapWildcardImport(iiifRedux, 'updateCollection')
       break
     case 'manifest':
-      mapDispatchToProps.updateOwner = iiifRedux.updateManifest
+      mapDispatchToProps.updateOwner = wrapWildcardImport(iiifRedux, 'updateManifest')
       break
     case 'range':
-      mapDispatchToProps.updateOwner = iiifRedux.updateRange
+      mapDispatchToProps.updateOwner = wrapWildcardImport(iiifRedux, 'updateRange')
       break
     case 'canvas':
-      mapDispatchToProps.updateOwner = iiifRedux.updateCanvas
+      mapDispatchToProps.updateOwner = wrapWildcardImport(iiifRedux, 'updateCanvas')
       break
   }
 
