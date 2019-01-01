@@ -200,7 +200,7 @@ const loginFormStyles = {
 }
 
 export const LoginForm = flow(picked('auth'), withStyles(loginFormStyles))(class LoginForm extends React.Component {
-  state = {username: 'adam@brainfood.com', password: '1234'}
+  state = {username: '', password: ''}
 
   handleLogout = event => {
     this.props.logout()
