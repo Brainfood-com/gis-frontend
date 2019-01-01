@@ -228,7 +228,7 @@ export const showBuilding = id => async (dispatch, getState) => {
     return result
   }, {})
 
-  const ranges = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json()).then(data => data[0])))
+  const ranges = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())))
 
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
 
