@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import classnames from 'classnames'
 
 import { withStyles } from '@material-ui/core/styles'
 
@@ -362,12 +363,12 @@ class GISMap extends React.Component {
   }
 
   render() {
-    const {classes} = this.props
+    const {className, classes} = this.props
     const {data, allPoints, center, zoom} = this.state
 
 
         //<CanvasDragResult target={dragLatLng}/>
-    return <div className={classes.root}>
+    return <div className={classnames(classes.root, className)}>
       <Map className={classes.map} center={center} zoom={zoom} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
         <CanvasDropTarget/>
         <ScaleControl/>

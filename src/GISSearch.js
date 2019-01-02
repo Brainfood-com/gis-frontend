@@ -520,7 +520,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
   }
 
   render() {
-    const {classes, clearCurrentBuilding, currentBuilding} = this.props
+    const {className, classes, clearCurrentBuilding, currentBuilding} = this.props
     if (!currentBuilding) {
       return <div />
     }
@@ -530,7 +530,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
       canvasesByRange,
       primaryCanvasByRange,
     } = currentBuilding
-    return <div className={classes.root}>
+    return <div className={classnames(classes.root, className)}>
       <Taxdata taxdata={taxdata} clearCurrentBuilding={clearCurrentBuilding}/>
       {ranges.map(range => {
         const {id} = range
