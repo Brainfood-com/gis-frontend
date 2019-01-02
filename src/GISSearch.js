@@ -141,7 +141,6 @@ export const doSearch = searchContext => async (dispatch, getState) => {
     address,
     radius,
   } = searchContext
-  console.log('doSearch', {address, radius})
   if (address === null || address === undefined) {
     return
   }
@@ -207,7 +206,6 @@ const pick = (...picked) => Component => {
 }
 
 export const showBuilding = id => async (dispatch, getState) => {
-  console.log('showBuilding', id)
   dispatch({
     type: 'gis-search',
     action: ACTION.requestCurrentBuilding,
@@ -217,7 +215,6 @@ export const showBuilding = id => async (dispatch, getState) => {
   searchURL.search = new URLSearchParams({id})
 
   const building = (await fetch(searchURL.toString()).then(data => data.json()))[0]
-  console.log('building', building)
   const canvasesURL = new URL(makeUrl('api', 'buildings/' + id + '/canvases'))
   const canvases = await fetch(canvasesURL.toString()).then(data => data.json())
 
@@ -263,7 +260,6 @@ export const clearCurrentBuilding = () => async dispatch => {
 }
 
 export const showRange = (rangeId, canvasId) => async (dispatch, getState) => {
-  console.log('showRange', rangeId, canvasId)
   dispatch(detectAndPick({iiifId: rangeId, childId: canvasId}))
 }
 
@@ -380,7 +376,6 @@ function makeChoropleth(scheme, min, max) {
        const range = max - min
   const adjust = (colors.length - 1) / range
 
-  console.log('makeChoropleth', scheme, min, max, range, adjust, colors)
   return value => {
     const index = Math.floor((value - min) * adjust)
     return colors[index]
@@ -488,7 +483,6 @@ class Taxdata extends React.Component {
 
   render() {
     const {taxdata} = this.props
-    console.log('taxdata', taxdata)
     if (!taxdata) {
       return <div />
     }
