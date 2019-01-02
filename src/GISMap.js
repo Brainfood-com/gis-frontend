@@ -87,21 +87,9 @@ const overlayLayers = [
 
   {name: 'lariac_buildings', workspace: 'gis', layers: 'gis:lariac_buildings', type: 'wms'},
   {name: 'tiger-edges', workspace: 'gis', layers: 'gis:tl_2017_06037_edges', type: 'wms'},
-  {name: 'sunset_road_edge', workspace: 'gis', layers: 'gis:sunset_road_edges', type: 'geojson'},
-  {name: 'sunset_road_edge_connected', workspace: 'gis', layers: 'gis:sunset_road_edges_connected', type: 'geojson', checked: false},
   {name: 'tiger-roads', workspace: 'gis', layers: 'gis:tl_2017_06037_roads', type: 'wms'},
-  {name: 'sunset_buildings', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'wms'},
   {name: 'tiger-roads-tms', workspace: 'gis', layers: 'gis:tl_2017_06037_roads', type: 'geotile'},
   {name: 'lariac_buildings-tms', workspace: 'gis', layers: 'gis:lariac_buildings', type: 'geotile'},
-  {name: 'sunset_road-tms', workspace: 'gis', layers: 'gis:sunset_road', type: 'geotile'},
-  {name: 'sunset_buildings-tms', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'geotile'},
-  {name: 'sunset_buildings-json', workspace: 'gis', layers: 'gis:sunset_buildings', type: 'geojson', checked: false},
-  {name: 'sunset_road-json', workspace: 'gis', layers: 'gis:sunset_road', type: 'geojson'},
-  {name: 'sunset_road_reduced-json', workspace: 'gis', layers: 'gis:sunset_road_reduced', type: 'geojson', checked: false},
-  {name: 'sunset_road_problems-json', workspace: 'gis', layers: 'gis:sunset_road_problems', type: 'geojson', checked: false},
-//  {name: 'sunset_road_debug-json', workspace: 'gis', layers: 'gis:sunset_road_debug', type: 'geojson', checked: false, positioned: false},
-//  {name: 'sunset_taxdata_2017-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017', type: 'geojson'},
-//  {name: 'sunset_taxdata_2017_buildings-json', workspace: 'gis', layers: 'gis:sunset_taxdata_2017_buildings', type: 'geojson'},
 ]
 
 class DelayLeafletLogin extends React.Component {
@@ -364,7 +352,7 @@ class GISMap extends React.Component {
 
   render() {
     const {className, classes} = this.props
-    const {data, allPoints, center, zoom} = this.state
+    const {allPoints, center, zoom} = this.state
 
 
         //<CanvasDragResult target={dragLatLng}/>
@@ -375,9 +363,6 @@ class GISMap extends React.Component {
 			 	<LayersControl>
           {baseLayers.map(layerDef => renderLayer(LayersControl.BaseLayer, layerDef))}
           {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef))}
-          <LayersControl.Overlay name='sunset-road' checked={false}>
-            <GISGeoJSON data={data}/>
-          </LayersControl.Overlay>
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <RangePoints zoom={zoom} allPoints={allPoints}/>
           </LayersControl.Overlay>
