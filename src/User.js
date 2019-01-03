@@ -6,6 +6,7 @@ import classnames from 'classnames'
 import Enum from 'es6-enum'
 import {fromJS, Set as imSet} from 'immutable'
 
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import FormControl from '@material-ui/core/FormControl'
@@ -170,14 +171,14 @@ export const LoginForm = flow(picked('auth'), withStyles(loginFormStyles))(class
     const {isLoggedIn, name} = this.props
     if (isLoggedIn) {
       return <div>
-        <Typography>Welcome back, {name}!</Typography>
-        <Button onClick={this.handleLogout}><Typography>logout</Typography></Button>
+        <Typography variant='subtitle'>Welcome back, {name}!</Typography>
+        <Button onClick={this.handleLogout} mini variant='contained' color='secondary'>Logout</Button>
       </div>
     } else {
       return <div>
         <TextField name='username' label='Username' value={this.state.username} onChange={this.handleInputChange}/>
         <TextField name='password' label='Password' value={this.state.password} onChange={this.handleInputChange} type='password'/>
-        <Button onClick={this.handleLogin}><Typography>login</Typography></Button>
+        <Button onClick={this.handleLogin} mini variant='contained' color='secondary'>Login <ArrowForwardIcon/></Button>
       </div>
     }
   }

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 
 import { withStyles } from '@material-ui/core/styles'
 import classnames from 'classnames'
+import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
@@ -134,7 +135,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
   }
 
   render() {
-    const {className, classes, name, title, pick, form, expanded} = this.props
+    const {className, classes, name, title, pick, form, expanded, icon} = this.props
     const {busy} = this.state
 
     return <div className={classnames(classes.root, className)}>
@@ -142,7 +143,12 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
-            <Typography onClick={e => e.stopPropagation()} variant='body2' classes={{body2: classes.name}}>{name}</Typography>
+            {
+              icon ?
+                <Button color='primary' variant='outlined'>{icon} {name}</Button>
+              :
+                <Typography onClick={e => e.stopPropagation()} variant='body2' classes={{body2: classes.name}}>{name}</Typography>
+            }
             <Typography variant='body2' classes={{body2: classes.title}}>{title}</Typography>
           </div>
         </ExpansionPanelSummary>

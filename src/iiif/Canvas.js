@@ -25,6 +25,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import PlaceIcon from '@material-ui/icons/Place';
+import ImageIcon from '@material-ui/icons/Image';
 import InfoIcon from '@material-ui/icons/Info';
 import LocationDisabledIcon from '@material-ui/icons/LocationDisabled';
 import BlockIcon from '@material-ui/icons/Block';
@@ -1061,7 +1062,7 @@ export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends
     const title = canvas ? canvas.get('label') : 'Canvas'
     const image = canvas && canvas.get('image')
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
-    return <ItemPanel className={className} name={`canvas ${lastImagePart}`} title={title} form={<CanvasForm {...props} range={range} canvas={canvas}/>} busy={canvas && canvas.get('_busy')}/>
+    return <ItemPanel className={className} name='canvas' title={`${lastImagePart} ${title}`} icon={<ImageIcon/>} form={<CanvasForm {...props} range={range} canvas={canvas}/>} busy={canvas && canvas.get('_busy')}/>
   }
 })
 /*

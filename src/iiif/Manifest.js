@@ -2,6 +2,7 @@ import {Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
+import CollectionsIcon from '@material-ui/icons/Collections'
 import FormControl from '@material-ui/core/FormControl'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormLabel from '@material-ui/core/FormLabel'
@@ -96,6 +97,6 @@ export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPa
 
     if (!collection) return <div/>
     const title = manifest ? manifest.get('label') : 'Manifest'
-    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} form={<ManifestForm {...props} manifest={manifest}/>} busy={manifest && manifest.get('_busy')}/>
+    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} icon={<CollectionsIcon/>} form={<ManifestForm {...props} manifest={manifest}/>} busy={manifest && manifest.get('_busy')}/>
   }
 })

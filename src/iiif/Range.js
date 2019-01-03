@@ -4,6 +4,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
+import CameraRollIcon from '@material-ui/icons/CameraRoll'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox';
 import Radio from '@material-ui/core/Radio'
@@ -189,6 +190,6 @@ export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends
 
     if (!manifest) return <div/>
     const title = range ? range.get('label') : 'Range'
-    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} form={<RangeForm {...props} range={range}/>} busy={range && range.get('_busy')}/>
+    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} icon={<CameraRollIcon/>} form={<RangeForm {...props} range={range}/>} busy={range && range.get('_busy')}/>
   }
 })
