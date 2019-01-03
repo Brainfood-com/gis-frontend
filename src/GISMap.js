@@ -297,15 +297,18 @@ class GISMap extends React.Component {
     position: la_center,
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      zoom: 11,
-      ...this.processProps(props, {zoom: 11}),
-      center: la_center
+  state = {
+    zoom: 11,
+    center: la_center,
+  }
+
+  static getDerivedStateFromProps(state, props) {
+    const {position} = props
+    const nextState = {}
+    if (state.position !== state.position) {
+      nextState.position = nextState.center = center
     }
-    this.iiifCanvasListLayer = L.geoJSON([], {
-    })
+    return nextState
   }
 
   onEachCanvasListFeature = (feature, layer) => {
@@ -320,19 +323,6 @@ class GISMap extends React.Component {
     lines.push(`<img width="400" height="225" src=${thumbnail}/full/full/0/default.jpg/>`)
     layer.bindPopup(lines.join('<br />'))
     //layer.setStyle(styleFeature(feature))
-  }
-
-  processProps(props, prevState) {
-    const {position, canvasList} = props
-    const nextState = {}
-    if (prevState.position !== position) {
-      nextState.position = nextState.center = position
-    }
-    return nextState
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.setState(this.processProps(nextProps, this.state))
   }
 
   onViewportChange = ({center, zoom}) => {
