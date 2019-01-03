@@ -124,7 +124,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
         {Icon ? <Avatar>{Icon}</Avatar> : null}
         <ListItemText primary={`Select a ${IconLabel}`}/>
         <ListItemSecondaryAction disabled={!isOpen}>
-          <Button disabled={!isOpen} onClick={this.handleOnClose}>
+          <Button disabled={!isOpen} color='secondary' onClick={this.handleOnClose}>
             <CloseIcon/>
           </Button>
         </ListItemSecondaryAction>
