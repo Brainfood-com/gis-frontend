@@ -38,7 +38,7 @@ export default withStyles(canvasLeafletStyles)(class CanvasLeaflet extends React
 
   render() {
     const {className, classes, canvas} = this.props
-    const url = canvas ? canvas.get('image') : null
+    const url = canvas ? canvas.image : null
     if (!url) return <div />
     return <div className={classnames(classes.root, className)}>
       <IIIFViewer url={`${url}/info.json`} className={classes.viewer} onWheel={this.handleOnWheel}/>

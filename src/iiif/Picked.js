@@ -84,6 +84,9 @@ export const picked = picked => Component => {
         case 'root':
           result.collections = iiif.get(iiifRedux.MODEL['collection'])
           break
+        case 'buildings':
+          result.buildings = iiif.get(iiifRedux.MODEL['buildings'])
+          break
         default:
           const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[modelType], pickedId])
           busy += pickedValue ? pickedValue.get('_busy', 0) : 0

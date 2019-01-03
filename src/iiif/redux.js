@@ -457,6 +457,15 @@ export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fo
 const REGEXES = [
   /^http:\/\/(media.getty.edu\/iiif\/research\/archives\/[^\/]+?(?:_thumb)?)$/,
 ]
+export const iiifLocalCache = service => {
+  for (const regex of REGEXES) {
+    const match = service.match(regex)
+    if (match) {
+      return makeUrl('cantaloupe', 'iiif/2/' + match[1].replace(/\//g, '%2F'))
+    }
+  }
+  return service
+}
 export const getRangePoints = requiredId(busyCall('range', rangeId => async (dispatch, getState) => {
   let pickedId = getState().iiif.getIn([MODEL['picked'], 'canvas', 'value'])
 
@@ -464,15 +473,6 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
 
   const canvases = new Array(canvasPoints.length)
   const points = new Array()
-  const iiifLocalCache = service => {
-    for (const regex of REGEXES) {
-      const match = service.match(regex)
-      if (match) {
-        return makeUrl('cantaloupe', 'iiif/2/' + match[1].replace(/\//g, '%2F'))
-      }
-    }
-    return service
-  }
 
   const wantedBuildings = {}
   canvasPoints.forEach((canvasPoint, index) => {

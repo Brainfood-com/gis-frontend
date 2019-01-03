@@ -114,7 +114,6 @@ const canvasCardBaseStyles = {
     left: 0,
     width: '100%',
     height: '100%',
-    border: '4px solid transparent',
     '&> img': {
       width: '100%',
       height: '100%',
@@ -124,9 +123,6 @@ const canvasCardBaseStyles = {
     },
     '$override > &': {
       borderColor: 'green',
-    },
-    '$loading > &': {
-      backgroundColor: '#aaaaaa',
     },
   },
   selected: {},
@@ -241,7 +237,6 @@ const canvasCardBaseStyles = {
   },
   isDraggable: {},
   isDragging: {},
-  loading: {},
   readOnly: {},
   range: {},
 /*
@@ -292,7 +287,6 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   state = {
-    loading: true,
     infoDialogOpen: false,
     inspectDialogOpen: false,
   }
@@ -315,10 +309,6 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     const {canvas} = this.state
     onCanvasNext(delta, {canvases, canvas, onItemPicked})
   })
-
-  handleOnLoad = event => {
-    this.setState({loading: false})
-  }
 
   skipChange = name => {
     const {range, permissions} = this.props
@@ -374,21 +364,11 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   render() {
-    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, inspectCanvas, range} = this.props
-    const {inspectDialogOpen, infoDialogOpen, canvas, image, loading} = this.state
+    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, range, canvasPoint} = this.props
+    const {inspectDialogOpen, infoDialogOpen, canvas, image} = this.state
     if (!image) {
       return <div/>
     }
-    const rangePoint = points && canvas && points.get(canvas.id) || {}
-    const {
-      googleVision: {
-        rgb: [
-          red = 0,
-          green = 0,
-          blue = 0,
-        ] = [],
-      } = {},
-    } = rangePoint
     const wantedClasses = {
       [classes.root]: true,
       [classes.readOnly]: readOnly,
@@ -397,7 +377,6 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.exclude,
       [classes.hole]: canvas.hole,
-      [classes.loading]: loading,
       [classes.isDraggable]: isDraggable,
       [classes.isDragging]: isDragging,
     }
@@ -405,9 +384,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
        <div className={classes.draggingOverlay}/>
       <div className={classes.excludeTopLeft} onClick={this.handleOnClick}/>
       <div className={classes.excludeBottomLeft} onClick={this.handleOnClick}/>
-      <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
-        <img src={`${image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
-      </Card>
+      <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint} onClick={this.handleOnClick}/>
       <div className={classes.upperLeft}>
         <div className={classes.upperLeftContent}>
           <Button className={classes.excludeButton} mini variant='fab' name='exclude' onClick={this.handleOnToggleClick}><BlockIcon titleAccess='Exclude' className={classes.excludeIcon}/></Button>
@@ -431,19 +408,83 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
           <Button className={classes.lowerRightItem} mini variant='fab' name='inspect' onClick={this.handleOnInspectOpen}><ZoomInIcon titleAccess='Inspect' className={classes.inspectcon}/></Button>
         </div>
       </div>
-      <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={inspectCanvas || canvas} onCanvasNext={onCanvasNext}/>
-      <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} canvas={canvas}/>
+      <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={canvas} onCanvasNext={onCanvasNext}/>
+      <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} canvas={canvas} canvasPoint={canvasPoint}/>
     </div>
     return isDraggable && !this.skipChange('override') ? connectDragSource(result) : result
+  }
+})
+
+const canvasImageStyles = {
+  root: {
+    border: '4px solid transparent',
+    '&> img': {
+    },
+    '&$loading': {
+      backgroundColor: '#aaaaaa',
+    },
+  },
+  loading: {},
+}
+
+const CanvasImage = flow(withStyles(canvasImageStyles))(class CanvasImage extends React.Component {
+  static defaultProps = {
+    onClick(event) {},
+    onLoad(event) {},
+    canvasPoint: {
+      googleVision: {
+        rgb: [0, 0, 0],
+      },
+    },
+  }
+
+  state = {
+    loading: true,
+  }
+
+  handleOnLoad = event => {
+    const {onLoad} = this.props
+    onLoad(event)
+    this.setState({loading: false})
+  }
+
+  handleOnClick = event => {
+    const {onClick} = this.props
+    onClick(event)
+  }
+
+  render() {
+    const {className, classes, canvas, canvasPoint} = this.props
+    const {
+      googleVision: {
+        rgb: [
+          red = 0,
+          green = 0,
+          blue = 0,
+        ] = [],
+      } = {},
+    } = canvasPoint
+
+    return <Card className={classnames(classes.root, className)} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
+      <img src={`${canvas.image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
+    </Card>
   }
 })
 
 const canvasInfoStyles = {
 }
 
-export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(class CanvasInfo extends React.Component {
+export const CanvasInfo = flow(picked(['buildings']), withStyles(canvasInfoStyles))(class CanvasInfo extends React.Component {
   static defaultProps = {
     onClose(event, name) {},
+    canvasPoint: {
+      googleVision: {
+        rgb: [0, 0, 0],
+      },
+      point: {
+        coordinates: [],
+      },
+    },
   }
 
   state = {}
@@ -454,23 +495,16 @@ export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(
   }
 
   render() {
-    const {name, className, classes, range, canvases, updateOwner, updateRange, onItemPicked, buildings, points, canvas: undefined, ...props} = this.props
+    const {name, className, classes, buildings, canvas: undefined, canvasPoint, ...props} = this.props
     const {canvas, image} = this.state
-    const canvasPoint = points && points.get(canvas.id) || {googleVision: {rgb: [0, 0, 0]}}
-    const canvasLocation = canvasPoint && canvasPoint.point
-    const canvasBuildings = (canvasPoint.buildings || []).map(id => buildings.get(id))
-    const {
-      googleVision: {
-        rgb: [red, green, blue],
-      },
-    } = canvasPoint
+    const canvasLocation = canvasPoint && canvasPoint.point || {}
+    const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
+    console.log('CanvasInfo', canvasPoint)
 
     return <Dialog {...props} onClose={this.onClose}>
       <DialogTitle>Canvas {canvas.label}</DialogTitle>
       <DialogContent>
-        <Card className={classes.card} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
-          <img src={`${image}/full/400,/0/default.jpg`}/>
-        </Card>
+        <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
         <List dense>
           <ListItem>
             <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
@@ -678,7 +712,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.image
     const point = canvas.point
-    const canvasPoint = points && points.get(canvas.id)
+    const canvasPoint = points && points.get(canvas.id) || undefined
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -686,7 +720,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} points={points} canvases={canvases} canvas={canvas} className={classes.card} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext}/>
+      <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext}/>
       {point}
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
@@ -786,7 +820,10 @@ export const CanvasList = withStyles(canvasListStyles)(class CanvasList extends 
     const {className, classes, canvases, points, selected, onItemPicked} = this.props
 
     return <div className={classnames(classes.root, className)}>
-      {canvases.map(canvas => <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} key={canvas.id} points={points} canvases={canvases} canvas={canvas} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>)}
+      {canvases.map(canvas => {
+        const canvasPoint = points && points.get(canvas.id) || undefined
+        return <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} key={canvas.id} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} selected={selected === canvas.id} onItemPicked={onItemPicked}/>
+      })}
     </div>
   }
 })
@@ -1011,7 +1048,6 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
         return <div key={`out-${absOffset}`} className={className}/>
       } else if (canvases) {
         const item = canvases.get(index)
-        const inspectCanvas = canvases.get(Math.max(index + canvasInspectDelta, Math.min(index + canvasInspectDelta, canvases.size - 1)))
         if (item) {
           const id = item.get('id')
           const cardClasses = {
@@ -1020,7 +1056,8 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
             lowerLeftContent: classes.cardLowerLeftContent,
             lowerRightContent: classes.cardLowerRightContent,
           }
-          return <div key={`canvas-${id}`} className={className}><CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} points={points} canvases={canvases} canvas={item} selected={item === canvas} onItemPicked={onItemPicked} inspectCanvas={inspectCanvas} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
+          const canvasPoint = points && points.get(id) || undefined
+          return <div key={`canvas-${id}`} className={className}><CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} canvas={item} canvasPoint={canvasPoint} selected={item === canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }

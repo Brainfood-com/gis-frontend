@@ -26,6 +26,7 @@ import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
 import { RangeBrief } from './iiif/Range'
+import { iiifLocalCache } from './iiif/redux'
 import { CanvasCardRO } from './iiif/Canvas'
 import { detectAndPick } from './iiif/redux'
 
@@ -217,7 +218,27 @@ export const showBuilding = id => async (dispatch, getState) => {
 
   const building = (await fetch(searchURL.toString()).then(data => data.json()))[0]
   const canvasesURL = new URL(makeUrl('api', 'buildings/' + id + '/canvases'))
-  const canvases = await fetch(canvasesURL.toString()).then(data => data.json())
+  const canvasPoints = {}
+  const canvases = await fetch(canvasesURL.toString()).then(data => data.json()).then(canvases => canvases.map(canvas => {
+    const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...rest} = canvas
+    const result = {
+      id, range_id, iiif_id, format, height, width, externalId, label, overrides, notes, exclude, hole,
+      externalId,
+      image: iiifLocalCache(image),
+      thumbnail: iiifLocalCache(thumbnail),
+    }
+    if (point) {
+      result.point = {
+        latlng: {
+          lat: point.coordinates[1],
+          lng: point.coordinates[0],
+        },
+        point,
+        buildings,
+      }
+    }
+    return result
+  }))
 
   const canvasesByRange = canvases.reduce((result, canvas) => {
     const {range_id: rangeId} = canvas
@@ -238,6 +259,7 @@ export const showBuilding = id => async (dispatch, getState) => {
     currentBuilding: {
       building,
       canvases,
+      canvasPoints,
       canvasesByRange: Object.entries(canvasesByRange).reduce((canvasesByRange, [rangeId, canvases]) => {
         canvasesByRange[rangeId] = canvases.map(canvas => canvas.iiif_id)
         return canvasesByRange
@@ -537,7 +559,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
         const primaryCanvas = primaryCanvasByRange[id]
         return <React.Fragment key={id}>
           <RangeBrief range={range} onItemPicked={this.handleRangeSelection}/>
-          <CanvasCardRO canvas={primaryCanvas}/>
+          <CanvasCardRO canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
         </React.Fragment>
       })}
     </div>
