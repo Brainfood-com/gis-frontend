@@ -101,4 +101,4 @@ class Stats extends React.Component {
   }
 }
 
-export default flow(withStyles(styles), stats(['range']))(Stats)
+export default flow(withStyles(styles), stats('range'))(Stats)

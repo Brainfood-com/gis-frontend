@@ -8,7 +8,7 @@ export const getStats = type => async dispatch => {
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['stats'], itemOrItems: {id: type, ...statsDetail}})
 }
 
-export const stats = picked => Component => {
+export const stats = (...picked) => Component => {
   function mapStateToProps(store, props) {
     const {iiif} = store
     return picked.reduce((result, type) => {
