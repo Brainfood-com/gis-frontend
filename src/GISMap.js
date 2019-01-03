@@ -300,6 +300,7 @@ class GISMap extends React.Component {
   state = {
     zoom: 11,
     center: la_center,
+    mounted: false,
   }
 
   static getDerivedStateFromProps(state, props) {
@@ -340,10 +341,18 @@ class GISMap extends React.Component {
     console.log('onLoad', arguments)
   }
 
+  componentDidMount() {
+    this.setState({mounted: true})
+  }
+
+
   render() {
     const {className, classes} = this.props
-    const {allPoints, center, zoom} = this.state
+    const {allPoints, center, zoom, mounted} = this.state
 
+    if (!mounted) {
+      return <div className={classnames(classes.root, className)}/>
+    }
 
         //<CanvasDragResult target={dragLatLng}/>
     return <div className={classnames(classes.root, className)}>
