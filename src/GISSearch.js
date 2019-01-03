@@ -20,6 +20,7 @@ import ListItemText from '@material-ui/core/ListItemText'
 
 import { FeatureGroup, GeoJSON, Popup, PropTypes as LeafletPropTypes } from 'react-leaflet'
 
+import { requiredRoles } from './User'
 import { makeUrl } from './api'
 import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
@@ -274,7 +275,7 @@ const searchStyles = theme => ({
   settingsButton: {},
 })
 
-export const Search = flow(withStyles(searchStyles), pick('search'))(class Search extends React.Component {
+export const Search = flow(withStyles(searchStyles), pick('search'), requiredRoles('search_form'))(class Search extends React.Component {
   state = {
     address: '',
   }
@@ -303,7 +304,11 @@ export const Search = flow(withStyles(searchStyles), pick('search'))(class Searc
   }
 
   render() {
-    const {children, className, classes} = this.props
+    const {children, className, classes, hasAllRoles} = this.props
+    if (!hasAllRoles) {
+      return <div className={classnames(classes.root, classes.margin, className)}/>
+    }
+
     const {address} = this.state
     return <FormControl className={classnames(classes.root, classes.margin, className)}>
       <TextField

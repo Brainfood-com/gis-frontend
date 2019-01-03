@@ -11,6 +11,7 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle'
 import RoomIcon from '@material-ui/icons/Room'
 import PhotoIcon from '@material-ui/icons/Photo'
 
+import { requiredRoles } from './User'
 import {stats} from './iiif/stats'
 /*
 import AppBar from '@material-ui/core/AppBar'
@@ -92,7 +93,10 @@ const styles = {
 }
 class Stats extends React.Component {
   render() {
-    const {classes, range} = this.props
+    const {classes, range, hasAllRoles} = this.props
+    if (!hasAllRoles) {
+      return <div className={classes.root} />
+    }
     return <div className={classes.root}>
       <Badge color='secondary' badgeContent={range.get('claimed', '')}><PhotoIcon className={classes.claimedIcon} titleAccess='Claimed'/></Badge>
       <Badge color='secondary' badgeContent={range.get('placed', '')}><RoomIcon className={classes.placedIcon} titleAccess='Placed'/></Badge>
@@ -101,4 +105,4 @@ class Stats extends React.Component {
   }
 }
 
-export default flow(withStyles(styles), stats('range'))(Stats)
+export default flow(withStyles(styles), stats('range'), requiredRoles('data_stats'))(Stats)
