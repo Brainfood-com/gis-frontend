@@ -226,7 +226,7 @@ export const LoginForm = flow(picked('auth'), withStyles(loginFormStyles))(class
     } else {
       return <Paper>
         <TextField name='username' label='Username' value={this.state.username} onChange={this.handleInputChange}/>
-        <TextField name='password' label='Password' value={this.state.password} onChange={this.handleInputChange}/>
+        <TextField name='password' label='Password' value={this.state.password} onChange={this.handleInputChange} type='password'/>
         <Button onClick={this.handleLogin}><Typography>login</Typography></Button>
       </Paper>
     }
