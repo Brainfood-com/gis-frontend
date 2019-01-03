@@ -25,53 +25,8 @@ export const ACTION = Enum(
   'set-info',
 )
 
-const constantPermissions = {
-  editor: imSet.of(
-    'iiif_tree',
-    'iiif_canvas_sliding_list',
-    'editor_collection_notes',
-    'editor_collection_tags',
-    'freeform_collection_tags',
-    'editor_manifest_notes',
-    'editor_manifest_tags',
-    'freeform_manifest_tags',
-    'editor_range_fovAngle',
-    'editor_range_fovDepth',
-    'editor_range_fovOrientation',
-    'editor_range_notes',
-    'editor_range_tags',
-    'freeform_range_tags',
-    'editor_canvas_notes',
-    'editor_canvas_exclude',
-    'editor_canvas_hole',
-    'editor_canvas_override',
-    'editor_canvas_tags',
-    'freeform_canvas_tags',
-    'search_map',
-    'search_results',
-  ).sort(),
-  client: imSet.of(
-    'iiif_tree',
-    'iiif_canvas_sliding_list',
-    'client_collection_tags',
-    'client_manifest_tags',
-    'client_range_tags',
-    'client_canvas_tags',
-    'search_map',
-    'search_results',
-  ).sort(),
-  workshop: imSet.of(
-    'iiif_canvas_sliding_list',
-    'search_map',
-    'search_results',
-  ).sort(),
-  anonymous: imSet.of(
-  ).sort(),
-}
-
 const defaultState = immutableEmptyMap.withMutations(map => {
   map.set('permissions', immutableEmptySet)
-  //constantPermissions.editor)
   map.set('name', null)
   map.set('username', null)
   map.set('isLoggedIn', false)
@@ -156,9 +111,6 @@ export const picked = (...picked) => Component => {
         mapDispatchToProps.logout = logout
         break
       case DEBUG_USER:
-        mapDispatchToProps.setPermissionType = permissionType => (dispatch, getState) => {
-          dispatch({type: 'user', actionType: ACTION['set-permissions'], permissionType})
-        }
         break
       case 'permissions':
         break
@@ -175,13 +127,6 @@ export const picked = (...picked) => Component => {
           break
         case DEBUG_USER:
           result.user = user
-          result.permissionType = Object.entries(constantPermissions).reduce((result, [key, value]) => {
-            if (permissions.equals(value)) {
-              return key
-            } else {
-              return result
-            }
-          }, 'server')
           break
         case 'permissions':
           result.permissions = permissions
@@ -245,23 +190,13 @@ export const DebugUser = flow(picked(DEBUG_USER), withStyles(debugUserStyles))(c
   handleInputChange = event => {
     const {name, value, checked} = event.currentTarget
     switch (name) {
-      case 'permissionType':
-        this.props.setPermissionType(value)
-        break
     }
   }
 
   render() {
-    const {permissionType, user} = this.props
+    const {user} = this.props
     return <div>
       <FormControl>
-        <FormLabel>Permission Type</FormLabel>
-        <RadioGroup row name='permissionType' value={permissionType} onChange={this.handleInputChange} margin='dense'>
-          <FormControlLabel value='editor' control={<Radio color='primary' />} label='Editor' margin='dense'/>
-          <FormControlLabel value='client' control={<Radio color='primary' />} label='Client' margin='dense'/>
-          <FormControlLabel value='anonymous' control={<Radio color='primary' />} label='Anonymous' margin='dense'/>
-          <FormControlLabel value='server' control={<Radio color='primary' />} label='Server' margin='dense'/>
-        </RadioGroup>
       </FormControl>
     </div>
   }
