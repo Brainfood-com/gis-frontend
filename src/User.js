@@ -6,7 +6,6 @@ import classnames from 'classnames'
 import Enum from 'es6-enum'
 import {fromJS, Set as imSet} from 'immutable'
 
-import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import FormControl from '@material-ui/core/FormControl'
@@ -225,16 +224,16 @@ export const LoginForm = flow(picked('auth'), withStyles(loginFormStyles))(class
   render() {
     const {isLoggedIn, name} = this.props
     if (isLoggedIn) {
-      return <Paper>
+      return <div>
         <Typography>Welcome back, {name}!</Typography>
         <Button onClick={this.handleLogout}><Typography>logout</Typography></Button>
-      </Paper>
+      </div>
     } else {
-      return <Paper>
+      return <div>
         <TextField name='username' label='Username' value={this.state.username} onChange={this.handleInputChange}/>
         <TextField name='password' label='Password' value={this.state.password} onChange={this.handleInputChange} type='password'/>
         <Button onClick={this.handleLogin}><Typography>login</Typography></Button>
-      </Paper>
+      </div>
     }
   }
 })
