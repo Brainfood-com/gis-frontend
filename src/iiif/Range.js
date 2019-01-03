@@ -104,7 +104,7 @@ export const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormSty
   }
 
   render() {
-    const {className, classes, onRemoveOverride} = this.props
+    const {className, classes} = this.props
     const {range} = this.state
     if (!range) return <div/>
     const rootClasses = {

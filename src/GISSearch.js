@@ -363,7 +363,7 @@ const resultBuildingsStyles = {
 }
 
 const choroplethSchemes = {
-       //diverging: ['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'],
+  //diverging: ['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'],
   diverging: [
     '#ff0000','#df4600','#c05e00','#a46a00','#7f7500','#547c00','#008000',
     '#547c00', '#7f7500', '#a46a00', '#c05e00', '#df4600', '#ff0000',
@@ -373,7 +373,7 @@ const choroplethSchemes = {
 
 function makeChoropleth(scheme, min, max) {
   const colors = choroplethSchemes[scheme]
-       const range = max - min
+  const range = max - min
   const adjust = (colors.length - 1) / range
 
   return value => {

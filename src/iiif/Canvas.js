@@ -473,7 +473,7 @@ export const CanvasInfo = flow(picked(['range']), withStyles(canvasInfoStyles))(
             <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
           </ListItem>
           <ListItem>
-            <ListItemText inset={false} primary={<CanvasStreetView mini canvas={canvas}/>}/>
+            <ListItemText inset={false} primary={<CanvasStreetView canvas={canvas}/>}/>
           </ListItem>
           <ListItem>
             <ListItemText primary={`
