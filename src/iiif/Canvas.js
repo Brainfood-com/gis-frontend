@@ -131,7 +131,7 @@ const canvasCardBaseStyles = {
   },
   selected: {},
   override: {
-    '& $overrideButton': {
+    '&$range $overrideButton': {
       display: 'initial',
     },
   },
@@ -243,6 +243,7 @@ const canvasCardBaseStyles = {
   isDragging: {},
   loading: {},
   readOnly: {},
+  range: {},
 /*
 .crossed {
     position: relative;
@@ -373,7 +374,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   render() {
-    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, inspectCanvas} = this.props
+    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, inspectCanvas, range} = this.props
     const {inspectDialogOpen, infoDialogOpen, canvas, image, loading} = this.state
     if (!image) {
       return <div/>
@@ -392,6 +393,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       [classes.root]: true,
       [classes.readOnly]: readOnly,
       [classes.selected]: selected,
+      [classes.range]: !!range,
       [classes.override]: canvasHasOverride(canvas),
       [classes.exclude]: canvas.exclude,
       [classes.hole]: canvas.hole,
