@@ -418,14 +418,10 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
     const {id} = structure
     const canvases = structure.canvases || []
     if (structure.canvases) {
-      structure.label += `(${structure.canvases.length})`
       if (structure.canvases.length) {
         rangesWithCanvases.push(id)
         allCanvases.splice(-1, 0, structure.canvases)
       }
-    }
-    if (structure.pointOverrideCount) {
-      structure.label += `(p=${structure.pointOverrideCount})`
     }
     ranges.push(id)
     const _extra = [
