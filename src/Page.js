@@ -59,10 +59,10 @@ class Page extends React.Component {
           </IconButton>
           <Typography variant='title'>GIS</Typography>
           <Search className={classes.grow}/>
+          <LoginForm/>
           <Stats/>
         </Toolbar>
       </AppBar>
-      <LoginForm/>
       <div className={classes.body}>
         <div className={classes.bodyContent}>
           {children}
