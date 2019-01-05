@@ -26,7 +26,7 @@ import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
 import { RangeBrief } from './iiif/Range'
-import { iiifLocalCache } from './iiif/redux'
+import { ensureBuildings, iiifLocalCache } from './iiif/redux'
 import { CanvasCardRO } from './iiif/Canvas'
 import { detectAndPick } from './iiif/redux'
 
@@ -219,6 +219,7 @@ export const showBuilding = id => async (dispatch, getState) => {
   const building = (await fetch(searchURL.toString()).then(data => data.json()))[0]
   const canvasesURL = new URL(makeUrl('api', 'buildings/' + id + '/canvases'))
   const canvasPoints = {}
+  const allBuildings = {}
   const canvases = await fetch(canvasesURL.toString()).then(data => data.json()).then(canvases => canvases.map(canvas => {
     const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...rest} = canvas
     const result = {
@@ -228,6 +229,7 @@ export const showBuilding = id => async (dispatch, getState) => {
       thumbnail: iiifLocalCache(thumbnail),
     }
     if (point) {
+      buildings.forEach(id => allBuildings[id] = true)
       result.point = {
         latlng: {
           lat: point.coordinates[1],
@@ -239,6 +241,7 @@ export const showBuilding = id => async (dispatch, getState) => {
     }
     return result
   }))
+  dispatch(ensureBuildings(Object.keys(allBuildings)))
 
   const canvasesByRange = canvases.reduce((result, canvas) => {
     const {range_id: rangeId} = canvas
