@@ -23,7 +23,7 @@ import { MapAddresses, MapBuildings } from './GISSearch'
 L.Marker.prototype.options.icon = L.icon({
   ...L.Icon.Default.prototype.options,
   iconUrl: leafletMarkerIcon,
-  iconRetinalUrl: leafletMarkerIconRetina,
+  iconRetinaUrl: leafletMarkerIconRetina,
   shadowUrl: leafletMarkerIconShadow,
 })
 
