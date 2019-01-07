@@ -120,7 +120,6 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
         onDragstart={this.handleOnDragStart}
         onDrag={this.handleOnDrag}
         onDragend={this.handleOnDragEnd}
-        onViewportChange={this.onViewportChange}
         >
       </RotatableMarker>
     </FeatureGroup>

@@ -37,7 +37,7 @@ const Building = picked(['pickedBuilding'])(class Building extends React.Compone
 })
 
 export default picked(['range', 'canvas'])(class RangePoints extends React.Component {
-  onUpdatePoint = (canvas, point) => {
+  handleOnUpdatePoint = (canvas, point) => {
     const {range, setRangePoint} = this.props
     const rangeId = range.get('id')
     const canvasId = canvas.get('id')
@@ -67,7 +67,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
         const rangePoint = points.get(id)
         const isFirst = index === 0
         const isLast = index === notNullCanvases.length - 1
-        return <DraggableCanvasPosition key={id} zoom={zoom} range={range} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.onUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
+        return <DraggableCanvasPosition key={id} zoom={zoom} range={range} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
 
       })}
     </FeatureGroup>

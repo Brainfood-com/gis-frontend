@@ -490,7 +490,7 @@ export const CanvasInfo = flow(picked(['buildings']), withStyles(canvasInfoStyle
   state = {}
   static getDerivedStateFromProps = getDerivedStateFromProps
 
-  onClose = event => {
+  handleOnClose = event => {
     this.props.onClose(event, this.props.name)
   }
 
@@ -501,7 +501,7 @@ export const CanvasInfo = flow(picked(['buildings']), withStyles(canvasInfoStyle
     const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
     console.log('CanvasInfo', canvasPoint)
 
-    return <Dialog {...props} onClose={this.onClose}>
+    return <Dialog {...props} onClose={this.handleOnClose}>
       <DialogTitle>Canvas {canvas.label}</DialogTitle>
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>

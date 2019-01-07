@@ -326,7 +326,7 @@ class GISMap extends React.Component {
     //layer.setStyle(styleFeature(feature))
   }
 
-  onViewportChange = ({center, zoom}) => {
+  handleOnViewportChange = ({center, zoom}) => {
     this.setState({center, zoom})
     // 14 = 26
     // 15 = 35
@@ -356,7 +356,7 @@ class GISMap extends React.Component {
 
         //<CanvasDragResult target={dragLatLng}/>
     return <div className={classnames(classes.root, className)}>
-      <Map className={classes.map} center={center} zoom={zoom} onViewportChange={this.onViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
+      <Map className={classes.map} center={center} zoom={zoom} onViewportChange={this.handleOnViewportChange} onLoading={this.handleOnLoading} onLoad={this.handleOnLoad}>
         <CanvasDropTarget/>
         <ScaleControl/>
 			 	<LayersControl>
