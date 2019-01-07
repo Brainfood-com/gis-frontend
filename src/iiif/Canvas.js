@@ -499,7 +499,6 @@ export const CanvasInfo = flow(picked(['buildings']), withStyles(canvasInfoStyle
     const {canvas, image} = this.state
     const canvasLocation = canvasPoint && canvasPoint.point || {}
     const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
-    console.log('CanvasInfo', canvasPoint)
 
     return <Dialog {...props} onClose={this.handleOnClose}>
       <DialogTitle>Canvas {canvas.label}</DialogTitle>
