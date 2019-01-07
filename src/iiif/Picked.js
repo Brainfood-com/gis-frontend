@@ -129,7 +129,10 @@ export const picked = picked => Component => {
       return result
     }, {})
   }
-  return connectHelper({mapStateToProps, mapDispatchToProps})(function BusyWrapper({isBusy, ...props}) {
-    return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
+  return connectHelper({mapStateToProps, mapDispatchToProps})(class BusyWrapper extends React.Component {
+    render() {
+      const {isBusy, ...props} = this.props
+      return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
+    }
   })
 }

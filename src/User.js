@@ -136,8 +136,10 @@ export const picked = (...picked) => Component => {
       return result
     }, {})
   }
-  return connectHelper({mapStateToProps, mapDispatchToProps})(function PermissionWrapper(props) {
-    return <Component {...props}/>
+  return connectHelper({mapStateToProps, mapDispatchToProps})(class PermissionWrapper extends React.Component {
+    render() {
+      return <Component {...this.props}/>
+    }
   })
 }
 

@@ -1,3 +1,4 @@
+import isEqual from 'lodash-es/isEqual'
 import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames'
@@ -192,27 +193,13 @@ class WithinAccuracy extends React.Component {
 }
 //261741105 220044581
 
-const dallas_center = [32.781132, -96.797271]
-const la_center = [34.0522, -118.2437]
-
 class GISMap extends React.Component {
   static defaultProps = {
-    position: la_center,
+    onViewportChange(opts) {},
   }
 
   state = {
-    zoom: 11,
-    center: la_center,
     mounted: false,
-  }
-
-  static getDerivedStateFromProps(state, props) {
-    const {position} = props
-    const nextState = {}
-    if (state.position !== state.position) {
-      nextState.position = nextState.center = center
-    }
-    return nextState
   }
 
   onEachCanvasListFeature = (feature, layer) => {
@@ -230,10 +217,7 @@ class GISMap extends React.Component {
   }
 
   handleOnViewportChange = ({center, zoom}) => {
-    this.setState({center, zoom})
-    // 14 = 26
-    // 15 = 35
-    // 16 = 50
+    this.props.onViewportChange({center, zoom})
   }
 
   handleOnLoading = () => {
@@ -250,8 +234,8 @@ class GISMap extends React.Component {
 
 
   render() {
-    const {className, classes} = this.props
-    const {center, zoom, mounted} = this.state
+    const {className, classes, center, zoom} = this.props
+    const {mounted} = this.state
 
     if (!mounted) {
       return <div className={classnames(classes.root, className)}/>

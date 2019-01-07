@@ -1,4 +1,6 @@
 import flow from 'lodash-es/flow'
+import isEqual from 'lodash-es/isEqual'
+import Enum from 'es6-enum'
 import React from 'react'
 
 import classnames from 'classnames'
@@ -14,6 +16,74 @@ import {CurrentBuildingInfo} from './GISSearch'
 import {CanvasSlidingList} from './iiif/Canvas'
 import {IIIFTree} from './IIIF'
 import {checkPermissions, picked as userPicked} from './User'
+import { immutableEmptyMap, immutableEmptyOrderedMap } from './constants'
+import connectHelper from './connectHelper'
+
+
+const dallas_center = [32.781132, -96.797271]
+const la_center = [34.0522, -118.2437]
+
+const ACTION = Enum(
+  'set-viewport',
+)
+
+const defaultState = immutableEmptyMap.withMutations(map => {
+  map.merge({
+    center: la_center,
+    zoom: 11,
+  })
+})
+
+export function reducer(state = defaultState, {type, actionType, ...rest}) {
+  if (type !== 'control') {
+    return state
+  }
+  switch (actionType) {
+    case ACTION['set-viewport']:
+      if (!isEqual(rest.center, state.get('center'))) {
+        state = state.set('center', rest.center)
+      }
+      state = state.set('zoom', rest.zoom)
+      break
+  }
+  return state
+}
+
+export function setViewport({center, zoom}) {
+  return {type: 'control', actionType: ACTION['set-viewport'], center, zoom}
+}
+
+export function picked(...items) {
+  return Component => {
+    function mapStateToProps(store, props) {
+      const state = store.control
+      const result = {}
+      items.forEach(item => {
+        switch (item) {
+          case 'viewport':
+            result.center = state.get('center')
+            result.zoom = state.get('zoom')
+            break
+        }
+      })
+      return result
+    }
+
+    function mapDispatchToProps(dispatch, ownProps) {
+      const result = {}
+      items.forEach(item => {
+        switch (item) {
+          case 'viewport':
+            result.setViewport = args => dispatch(setViewport(args))
+            break
+        }
+      })
+      return result
+    }
+
+    return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
+  }
+}
 
 /*
  *  /---------------+--------\
@@ -87,8 +157,12 @@ const styles = {
   hasSearchResults: {},
 }
 class GISControl extends React.Component {
+  handleOnViewportChange = ({center, zoom}) => {
+    this.props.setViewport({center, zoom})
+  }
+
   render() {
-    const {children, classes, permissions} = this.props
+    const {children, classes, center, zoom, permissions} = this.props
     const hasIIIFTree = checkPermissions(permissions, null, 'iiif', 'tree')
     const hasIIIFCanvasSlidingList = checkPermissions(permissions, null, 'iiif', 'canvas_sliding_list')
     const hasSearchMap = checkPermissions(permissions, null, 'search', 'map')
@@ -106,7 +180,7 @@ class GISControl extends React.Component {
           {hasIIIFTree ? <IIIFTree/> : null}
         </div>
         <div className={classes.mapViewMiddle}>
-          {hasSearchMap ? <GISMap/> : null}
+          {hasSearchMap ? <GISMap center={center} zoom={zoom} onViewportChange={this.handleOnViewportChange}/> : null}
         </div>
         <div className={classes.mapViewRight}>
           {hasSearchResults ? <CurrentBuildingInfo/> : null}
@@ -121,4 +195,4 @@ class GISControl extends React.Component {
   }
 }
 
-export default flow(userPicked('permissions'), withStyles(styles))(GISControl)
+export default flow(picked('viewport'), userPicked('permissions'), withStyles(styles),)(GISControl)
