@@ -348,7 +348,7 @@ class GISMap extends React.Component {
 
   render() {
     const {className, classes} = this.props
-    const {allPoints, center, zoom, mounted} = this.state
+    const {center, zoom, mounted} = this.state
 
     if (!mounted) {
       return <div className={classnames(classes.root, className)}/>
@@ -363,7 +363,7 @@ class GISMap extends React.Component {
           {baseLayers.map(layerDef => renderLayer(LayersControl.BaseLayer, layerDef))}
           {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef))}
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
-            <RangePoints zoom={zoom} allPoints={allPoints}/>
+            <RangePoints zoom={zoom}/>
           </LayersControl.Overlay>
           <LayersControl.Overlay name='view' checked={false}>
             <ViewGeoJSON/>
