@@ -16,7 +16,6 @@ import leafletMarkerIcon from 'leaflet/dist/images/marker-icon.png'
 import leafletMarkerIconRetina from 'leaflet/dist/images/marker-icon-2x.png'
 import leafletMarkerIconShadow from 'leaflet/dist/images/marker-shadow.png'
 import CameraPosition from './leaflet/CameraPosition'
-import ViewGeoJSON from './leaflet/ViewGeoJSON'
 import CanvasDropTarget from './leaflet/CanvasDropTarget'
 import { MapAddresses, MapBuildings } from './GISSearch'
 
@@ -156,10 +155,6 @@ function renderLayer(Control, layerDefOrig) {
         url={`${geoserverUtil.servers[server].serverDef.url}/gwc/service/tms/1.0.0/${layers}@EPSG:900913@png/{z}/{x}/{-y}.png`}
       />
       break
-    case 'geojson':
-      //layer = <DelayedGeoJSON server={server} typeName={layers} workspace={workspace} position={layerDef.positioned ? position : undefined}/>
-      layer = <DelayedGeoJSON server={server} workspace={workspace} layers={layers} future={layerDef.future}/>
-      break
     case 'wms':
       layer = <DelayLeafletLogin server={geoserverUtil.servers[server]}><WMSTileLayer
         attribution='foo'
@@ -174,98 +169,6 @@ function renderLayer(Control, layerDefOrig) {
       return
   }
   return <Control key={name} name={name} checked={checked}>{layer}</Control>
-}
-
-class DelayedGeoJSON extends GeoJSON {
-  static defaultProps = {
-    data: [],
-    onEachFeature: (feature, layer) => {
-      const {properties} = feature
-      layer.bindPopup(Object.keys(properties).map(key => `${key}: ${properties[key]}`).join('<br />'))
-      layer.setStyle(styleFeature(feature))
-    },
-  }
-
-  constructor(props) {
-    super(props)
-    this.state = {data: null}
-  }
-
-  componentWillMount() {
-    super.componentWillMount()
-    this.processProps(this.props)
-  }
-
-  processProps(props) {
-    const {server, workspace, layers} = props
-    if (this.state.data !== undefined && server === this.props.server && workspace === this.props.workspace && layers === this.props.layers) {
-      if (props !== this.props) {
-        return
-      }
-    }
-    geoserverUtil.fetch({server, workspace, typeName: layers}).then(result => {
-      if (server !== this.props.server || workspace !== this.props.workspace || layers != this.props.layers) {
-        return
-      }
-      const {data} = result
-      if (this.leafletElement) {
-        this.leafletElement.clearLayers()
-        this.leafletElement.addData(data)
-      }
-      this.setState({data})
-    })
-  }
-
-  componentWillReceiveProps(nextProps) {
-    super.componentWillReceiveProps(nextProps)
-    this.processProps(nextProps)
-  }
-}
-
-class IIIFGeoJSON extends GeoJSON {
-  static defaultProps = {
-    data: [],
-    onEachFeature: (feature, layer) => {
-      const {properties} = feature
-      layer.bindPopup(Object.keys(properties).map(key => `${key}: ${properties[key]}`).join('<br />'))
-      layer.setStyle(styleFeature(feature))
-    },
-  }
-
-  constructor(props) {
-    super(props)
-    this.state = {data: null}
-  }
-
-  componentWillMount() {
-    super.componentWillMount()
-    this.processProps(this.props)
-  }
-
-  processProps(props) {
-    const {server, workspace, layers} = props
-    if (this.state.data !== undefined && server === this.props.server && workspace === this.props.workspace && layers === this.props.layers) {
-      if (props !== this.props) {
-        return
-      }
-    }
-    geoserverUtil.fetch({server, workspace, typeName: layers}).then(result => {
-      if (server !== this.props.server || workspace !== this.props.workspace || layers != this.props.layers) {
-        return
-      }
-      const {data} = result
-      if (this.leafletElement) {
-        this.leafletElement.clearLayers()
-        this.leafletElement.addData(data)
-      }
-      this.setState({data})
-    })
-  }
-
-  componentWillReceiveProps(nextProps) {
-    super.componentWillReceiveProps(nextProps)
-    this.processProps(nextProps)
-  }
 }
 
 const styles = {
@@ -364,9 +267,6 @@ class GISMap extends React.Component {
           {overlayLayers.map(layerDef => renderLayer(LayersControl.Overlay, layerDef))}
           <LayersControl.Overlay name='iiif-canvaslist' checked={true}>
             <RangePoints zoom={zoom}/>
-          </LayersControl.Overlay>
-          <LayersControl.Overlay name='view' checked={false}>
-            <ViewGeoJSON/>
           </LayersControl.Overlay>
           <LayersControl.Overlay name='search-addresses' checked={true}>
             <MapAddresses/>

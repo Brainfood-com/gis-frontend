@@ -19,7 +19,7 @@ import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 
-import { FeatureGroup, GeoJSON, Popup, PropTypes as LeafletPropTypes } from 'react-leaflet'
+import { FeatureGroup, GeoJSON, Popup, withLeaflet } from 'react-leaflet'
 
 import { requiredRoles } from './User'
 import { makeUrl } from './api'
@@ -376,15 +376,11 @@ const resultAddressesStyles = {
 const resultAddressColors = {
   locationType_ROOFTOP: 'green',
 }
-export const MapAddresses = flow(withStyles(resultAddressesStyles), pick('addresses'))(class MapAddresses extends React.Component {
-  static contextTypes = {
-    map: LeafletPropTypes.map,
-  }
-
+export const MapAddresses = flow(withStyles(resultAddressesStyles), pick('addresses'), withLeaflet)(class MapAddresses extends React.Component {
   componentDidUpdate() {
     const {addresses} = this.props
     if (addresses && addresses.length === 1) {
-      const {map} = this.context
+      const {leaflet: {map}} = this.props
       const {coordinates} = addresses[0].geolocation
       map.setView([coordinates[1], coordinates[0]], 18)
     }

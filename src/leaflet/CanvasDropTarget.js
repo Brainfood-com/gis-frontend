@@ -1,3 +1,4 @@
+import flow from 'lodash-es/flow'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames'
@@ -5,7 +6,7 @@ import { withStyles } from '@material-ui/core/styles'
 
 import L from 'leaflet'
 import {DropTarget} from 'react-dnd'
-import { FeatureGroup, PropTypes as LeafletPropTypes } from 'react-leaflet'
+import { FeatureGroup, withLeaflet } from 'react-leaflet'
 
 import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
@@ -31,10 +32,6 @@ const styles = {
   },
 }
 class CanvasDropTarget extends React.Component {
-  static contextTypes = {
-    map: LeafletPropTypes.map,
-  }
-
   constructor(props) {
     super(props)
     this.state = {
@@ -59,7 +56,7 @@ class CanvasDropTarget extends React.Component {
   }
 
   monitorToPoint(monitor) {
-    const {context: {map}} = this
+    const {props: {leaflet: {map}}} = this
     const clientRect = ReactDOM.findDOMNode(this).getBoundingClientRect()
     const dropClientOffset = monitor.getClientOffset()
     const containerPoint = L.point(dropClientOffset.x - clientRect.x, dropClientOffset.y - clientRect.y)
@@ -132,4 +129,4 @@ const dropCollect = (connect, monitor) => ({
 })
 
 
-export default picked(['range', 'canvas'])(withStyles(styles)(DropTarget(dropTypes, dropSpec, dropCollect)(CanvasDropTarget)))
+export default flow(picked(['range', 'canvas']), withStyles(styles), DropTarget(dropTypes, dropSpec, dropCollect), withLeaflet)(CanvasDropTarget)
