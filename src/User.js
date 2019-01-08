@@ -145,7 +145,6 @@ export const picked = (...picked) => Component => {
 
 export const requiredRoles = (...roles) => Component => picked('permissions')(({permissions, ...props}) => {
   const hasAllRoles = roles.reduce((result, role) => permissions.has(role) ? result : false, true)
-  console.log('requiredRoles', roles, hasAllRoles)
   return <Component {...props} hasAllRoles={hasAllRoles}/>
 })
 

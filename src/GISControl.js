@@ -173,7 +173,6 @@ class GISControl extends React.Component {
       [classes.hasSearchMap]: hasSearchMap,
       [classes.hasSearchResults]: hasSearchResults,
     }
-    console.log('gis-control', {foo: permissions.toJS(), hasIIIFTree, hasIIIFCanvasSlidingList, hasSearchResults})
     return <div className={classnames(classes.root, rootClasses)}>
       <div className={classes.mapViewTop}>
         <div className={classes.mapViewLeft}>

@@ -235,11 +235,9 @@ export const pickMany = toPick => async (dispatch, getState) => {
       if (id === currentId) {
         continue
       }
-      console.log('pick/dispatch:set', modelType, id)
       await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: id}})
       outstandingFetchers.splice(-1, 0, ...modelTypeToFetchers[modelType].map(handler => handler(id)))
     } else if (needsUnset) {
-      console.log('pick/dispatch:delete', modelType, currentId)
       if (currentId !== undefined || currentId !== null) {
         await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: null}})
       }
@@ -361,7 +359,6 @@ export const getBuilding = busyCall('buildings', id => async (dispatch, getState
   if (id === null || id === undefined) {
     return
   }
-  console.log('getBuilding', id)
   dispatch(ensureBuildings([id]))
   const apiUrl = new URL(makeUrl('api', `buildings/${id}/canvases`))
   const buildingCanvasesResults = await fetch(apiUrl).then(data => data.json())
