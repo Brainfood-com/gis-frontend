@@ -577,7 +577,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
         const primaryCanvas = primaryCanvasByRange[id]
         return <React.Fragment key={id}>
           <RangeBrief range={range} onItemPicked={this.handleRangeSelection}/>
-          <CanvasCardRO canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
+          <CanvasCardRO range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
         </React.Fragment>
       })}
     </div>

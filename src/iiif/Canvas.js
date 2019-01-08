@@ -75,10 +75,12 @@ export function handleCanvasWheel({event, ...context}) {
 }
 
 function getDerivedStateFromProps(props, state = {}) {
-  const {canvas} = props
+  const {range, canvas} = props
+  const newRange = range instanceof imMap ? range.toJS() : range
   const newCanvas = canvas instanceof imMap ? canvas.toJS() : canvas
   const image = newCanvas ? newCanvas.image : null
   return {
+    range: newRange,
     canvas: newCanvas,
     image,
     loading: state.image !== image,
@@ -311,7 +313,8 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   })
 
   skipChange = name => {
-    const {range, permissions} = this.props
+    const {permissions} = this.props
+    const {range} = this.state
     return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
   }
 
@@ -677,7 +680,8 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   skipChangeParent = (name, value, checked) => {
-    const {range, userPermissions} = this.props
+    const {userPermissions} = this.props
+    const {range} = this.state
     return !approvedRangePermissionCheck(range, userPermissions, 'canvas', name)
   }
 

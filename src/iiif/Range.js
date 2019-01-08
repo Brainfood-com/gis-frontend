@@ -30,8 +30,8 @@ import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList} from '../constants'
 
 export function approvedRangePermissionCheck(range, permissions, modelName, fieldName) {
-  const rangeTags = range.get('tags')
-  const isClientApproved = rangeTags.indexOf('Client Approved') !== -1
+  const {tags} = range
+  const isClientApproved = tags.indexOf('Client Approved') !== -1
   return checkPermissions(permissions, isClientApproved ? 'client' : 'editor', modelName, fieldName)
 }
 
@@ -100,7 +100,8 @@ export const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormSty
       debugger
       return false
     }
-    const {range, permissions} = this.props
+    const {permissions} = this.props
+    const {range} = this.state
     return !approvedRangePermissionCheck(range, permissions, 'range', name)
   }
 
