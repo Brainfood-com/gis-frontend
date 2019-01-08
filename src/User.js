@@ -172,14 +172,14 @@ export const LoginForm = flow(picked('auth'), withStyles(loginFormStyles))(class
     const {isLoggedIn, name} = this.props
     if (isLoggedIn) {
       return <div>
-        <Typography variant='subtitle'>Welcome back, {name}!</Typography>
-        <Button onClick={this.handleLogout} mini variant='contained' color='secondary'>Logout</Button>
+        <Typography variant='subheading'>Welcome back, {name}!</Typography>
+        <Button onClick={this.handleLogout} mini variant='flat' color='secondary'>Logout</Button>
       </div>
     } else {
       return <div>
         <TextField name='username' label='Username' value={this.state.username} onChange={this.handleInputChange}/>
         <TextField name='password' label='Password' value={this.state.password} onChange={this.handleInputChange} type='password'/>
-        <Button onClick={this.handleLogin} mini variant='contained' color='secondary'>Login <ArrowForwardIcon/></Button>
+        <Button onClick={this.handleLogin} mini variant='raised' color='secondary'>Login <ArrowForwardIcon/></Button>
       </div>
     }
   }

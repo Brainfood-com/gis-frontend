@@ -130,7 +130,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
         </ListItemSecondaryAction>
       </ListItem>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleOnMenuClose}>
-        {items.map((item, index) => {
+        {items.toIndexedSeq().map((item, index) => {
           const id = item.get('id')
           const label = item.get('label')
           const type = item.get('type')
