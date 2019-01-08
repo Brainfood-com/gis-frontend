@@ -2,6 +2,7 @@ import Enum from 'es6-enum'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import {fromJS} from 'immutable'
+import polylabel from 'polylabel'
 
 import classnames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
@@ -29,6 +30,14 @@ import { RangeBrief } from './iiif/Range'
 import { ensureBuildings, iiifLocalCache } from './iiif/redux'
 import { CanvasCardRO } from './iiif/Canvas'
 import { detectAndPick } from './iiif/redux'
+import AwesomeMarkers from './leaflet/AwesomeMarkers'
+import RotatableMarker from './leaflet/RotatableMarker'
+
+const defaultIcon = AwesomeMarkers.icon({
+  markerColor: 'blue',
+  prefix: 'fa',
+  icon: 'film',
+})
 
 const ACTION = Enum(
   'clear',
@@ -191,6 +200,7 @@ const pick = (...picked) => Component => {
         case 'buildings':
           result.buildings = search.get('buildings')
           result.buildingStats = search.get('buildingStats')
+          result.requestCurrentBuilding = search.get('requestCurrentBuilding')
           break
         case 'currentBuilding':
           const requestCurrentBuilding = search.get('requestCurrentBuilding')
@@ -282,6 +292,11 @@ export const clearCurrentBuilding = () => async dispatch => {
     type: 'gis-search',
     action: ACTION.setCurrentBuilding,
     currentBuilding: null,
+  })
+  dispatch({
+    type: 'gis-search',
+    action: ACTION.requestCurrentBuilding,
+    requestCurrentBuilding: null,
   })
 }
 
