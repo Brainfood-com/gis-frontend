@@ -76,14 +76,15 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
     updateRange(id, data) {},
   }
 
-  getValue(model, name) {
-    return model[name]
+  getValue(name) {
+    const {range} = this.props
+    return range[name]
   }
 
   flushInputChange = (name, value, checked) => {
     const {range, updateRange} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(range, name)
+    const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
       updateRange(range.id, {[name]: processedValue})
     }
@@ -114,7 +115,7 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
       <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button>
       <FormGroup row>
         <FormControlLabel label='Reverse' control={
-          <Checkbox name='reverse' checked={!!this.checkOverrideValueDefault(range, 'reverse', false)} onChange={this.handleInputChange}/>
+          <Checkbox name='reverse' checked={!!this.checkOverrideValueDefault('reverse', false)} onChange={this.handleInputChange}/>
         }/>
       </FormGroup>
       <FormControl>
@@ -126,12 +127,12 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
       </FormControl>
       <FormControl>
         <FormGroup row>
-          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={this.checkOverrideValueDefault(range, 'fovAngle', 60)} onChange={this.handleInputChange} margin='dense'/>
-          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={this.checkOverrideValueDefault(range, 'fovDepth', 100)} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={this.checkOverrideValueDefault('fovAngle', 60)} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={this.checkOverrideValueDefault('fovDepth', 100)} onChange={this.handleInputChange} margin='dense'/>
         </FormGroup>
       </FormControl>
-      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(range, 'notes', '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
-      <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault(range, 'tags', [])} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

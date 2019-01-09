@@ -42,19 +42,19 @@ export default class DebouncedForm extends React.Component {
     })
   }
 
-  getValue(model, name) {
-    return model.get(name)
+  getValue(name) {
+    throw new Error('not implemented')
   }
 
   processFieldInput(name, value, checked) {
     return value
   }
 
-  checkOverrideValueDefault(model, name, def) {
+  checkOverrideValueDefault(name, def) {
     if (this.state.curField === name) {
       return this.processFieldInput(name, this.state.curValue, this.state.curChecked)
     } else {
-      const value = this.getValue(model, name)
+      const value = this.getValue(name)
       return value === null || value === undefined ? def : value
     }
   }

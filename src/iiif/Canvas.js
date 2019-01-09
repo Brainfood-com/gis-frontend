@@ -663,8 +663,9 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
 
   state = {dialogOpen: false}
 
-  getValue(model, name) {
-    return model[name]
+  getValue(name) {
+    const {canvas} = this.props
+    return canvas[name]
   }
 
   handleOnCanvasNext = delta => {
@@ -677,7 +678,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   flushInputChange = (name, value, checked) => {
     const {canvas, updateCanvas} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(canvas, name)
+    const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
       updateCanvas(canvas.id, {[name]: processedValue})
     }
@@ -734,17 +735,17 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
-          <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault(canvas, 'exclude', false)} onChange={this.handleInputChange}/>
+          <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault('exclude', false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Hole' control={
-          <Checkbox name='hole' checked={!!this.checkOverrideValueDefault(canvas, 'hole', false)} onChange={this.handleInputChange}/>
+          <Checkbox name='hole' checked={!!this.checkOverrideValueDefault('hole', false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Override' control={
           <Checkbox name='override' disabled={!hasOverride} checked={!!hasOverride} onChange={this.handleRemoveOverride}/>
         }/>
       </FormGroup>
-      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', [])} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

@@ -43,14 +43,15 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
     updateManifest(id, data) {},
   }
 
-  getValue(model, name) {
-    return model[name]
+  getValue(name) {
+    const {manifest} = this.props
+    return manifest[name]
   }
 
   flushInputChange = (name, value, checked) => {
     const {manifest, updateManifest} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(manifest, name)
+    const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
       updateManifest(manifest.id, {[name]: processedValue})
     }
@@ -77,8 +78,8 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(manifest, 'notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' modelName='manifest' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault(manifest, 'tags', [])} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='manifest' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
