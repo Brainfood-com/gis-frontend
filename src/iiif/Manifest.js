@@ -50,7 +50,7 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
   flushInputChange = (name, value, checked) => {
     const {manifest, updateManifest} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = manifest[name]
+    const currentValue = this.getValue(manifest, name)
     if (currentValue !== processedValue) {
       updateManifest(manifest.id, {[name]: processedValue})
     }

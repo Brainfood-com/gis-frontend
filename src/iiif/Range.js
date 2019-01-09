@@ -83,7 +83,7 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
   flushInputChange = (name, value, checked) => {
     const {range, updateRange} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = range[name]
+    const currentValue = this.getValue(range, name)
     if (currentValue !== processedValue) {
       updateRange(range.id, {[name]: processedValue})
     }

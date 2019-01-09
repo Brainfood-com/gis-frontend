@@ -677,7 +677,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   flushInputChange = (name, value, checked) => {
     const {canvas, updateCanvas} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = canvas[name]
+    const currentValue = this.getValue(canvas, name)
     if (currentValue !== processedValue) {
       updateCanvas(canvas.id, {[name]: processedValue})
     }
