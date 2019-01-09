@@ -74,17 +74,9 @@ function getDerivedStateFromProps(props, state) {
 const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
   static modelName = 'range'
   static fieldInputProcessors = fieldInputProcessors
+  static updaterName = 'updateRange'
   static defaultProps = {
     updateRange(id, data) {},
-  }
-
-  flushInputChange = (name, value, checked) => {
-    const {updateRange} = this.props
-    const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(name)
-    if (currentValue !== processedValue) {
-      updateRange(this.getValue('id'), {[name]: processedValue})
-    }
   }
 
   skipChange = (name, value, checked) => {

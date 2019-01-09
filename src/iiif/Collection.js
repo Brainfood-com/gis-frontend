@@ -41,17 +41,9 @@ function getDerivedStateFromProps(props, state) {
 const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends AbstractForm {
   static modelName = 'collection'
   static fieldInputProcessors = fieldInputProcessors
+  static updaterName = 'updateCollection'
   static defaultProps = {
     updateCollection(id, data) {},
-  }
-
-  flushInputChange = (name, value, checked) => {
-    const {updateCollection} = this.props
-    const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(name)
-    if (currentValue !== processedValue) {
-      updateCollection(this.getValue('id'), {[name]: processedValue})
-    }
   }
 
   skipChange = (name, value, checked) => {

@@ -41,17 +41,9 @@ function getDerivedStateFromProps(props, state) {
 const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends AbstractForm {
   static modelName = 'manifest'
   static fieldInputProcessors = fieldInputProcessors
+  static updaterName = 'updateManifest'
   static defaultProps = {
     updateManifest(id, data) {},
-  }
-
-  flushInputChange = (name, value, checked) => {
-    const {updateManifest} = this.props
-    const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(name)
-    if (currentValue !== processedValue) {
-      updateManifest(this.getValue('id'), {[name]: processedValue})
-    }
   }
 
   skipChange = (name, value, checked) => {

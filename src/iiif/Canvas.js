@@ -657,6 +657,7 @@ const fieldInputProcessors = {
 export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends AbstractForm {
   static modelName = 'canvas'
   static fieldInputProcessors = fieldInputProcessors
+  static updaterName = 'updateCanvas'
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -671,15 +672,6 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
-
-  flushInputChange = (name, value, checked) => {
-    const {updateCanvas} = this.props
-    const processedValue = this.processFieldInput(name, value, checked)
-    const currentValue = this.getValue(name)
-    if (currentValue !== processedValue) {
-      updateCanvas(this.getValue('id'), {[name]: processedValue})
-    }
-  }
 
   skipChangeParent = (name, value, checked) => {
     const {permissions, range} = this.props

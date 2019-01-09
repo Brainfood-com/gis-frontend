@@ -26,6 +26,16 @@ export class AbstractForm extends DebouncedForm {
     return model[name]
   }
 
+  flushInputChange = (name, value, checked) => {
+    const {constructor: {updaterName}} = this
+    const {[updaterName]: updater} = this.props
+    const processedValue = this.processFieldInput(name, value, checked)
+    const currentValue = this.getValue(name)
+    if (currentValue !== processedValue) {
+      updater(this.getValue('id'), {[name]: processedValue})
+    }
+  }
+
   processFieldInput(name, value, checked) {
     const {constructor: {fieldInputProcessors}} = this
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
