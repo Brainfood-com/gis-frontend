@@ -658,6 +658,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   static modelName = 'canvas'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateCanvas'
+  static complexFields = ['tags']
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -676,16 +677,6 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   skipChangeParent = (name, value, checked) => {
     const {permissions, range} = this.props
     return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
-  }
-
-  skipChange = (name, value, checked) => {
-    if (name === 'tags') {
-      return false
-    }
-    const {permissions} = this.props
-    const result = !checkPermissions(permissions, 'editor', 'canvas', name)
-    console.log('canvas:userPermissions', name, result)
-    return result
   }
 
   handleRemoveOverride = (event) => {

@@ -42,16 +42,9 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
   static modelName = 'collection'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateCollection'
+  static complexFields = ['tags']
   static defaultProps = {
     updateCollection(id, data) {},
-  }
-
-  skipChange = (name, value, checked) => {
-    if (name === 'tags') {
-      return false
-    }
-    const {permissions} = this.props
-    return !checkPermissions(permissions, 'editor', 'collection', name)
   }
 
   render() {

@@ -42,16 +42,9 @@ const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyl
   static modelName = 'manifest'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateManifest'
+  static complexFields = ['tags']
   static defaultProps = {
     updateManifest(id, data) {},
-  }
-
-  skipChange = (name, value, checked) => {
-    if (name === 'tags') {
-      return false
-    }
-    const {permissions} = this.props
-    return !checkPermissions(permissions, 'editor', 'manifest', name)
   }
 
   render() {

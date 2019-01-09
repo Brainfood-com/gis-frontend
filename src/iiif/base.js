@@ -1,5 +1,6 @@
 import React from 'react'
 import DebouncedForm from '../DebouncedForm'
+import { checkPermissions } from '../User'
 
 export class AbstractDetail extends React.Component {
   static defaultProps = {
@@ -40,5 +41,14 @@ export class AbstractForm extends DebouncedForm {
     const {constructor: {fieldInputProcessors}} = this
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     return inputProcessor(value, checked)
+  }
+
+  skipChange = (name, value, checked) => {
+    const {constructor: {complexFields = [], modelName}} = this
+    if (complexFields.indexOf(name) !== -1) {
+      return false
+    }
+    const {permissions} = this.props
+    return !checkPermissions(permissions, 'editor', modelName, name)
   }
 }
