@@ -688,9 +688,9 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   skipChangeParent = (name, value, checked) => {
-    const {userPermissions} = this.props
+    const {permissions} = this.props
     const {range} = this.state
-    return !approvedRangePermissionCheck(range, userPermissions, 'canvas', name)
+    return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
   }
 
   skipChange = (name, value, checked) => {
