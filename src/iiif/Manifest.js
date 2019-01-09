@@ -40,6 +40,7 @@ function getDerivedStateFromProps(props, state) {
 
 const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends AbstractForm {
   static modelName = 'manifest'
+  static fieldInputProcessors = fieldInputProcessors
   static defaultProps = {
     updateManifest(id, data) {},
   }
@@ -59,11 +60,6 @@ const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyl
     }
     const {permissions} = this.props
     return !checkPermissions(permissions, 'editor', 'manifest', name)
-  }
-
-  processFieldInput(name, value, checked) {
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    return inputProcessor(value, checked)
   }
 
   render() {

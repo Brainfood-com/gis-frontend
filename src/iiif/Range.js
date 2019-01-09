@@ -73,6 +73,7 @@ function getDerivedStateFromProps(props, state) {
 
 const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
   static modelName = 'range'
+  static fieldInputProcessors = fieldInputProcessors
   static defaultProps = {
     updateRange(id, data) {},
   }
@@ -93,11 +94,6 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
     }
     const {permissions, range} = this.props
     return !approvedRangePermissionCheck(range, permissions, 'range', name)
-  }
-
-  processFieldInput(name, value, checked) {
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    return inputProcessor(value, checked)
   }
 
   render() {

@@ -25,4 +25,10 @@ export class AbstractForm extends DebouncedForm {
     const {props: {[modelName]: model}} = this
     return model[name]
   }
+
+  processFieldInput(name, value, checked) {
+    const {constructor: {fieldInputProcessors}} = this
+    const {[name]: inputProcessor = value => value} = fieldInputProcessors
+    return inputProcessor(value, checked)
+  }
 }

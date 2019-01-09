@@ -656,6 +656,7 @@ const fieldInputProcessors = {
 
 export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends AbstractForm {
   static modelName = 'canvas'
+  static fieldInputProcessors = fieldInputProcessors
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -693,11 +694,6 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
     const result = !checkPermissions(permissions, 'editor', 'canvas', name)
     console.log('canvas:userPermissions', name, result)
     return result
-  }
-
-  processFieldInput(name, value, checked) {
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    return inputProcessor(value, checked)
   }
 
   handleRemoveOverride = (event) => {
