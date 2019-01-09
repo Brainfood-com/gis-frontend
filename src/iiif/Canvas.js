@@ -676,8 +676,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
 
   flushInputChange = (name, value, checked) => {
     const {canvas, updateCanvas} = this.props
-    const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
-    const processedValue = inputProcessor(value, checked)
+    const processedValue = this.processFieldInput(name, value, checked)
     const currentValue = canvas[name]
     if (currentValue !== processedValue) {
       updateCanvas(canvas.id, {[name]: processedValue})
@@ -697,6 +696,11 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
     const result = !checkPermissions(permissions, 'editor', 'canvas', name)
     console.log('canvas:userPermissions', name, result)
     return result
+  }
+
+  processFieldInput(name, value, checked) {
+    const {[name]: inputProcessor = value => value} = fieldInputProcessors
+    return inputProcessor(value, checked)
   }
 
   handleRemoveOverride = (event) => {
@@ -730,17 +734,17 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
-          <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault(canvas, 'exclude', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
+          <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault(canvas, 'exclude', false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Hole' control={
-          <Checkbox name='hole' checked={!!this.checkOverrideValueDefault(canvas, 'hole', fieldInputProcessors, false)} onChange={this.handleInputChange}/>
+          <Checkbox name='hole' checked={!!this.checkOverrideValueDefault(canvas, 'hole', false)} onChange={this.handleInputChange}/>
         }/>
         <FormControlLabel label='Override' control={
           <Checkbox name='override' disabled={!hasOverride} checked={!!hasOverride} onChange={this.handleRemoveOverride}/>
         }/>
       </FormGroup>
-      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(canvas, 'notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault(canvas, 'tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })

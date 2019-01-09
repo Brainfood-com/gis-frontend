@@ -49,8 +49,7 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
 
   flushInputChange = (name, value, checked) => {
     const {collection, updateCollection} = this.props
-    const {[name]: inputProcessor = value => value} = fieldInputProcessors
-    const processedValue = inputProcessor(value)
+    const processedValue = this.processFieldInput(name, value, checked)
     const currentValue = collection[name]
     if (currentValue !== processedValue) {
       updateCollection(collection.id, {[name]: processedValue})
@@ -65,6 +64,11 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
     return !checkPermissions(permissions, 'editor', 'collection', name)
   }
 
+  processFieldInput(name, value, checked) {
+    const {[name]: inputProcessor = value => value} = fieldInputProcessors
+    return inputProcessor(value, checked)
+  }
+
   render() {
     const {className, classes, collection, onRemoveOverride} = this.props
     if (!collection) return <div/>
@@ -73,8 +77,8 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', fieldInputProcessors, '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' modelName='collection' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', fieldInputProcessors, [])} onChange={this.handleInputChange}/>
+      <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault(collection, 'notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='collection' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault(collection, 'tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
