@@ -46,11 +46,11 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
   }
 
   flushInputChange = (name, value, checked) => {
-    const {collection, updateCollection} = this.props
+    const {updateCollection} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
     const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
-      updateCollection(collection.id, {[name]: processedValue})
+      updateCollection(this.getValue('id'), {[name]: processedValue})
     }
   }
 

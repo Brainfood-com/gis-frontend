@@ -673,11 +673,11 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
 
   flushInputChange = (name, value, checked) => {
-    const {canvas, updateCanvas} = this.props
+    const {updateCanvas} = this.props
     const processedValue = this.processFieldInput(name, value, checked)
     const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
-      updateCanvas(canvas.id, {[name]: processedValue})
+      updateCanvas(this.getValue('id'), {[name]: processedValue})
     }
   }
 
