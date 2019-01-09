@@ -43,13 +43,13 @@ import Relider from 'relider'
 import connectHelper from '../connectHelper'
 import * as iiifRedux from './redux'
 import {picked} from './Picked'
-import DebouncedForm from '../DebouncedForm'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 import {createScrollHandler} from '../ScrollHelper'
 import {checkPermissions, picked as userPicked} from '../User'
 import {approvedRangePermissionCheck} from './Range'
+import { AbstractForm } from './base'
 
 export function handleCanvasNext(event, onCanvasNext) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -654,7 +654,8 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends DebouncedForm {
+export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends AbstractForm {
+  static modelName = 'canvas'
   static defaultProps = {
     updateCanvas(id, data) {},
     deleteCanvasPointOverride(id) {},
@@ -662,11 +663,6 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   state = {dialogOpen: false}
-
-  getValue(name) {
-    const {canvas} = this.props
-    return canvas[name]
-  }
 
   handleOnCanvasNext = delta => {
     const {canvases, canvas, onItemPicked} = this.props

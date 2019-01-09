@@ -1,4 +1,5 @@
 import React from 'react'
+import DebouncedForm from '../DebouncedForm'
 
 export class AbstractDetail extends React.Component {
   static defaultProps = {
@@ -18,4 +19,10 @@ export class AbstractDetail extends React.Component {
   }
 }
 
-
+export class AbstractForm extends DebouncedForm {
+  getValue(name) {
+    const {constructor: {modelName}} = this
+    const {props: {[modelName]: model}} = this
+    return model[name]
+  }
+}

@@ -17,9 +17,9 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
-import DebouncedForm from '../DebouncedForm'
 import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
+import { AbstractForm } from './base'
 
 const manifestFormStyles = {
   root: {
@@ -38,14 +38,10 @@ function getDerivedStateFromProps(props, state) {
   return {manifest: manifest instanceof imMap ? manifest.toJS() : manifest}
 }
 
-export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends DebouncedForm {
+const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends AbstractForm {
+  static modelName = 'manifest'
   static defaultProps = {
     updateManifest(id, data) {},
-  }
-
-  getValue(name) {
-    const {manifest} = this.props
-    return manifest[name]
   }
 
   flushInputChange = (name, value, checked) => {

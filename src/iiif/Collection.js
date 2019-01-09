@@ -17,9 +17,9 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
-import DebouncedForm from '../DebouncedForm'
 import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
+import { AbstractForm } from './base'
 
 const collectionFormStyles = {
   root: {
@@ -38,14 +38,10 @@ function getDerivedStateFromProps(props, state) {
   return {collection: collection instanceof imMap ? collection.toJS() : collection}
 }
 
-const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
+const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends AbstractForm {
+  static modelName = 'collection'
   static defaultProps = {
     updateCollection(id, data) {},
-  }
-
-  getValue(name) {
-    const {collection} = this.props
-    return collection[name]
   }
 
   flushInputChange = (name, value, checked) => {

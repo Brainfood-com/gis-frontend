@@ -24,10 +24,10 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
-import DebouncedForm from '../DebouncedForm'
 import {checkPermissions, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList} from '../constants'
+import { AbstractForm } from './base'
 
 export function approvedRangePermissionCheck(range, permissions, modelName, fieldName) {
   const {tags} = range
@@ -71,14 +71,10 @@ function getDerivedStateFromProps(props, state) {
   return {range: range instanceof imMap ? range.toJS() : range}
 }
 
-const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
+const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
+  static modelName = 'range'
   static defaultProps = {
     updateRange(id, data) {},
-  }
-
-  getValue(name) {
-    const {range} = this.props
-    return range[name]
   }
 
   flushInputChange = (name, value, checked) => {
