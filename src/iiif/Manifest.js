@@ -55,6 +55,7 @@ const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyl
     }
 
     return <Paper className={classnames(rootClasses, className)}>
+      <TextField name='values.batch' fullWidth label='Batch' value={this.checkOverrideValueDefault('values.batch', '')} onChange={this.handleInputChange}/>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <IIIFTagEditor name='tags' modelName='manifest' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>

@@ -24,7 +24,12 @@ export class AbstractForm extends DebouncedForm {
   getValue(name) {
     const {constructor: {modelName}} = this
     const {props: {[modelName]: model}} = this
-    return model[name]
+    if (name.startsWith('values.')) {
+      const {values = {}} = model
+      return values[name.substring('values.'.length)]
+    } else {
+      return model[name]
+    }
   }
 
   flushInputChange = (name, value, checked) => {
@@ -33,7 +38,13 @@ export class AbstractForm extends DebouncedForm {
     const processedValue = this.processFieldInput(name, value, checked)
     const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
-      updater(this.getValue('id'), {[name]: processedValue})
+      if (name.startsWith('values.')) {
+        const values = Object.assign({}, this.getValue('values'))
+        values[name.substring('values.'.length)] = processedValue
+        updater(this.getValue('id'), {values})
+      } else {
+        updater(this.getValue('id'), {[name]: processedValue})
+      }
     }
   }
 

@@ -389,15 +389,15 @@ export const getCollection = requiredId(busyCall('collection', collectionId => a
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionDetail})
 }))
 
-export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags'], id => makeUrl('api', `collection/${id}`), getCollection)
+export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags', 'values'], id => makeUrl('api', `collection/${id}`), getCollection)
 
 function manifestBuildLabel(manifest) {
-  const {tags = [], label, ...rest} = manifest
-  const tagFlags = []
-  if (tags.find(tag => tag === 'Claimed')) {
-    tagFlags.push('Claimed')
+  const {values = {}} = manifest
+  const _extra = []
+  if (values.batch !== undefined) {
+    _extra.push({name: 'batch', value: values.batch})
   }
-  return {...rest, label: `${label}(${tagFlags.join('/')})`, tags}
+  return {...manifest, _extra}
 }
 
 export const getManifest = requiredId(busyCall('manifest', manifestId => async dispatch => {
@@ -405,7 +405,7 @@ export const getManifest = requiredId(busyCall('manifest', manifestId => async d
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestDetail)})
 }))
 
-export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags'], id => makeUrl('api', `manifest/${id}`), getManifest)
+export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags', 'values'], id => makeUrl('api', `manifest/${id}`), getManifest)
 
 export const getManifestStructures = requiredId(busyCall('manifest', manifestId => async dispatch => {
   const ranges = []
@@ -444,7 +444,7 @@ export const getRange = requiredId(busyCall('range', rangeId => async dispatch =
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail})
 }))
 
-export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
+export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags', 'values'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
   dispatch(getRange(rangeId))
   dispatch(getRangePoints(rangeId))
   dispatch(getStats('range'))
@@ -551,7 +551,7 @@ export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatc
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasDetail})
 }))
 
-export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), id => async dispatch => {
+export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags', 'values'], id => makeUrl('api', `canvas/${id}`), id => async dispatch => {
   dispatch(getCanvas(id))
   const typeInfo = await fetch(makeUrl('api', 'iiif/detectType'), {
     method: 'POST',
