@@ -43,7 +43,7 @@ export class AbstractForm extends DebouncedForm {
     return inputProcessor(value, checked)
   }
 
-  skipChange = (name, value, checked) => {
+  skipChangeItem = (name, value, checked) => {
     const {constructor: {complexFields = [], modelName}} = this
     if (complexFields.indexOf(name) !== -1) {
       return false

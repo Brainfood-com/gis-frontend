@@ -680,7 +680,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   handleRemoveOverride = (event) => {
-    if (this.skipChange('override')) {
+    if (this.skipChangeItem('override')) {
       return
     }
     const {canvas, range, deleteRangePoint} = this.props

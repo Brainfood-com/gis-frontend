@@ -25,12 +25,12 @@ export default class DebouncedForm extends React.Component {
   skipChangeParent = (name, value, checked) => {
   }
 
-  skipChange = (name, value, checked) => {
+  skipChangeItem = (name, value, checked) => {
   }
 
   handleInputChange = event => {
     const {name, value, checked} = event.currentTarget
-    if (this.skipChangeParent(name, value, checked) || this.skipChange(name, value, checked)) {
+    if (this.skipChangeParent(name, value, checked) || this.skipChangeItem(name, value, checked)) {
       return
     }
     this.setState((state, props) => {
