@@ -495,15 +495,18 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     showBuilding(buildingId)
   }
 
+  rangeChoropleth = value => this.state.rangeChoropleth(value)
+  canvasChoropleth = value => this.state.canvasChoropleth(value)
+  doneChoropleth = value => this.state.doneChoropleth(value)
+
   render() {
     const {className, classes, buildings, buildingStats, requestCurrentBuilding} = this.props
-    const {rangeChoropleth, canvasChoropleth, doneChoropleth} = this.state
 
     return <FeatureGroup>
       {buildings && buildings.map((building, key, index) => <MapBuilding key={`${building.buildingId === requestCurrentBuilding}:${building.buildingId}`} building={building}
-        rangeChoropleth={rangeChoropleth}
-        canvasChoropleth={canvasChoropleth}
-        doneChoropleth={doneChoropleth}
+        rangeChoropleth={this.rangeChoropleth}
+        canvasChoropleth={this.canvasChoropleth}
+        doneChoropleth={this.doneChoropleth}
         showBuilding={this.handleShowBuilding}
         isSelected={building.buildingId === requestCurrentBuilding}
         />).toIndexedSeq()}
