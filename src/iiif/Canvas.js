@@ -48,7 +48,7 @@ import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 import {createScrollHandler} from '../ScrollHelper'
 import {checkPermissions, picked as userPicked} from '../User'
-import {approvedRangePermissionCheck} from './Range'
+import { rangeRequiredRole } from './Range'
 import { AbstractForm } from './base'
 
 export function handleCanvasNext(event, onCanvasNext) {
@@ -323,7 +323,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   skipChange = name => {
     const {permissions} = this.props
     const {range} = this.state
-    return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
+    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleOnClick = event => {
@@ -676,7 +676,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
 
   skipChangeParent = (name, value, checked) => {
     const {permissions, range} = this.props
-    return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
+    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleRemoveOverride = (event) => {

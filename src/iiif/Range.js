@@ -29,10 +29,10 @@ import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList} from '../constants'
 import { AbstractForm } from './base'
 
-export function approvedRangePermissionCheck(range, permissions, modelName, fieldName) {
+export function rangeRequiredRole(range) {
   const {tags} = range
   const isClientApproved = tags.indexOf('Client Approved') !== -1
-  return checkPermissions(permissions, isClientApproved ? 'client' : 'editor', modelName, fieldName)
+  return isClientApproved ? 'client' : 'editor'
 }
 
 const rangeFormStyles = {
@@ -82,9 +82,7 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
 
   requiredRole() {
     const {range} = this.props
-    const {tags} = range
-    const isClientApproved = tags.indexOf('Client Approved') !== -1
-    return isClientApproved ? 'client' : 'editor'
+    return rangeRequiredRole(range)
   }
 
   render() {
