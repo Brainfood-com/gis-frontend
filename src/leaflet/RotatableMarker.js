@@ -3,22 +3,11 @@ import React from 'react'
 import {Marker} from 'react-leaflet'
 import 'leaflet-rotatedmarker'
 
-let counter = 0
-
-export default class RotatableMarker  extends React.Component {
-  state = {}
-
-  static getDerivedStateFromProps(props, state) {
-    const {rotationAngle} = props
-    if (state.rotationAngle !== rotationAngle) {
-      return {key: counter++, rotationAngle}
-    } else {
-      return {rotationAngle}
+export default class RotatableMarker  extends Marker {
+  updateLeafletElement(fromProps, toProps) {
+    super.updateLeafletElement(fromProps, toProps)
+    if (toProps.rotationAngle !== fromProps.rotationAngle) {
+      this.leafletElement.setRotationAngle(toProps.rotationAngle)
     }
-  }
-
-  render() {
-    const {key} = this.state
-    return <Marker {...this.props} key={key}/>
   }
 }

@@ -1,15 +1,18 @@
-import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
 
 import L from 'leaflet'
-import { Polygon, withLeaflet } from 'react-leaflet'
+import { Polygon, PropTypes as LeafletPropTypes } from 'react-leaflet'
 
 import Points from './Points'
 
 import { picked } from '../iiif/Picked'
 
-export default flow(picked(['range', 'canvas']), withLeaflet)(class CameraPosition extends React.Component {
+export default picked(['range', 'canvas'])(class CameraPosition extends React.Component {
+
+  static contextTypes = {
+    map: LeafletPropTypes.map,
+  }
 
   static defaultProps = {
     fieldOfView: 60,
@@ -84,7 +87,7 @@ export default flow(picked(['range', 'canvas']), withLeaflet)(class CameraPositi
     const {latlng, bearing} = rangePoint
     //position, heading, zoom} = pickedProps
 
-    const {leaflet: {map}} = this.props
+    const {map} = this.context
     const {crs} = map.options
 
     const cartesianPoint = map.project(latlng)

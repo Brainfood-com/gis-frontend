@@ -4,7 +4,7 @@ import memoize from 'lodash-es/memoize'
 import React from 'react'
 
 import AwesomeMarkers from '../leaflet/AwesomeMarkers'
-import { FeatureGroup, Marker, withLeaflet, Tooltip } from 'react-leaflet'
+import { FeatureGroup, Marker, PropTypes as LeafletPropTypes, Tooltip } from 'react-leaflet'
 import GISGeoJSON from '../GISGeoJSON'
 
 import {makeUrl} from '../api'
@@ -30,13 +30,17 @@ export const CanvasDragResultShape = PropTypes.shape({
   edge: PropTypes.any,
 })
 
-export const CanvasDragResultDisplay = withLeaflet(class CanvasDragResultDisplay extends React.Component {
+export class CanvasDragResultDisplay extends React.Component {
+  static contextTypes = {
+    map: LeafletPropTypes.map,
+  }
+
   static propTypes = {
     target: LeafletPointShape,
     result: CanvasDragResultShape,
   }
   componentDidMount() {
-    const {props: {leaflet: {map}}} = this
+    const {context: {map}} = this
     map.createPane('dragResult').style.zIndex = 250
   }
 
@@ -52,7 +56,7 @@ export const CanvasDragResultDisplay = withLeaflet(class CanvasDragResultDisplay
       </Marker>
     </FeatureGroup>
   }
-})
+}
 
 const memoizePoint = memoize((lat, lng) => ({lat, lng}), (lat, lng) => JSON.stringify([lat, lng]))
 

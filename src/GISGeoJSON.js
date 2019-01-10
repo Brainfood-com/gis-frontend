@@ -2,27 +2,25 @@ import React from 'react'
 
 import { GeoJSON } from 'react-leaflet'
 
-let counter = 0
-
-export default class GISGeoJSON extends React.Component {
+export default class GISGeoJSON extends GeoJSON {
   static defaultProps = {
     data: [],
   }
 
-  state = {}
-
-  static getDerivedStateFromProps(props, state) {
-    const {data} = props
-    if (state.data !== data) {
-      return {key: counter++, data}
-    } else {
-      return {data}
+	constructor(props) {
+    super(props)
+    this.state = {
+      data: props.data,
     }
   }
 
-  render() {
-    const {data, ...props} = this.props
-    const {key} = this.state
-    return <GeoJSON {...props} key={key} data={data}/>
+  componentWillReceiveProps(nextProps) {
+    super.componentWillReceiveProps(nextProps)
+    const {data} = nextProps
+    if (data && data !== this.state.data) {
+      this.setState({data})
+      this.leafletElement.clearLayers()
+      this.leafletElement.addData(data)
+    }
   }
 }
