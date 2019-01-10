@@ -551,9 +551,17 @@ export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatc
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasDetail})
 }))
 
-export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), id => dispatch => {
+export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags'], id => makeUrl('api', `canvas/${id}`), id => async dispatch => {
   dispatch(getCanvas(id))
-  dispatch(searchRefreshBuildings())
+  const typeInfo = await fetch(makeUrl('api', 'iiif/detectType'), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({iiifId: id}),
+  }).then(data => data.json())
+  const rangeIds = typeInfo.allParents['sc:Range'] || []
+  rangeIds.forEach(rangeId => dispatch(searchRefreshBuildings({rangeId})))
 })
 
 const modelTypeToFetchers = {
