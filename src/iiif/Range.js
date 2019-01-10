@@ -75,17 +75,16 @@ const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(c
   static modelName = 'range'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateRange'
+  static complexFields = ['tags']
   static defaultProps = {
     updateRange(id, data) {},
   }
 
-  skipChange = (name, value, checked) => {
-    if (name === 'tags') {
-      debugger
-      return false
-    }
-    const {permissions, range} = this.props
-    return !approvedRangePermissionCheck(range, permissions, 'range', name)
+  requiredRole() {
+    const {range} = this.props
+    const {tags} = range
+    const isClientApproved = tags.indexOf('Client Approved') !== -1
+    return isClientApproved ? 'client' : 'editor'
   }
 
   render() {

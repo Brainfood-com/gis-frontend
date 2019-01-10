@@ -49,6 +49,10 @@ export class AbstractForm extends DebouncedForm {
       return false
     }
     const {permissions} = this.props
-    return !checkPermissions(permissions, 'editor', modelName, name)
+    return !checkPermissions(permissions, this.requiredRole(), modelName, name)
+  }
+
+  requiredRole() {
+    return 'editor'
   }
 }
