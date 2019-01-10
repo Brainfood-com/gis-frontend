@@ -663,8 +663,6 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
 
   state = {dialogOpen: false}
 
-  static getDerivedStateFromProps = getDerivedStateFromProps
-
   getValue(model, name) {
     return model[name]
   }
@@ -677,8 +675,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
 
   flushInputChange = (name, value, checked) => {
-    const {updateCanvas} = this.props
-    const {canvas} = this.state
+    const {canvas, updateCanvas} = this.props
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const processedValue = inputProcessor(value, checked)
     const currentValue = canvas[name]
@@ -688,8 +685,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   skipChangeParent = (name, value, checked) => {
-    const {permissions} = this.props
-    const {range} = this.state
+    const {permissions, range} = this.props
     return !approvedRangePermissionCheck(range, permissions, 'canvas', name)
   }
 
@@ -707,9 +703,8 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
     if (this.skipChange('override')) {
       return
     }
-    const {range, deleteRangePoint} = this.props
-    const {canvas} = this.state
-    deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
+    const {canvas, range, deleteRangePoint} = this.props
+    deleteRangePoint(range.id, canvas.id, {sourceId: 'web'})
   }
 
   handleClose = () => {
@@ -717,8 +712,7 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
   }
 
   render() {
-    const {className, classes, range, deleteRangePoint, canvases, points, updateCanvas, selected, onItemPicked} = this.props
-    const {canvas} = this.state
+    const {className, classes, range, deleteRangePoint, canvases, canvas, points, updateCanvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.image
@@ -1105,14 +1099,26 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
 })
 
 export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends React.Component {
+  state = {}
+
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
   render() {
-    const {className, range, canvas, ...props} = this.props
+    const {className, canvases, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, ...props} = this.props
+    const {range, canvas} = this.state
 
     if (!range) return <div/>
-    const title = canvas ? canvas.get('label') : 'Canvas'
-    const image = canvas && canvas.get('image')
+    const title = canvas ? canvas.label : 'Canvas'
+    const image = canvas && canvas.image
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
-    return <ItemPanel className={className} name='canvas' title={`${lastImagePart} ${title}`} icon={<ImageIcon/>} form={<CanvasForm {...props} range={range} canvas={canvas}/>} busy={canvas && canvas.get('_busy')}/>
+    return <ItemPanel
+      className={className}
+      name='canvas'
+      title={`${lastImagePart} ${title}`}
+      icon={<ImageIcon/>}
+      form={<CanvasForm range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint}/>}
+      busy={canvas && canvas._busy}
+    />
   }
 })
 /*

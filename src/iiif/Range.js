@@ -71,22 +71,17 @@ function getDerivedStateFromProps(props, state) {
   return {range: range instanceof imMap ? range.toJS() : range}
 }
 
-export const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
+const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends DebouncedForm {
   static defaultProps = {
     updateRange(id, data) {},
   }
-
-  state = {}
-
-  static getDerivedStateFromProps = getDerivedStateFromProps
 
   getValue(model, name) {
     return model[name]
   }
 
   flushInputChange = (name, value, checked) => {
-    const {updateRange} = this.props
-    const {range} = this.state
+    const {range, updateRange} = this.props
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
     const processedValue = inputProcessor(value, checked)
     const currentValue = range[name]
@@ -100,14 +95,12 @@ export const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormSty
       debugger
       return false
     }
-    const {permissions} = this.props
-    const {range} = this.state
+    const {permissions, range} = this.props
     return !approvedRangePermissionCheck(range, permissions, 'range', name)
   }
 
   render() {
-    const {className, classes} = this.props
-    const {range} = this.state
+    const {className, classes, range} = this.props
     if (!range) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -145,9 +138,6 @@ const rangeBriefStyles = {
 }
 
 export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief extends React.Component {
-  state = {}
-  static getDerivedStateFromProps = getDerivedStateFromProps
-
   static propTypes = {
   }
 
@@ -157,14 +147,12 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief ex
 
   handleOnClick = event => {
     event.preventDefault()
-    const {onItemPicked} = this.props
-    const {range} = this.state
+    const {onItemPicked, range} = this.props
     onItemPicked(range.id)
   }
 
   render() {
-    const {className, classes} = this.props
-    const {range} = this.state
+    const {className, classes, range} = this.props
     if (!range) {
       return <div />
     }
@@ -177,20 +165,33 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief ex
   }
 })
 
-export const RangePick = picked(['manifest', 'range'])(class RangePick extends React.Component {
+class RangePick extends React.Component {
   render() {
-    const {className, manifest, rangesWithCanvases, range, onItemPicked, updateOwner} = this.props
+    const {manifest, rangesWithCanvases, range, onItemPicked} = this.props
     if (!manifest) return <Typography>Please select a manifest.</Typography>
-    return <ExpandoList className={className} items={rangesWithCanvases} selectedItem={range} IconLabel='Range' onItemPicked={onItemPicked}/>
+    return <ExpandoList items={rangesWithCanvases} selectedItem={range} IconLabel='Range' onItemPicked={onItemPicked}/>
   }
-})
+}
 
 export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends React.Component {
+  state = {}
+
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
   render() {
-    const {className, manifest, rangesWithCanvases, range, ...props} = this.props
+    const {className, manifest, rangesWithCanvases, onItemPicked, updateRange} = this.props
+    const {range} = this.state
 
     if (!manifest) return <div/>
-    const title = range ? range.get('label') : 'Range'
-    return <ItemPanel className={className} name='range' title={title} pick={<RangePick/>} icon={<CameraRollIcon/>} form={<RangeForm {...props} range={range}/>} busy={range && range.get('_busy')}/>
+    const title = range ? range.label : 'Range'
+    return <ItemPanel
+      className={className}
+      name='range'
+      title={title}
+      pick={<RangePick manifest={manifest} rangesWithCanvases={rangesWithCanvases} range={this.props.range} onItemPicked={onItemPicked}/>}
+      icon={<CameraRollIcon/>}
+      form={<RangeForm range={range} updateRange={updateRange}/>}
+      busy={range && range._busy}
+    />
   }
 })

@@ -38,20 +38,17 @@ function getDerivedStateFromProps(props, state) {
   return {collection: collection instanceof imMap ? collection.toJS() : collection}
 }
 
-export const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
+const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends DebouncedForm {
   static defaultProps = {
     updateCollection(id, data) {},
   }
-
-  static getDerivedStateFromProps = getDerivedStateFromProps
 
   getValue(model, name) {
     return model[name]
   }
 
   flushInputChange = (name, value, checked) => {
-    const {updateCollection} = this.props
-    const {collection} = this.state
+    const {collection, updateCollection} = this.props
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
     const currentValue = collection[name]
@@ -69,8 +66,7 @@ export const CollectionForm = flow(userPicked('permissions'), withStyles(collect
   }
 
   render() {
-    const {className, classes, onRemoveOverride} = this.props
-    const {collection} = this.state
+    const {className, classes, collection, onRemoveOverride} = this.props
     if (!collection) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -83,18 +79,31 @@ export const CollectionForm = flow(userPicked('permissions'), withStyles(collect
   }
 })
 
-export const CollectionPick = picked(['root', 'collection'])(class CollectionPick extends React.Component {
+class CollectionPick extends React.Component {
   render() {
     const {className, collections, onItemPicked, collection} = this.props
     return <ExpandoList className={className} items={collections} selectedItem={collection} IconLabel='Collection' onItemPicked={onItemPicked}/>
   }
-})
+}
 
 export const CollectionPanel = picked(['root', 'collection'])(class CollectionPanel extends React.Component {
-  render() {
-    const {className, collections, collection, ...props} = this.props
+  state = {}
 
-    const title = collection ? collection.get('label') : 'Collection'
-    return <ItemPanel className={className} name='collection' title={title} pick={<CollectionPick/>} icon={<CollectionsIcon/>} form={<CollectionForm {...props} collection={collection}/>} busy={collection && collection.get('_busy')}/>
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
+  render() {
+    const {className, collections, updateCollection, onItemPicked, ...props} = this.props
+    const {collection} = this.state
+
+    const title = collection ? collection.label : 'Collection'
+    return <ItemPanel
+      className={className}
+      name='collection'
+      title={title}
+      pick={<CollectionPick collections={collections} onItemPicked={onItemPicked} collection={this.props.collection}/>}
+      icon={<CollectionsIcon/>}
+      form={<CollectionForm {...props} collection={collection} updateCollection={updateCollection}/>}
+      busy={collection && collection._busy}
+    />
   }
 })

@@ -43,15 +43,12 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
     updateManifest(id, data) {},
   }
 
-  static getDerivedStateFromProps = getDerivedStateFromProps
-
   getValue(model, name) {
     return model[name]
   }
 
   flushInputChange = (name, value, checked) => {
-    const {updateManifest} = this.props
-    const {manifest} = this.state
+    const {manifest, updateManifest} = this.props
     const {[name]: inputProcessor = value => value} = fieldInputProcessors
     const processedValue = inputProcessor(value)
     const currentValue = manifest[name]
@@ -69,8 +66,7 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
   }
 
   render() {
-    const {className, classes, onRemoveOverride} = this.props
-    const {manifest} = this.state
+    const {className, classes, manifest, onRemoveOverride} = this.props
     if (!manifest) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -83,20 +79,33 @@ export const ManifestForm = flow(userPicked('permissions'), withStyles(manifestF
   }
 })
 
-export const ManifestPick = picked(['collection', 'manifest'])(class ManifestPick extends React.Component {
+class ManifestPick extends React.Component {
   render() {
     const {className, collection, manifests, manifest, onItemPicked} = this.props
     if (!collection) return <Typography>Please select a collection.</Typography>
     return <ExpandoList className={className} items={manifests} selectedItem={manifest} IconLabel='Manifest' onItemPicked={onItemPicked}/>
   }
-})
+}
 
 export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPanel extends React.Component {
+  state = {}
+
+  static getDerivedStateFromProps = getDerivedStateFromProps
+
   render() {
-    const {className, collection, manifests, manifest, ...props} = this.props
+    const {className, collection, manifests, onItemPicked, updateManifest} = this.props
+    const {manifest} = this.state
 
     if (!collection) return <div/>
-    const title = manifest ? manifest.get('label') : 'Manifest'
-    return <ItemPanel className={className} name='manifest' title={title} pick={<ManifestPick/>} icon={<CollectionsIcon/>} form={<ManifestForm {...props} manifest={manifest}/>} busy={manifest && manifest.get('_busy')}/>
+    const title = manifest ? manifest.label : 'Manifest'
+    return <ItemPanel
+      className={className}
+      name='manifest'
+      title={title}
+      pick={<ManifestPick collection={collection} manifests={manifests} manifest={this.props.manifest} onItemPicked={onItemPicked}/>}
+      icon={<CollectionsIcon/>}
+      form={<ManifestForm manifest={manifest} updateManifest={updateManifest}/>}
+      busy={manifest && manifest._busy}
+    />
   }
 })
