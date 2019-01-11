@@ -578,7 +578,12 @@ class Taxdata extends React.Component {
   }
 }
 
-const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'))(class CurrentBuildingRange extends React.Component {
+const currentBuildingRangeStyles = {
+  cursor: {
+    cursor: 'pointer',
+  }
+}
+const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
   state = {collection: null, manifest: null}
 
   static getDerivedStateFromProps(props, state) {
@@ -595,17 +600,17 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'))(clas
   }
 
   render() {
-    const {onItemPicked, range, currentBuilding} = this.props
+    const {classes, onItemPicked, range, currentBuilding} = this.props
     const {collection, manifest} = this.state
     const {canvasesByRange, primaryCanvasByRange} = currentBuilding
     const {id} = range
     const rangeCanvases = canvasesByRange[id]
     const primaryCanvas = primaryCanvasByRange[id]
     return <React.Fragment key={id}>
-      <CollectionBrief collection={collection} onItemPicked={this.handleOnItemPicked}/>
-      <ManifestBrief manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
-      <RangeBrief range={range} onItemPicked={this.handleOnItemPicked}/>
-      <CanvasCardRO range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
+      <CollectionBrief className={classes.cursor} collection={collection} onItemPicked={this.handleOnItemPicked}/>
+      <ManifestBrief className={classes.cursor} manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
+      <RangeBrief className={classes.cursor} range={range} onItemPicked={this.handleOnItemPicked}/>
+      <CanvasCardRO className={classes.cursor} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
     </React.Fragment>
   }
 })
