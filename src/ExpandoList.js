@@ -135,7 +135,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           const label = item.get('label')
           const type = item.get('type')
           const extra = item.get('_extra', immutableEmptyList)
-          const secondaryItems = [`${id}.${index}`, type]
+          const secondaryItems = [`${id}.${index}`]
           const tags = item.get('tags', immutableEmptyList)
           const tagFlags = {}
           tags.forEach(tag => {

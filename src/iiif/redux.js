@@ -271,7 +271,7 @@ export const startOfDay = () => async (dispatch, getState) => {
     dispatch({type: 'redux-iiif', actionType: ACTION.clear, modelType: MODEL['buildings']}),
   ])
   const collections = await fetch(makeUrl('api', 'collection')).then(data => data.json())
-  await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collections})
+  await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collections.map(collectionBuildKey).map(collectionBuildLabel)})
   const picked = JSON.parse(localStorage.getItem('gis-app.picked')) || {}
   await dispatch(pickMany(picked))
   await dispatch(getStats('range'))
@@ -382,18 +382,50 @@ export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch,
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['buildings'], itemOrItems: buildingResults})
 })
 
+function collectionBuildKey(collection) {
+  const {externalId} = collection
+  const clientKey = externalId.replace(/.*\/([^\/]+)\/collection\.json$/, '$1')
+  if (clientKey !== externalId) {
+    return {...collection, clientKey}
+  } else {
+    return collection
+  }
+}
+
+function collectionBuildLabel(collection) {
+  const {clientKey} = collection
+  const _extra = []
+  if (clientKey) {
+    _extra.push({name: 'key', value: clientKey})
+  }
+  return {...collection, _extra}
+}
+
 export const getCollection = requiredId(busyCall('collection', collectionId => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildLabel)})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildKey).map(manifestBuildLabel)})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionDetail})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionBuildLabel(collectionBuildKey(collectionDetail))})
 }))
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags', 'values'], id => makeUrl('api', `collection/${id}`), getCollection)
 
+function manifestBuildKey(manifest) {
+  const {externalId} = manifest
+  const clientKey = externalId.replace(/.*\/([^\/]+)\/manifest\.json$/, '$1')
+  if (clientKey !== externalId) {
+    return {...manifest, clientKey}
+  } else {
+    return manifest
+  }
+}
+
 function manifestBuildLabel(manifest) {
-  const {values = {}} = manifest
+  const {clientKey, values = {}} = manifest
   const _extra = []
+  if (clientKey) {
+    _extra.push({name: 'key', value: clientKey})
+  }
   if (values.batch !== undefined) {
     _extra.push({name: 'batch', value: values.batch})
   }
@@ -402,7 +434,7 @@ function manifestBuildLabel(manifest) {
 
 export const getManifest = requiredId(busyCall('manifest', manifestId => async dispatch => {
   const manifestDetail = await fetch(makeUrl('api', `manifest/${manifestId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestDetail)})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestBuildKey(manifestDetail))})
 }))
 
 export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags', 'values'], id => makeUrl('api', `manifest/${id}`), getManifest)
@@ -411,8 +443,8 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
   const ranges = []
   const rangesWithCanvases = []
   const allCanvases = []
-  const manifestStructures = (await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())).map(structure => {
-    const {id} = structure
+  const manifestStructures = (await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())).map(rangeBuildKey).map(structure => {
+    const {id, clientKey} = structure
     const canvases = structure.canvases || []
     if (structure.canvases) {
       if (structure.canvases.length) {
@@ -425,6 +457,9 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
       {name: 'canvases', value: canvases.length},
       {name: 'points', value: structure.pointOverrideCount || 0},
     ]
+    if (clientKey) {
+      _extra.push({name: 'key', value: clientKey})
+    }
     return {...structure, canvases: canvases.map(item => item.id), _extra}
   })
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: manifestStructures})
@@ -437,11 +472,21 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestDetail})
 }))
 
+function rangeBuildKey(range) {
+  const {externalId} = range
+  const clientKey = externalId.replace(/.*\/([^\/]+)\/range\/range-([0-9]+)\.json$/, '$1/$2')
+  if (clientKey !== externalId) {
+    return {...range, clientKey}
+  } else {
+    return range
+  }
+}
+
 export const getRange = requiredId(busyCall('range', rangeId => async dispatch => {
   const rangeDetail = await fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail.structures})
   //rangeDetail.ranges = rangeDetail.ranges.map(range => range.id)
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeBuildKey(rangeDetail)})
 }))
 
 export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags', 'values'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
@@ -474,11 +519,11 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
   const wantedBuildings = {}
   canvasPoints.forEach((canvasPoint, index) => {
     const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...canvasPointRest} = canvasPoint
-    canvases[index] = {
+    canvases[index] = canvasBuildKey({
       id, format, height, width, externalId, label, overrides, notes, exclude, hole,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
-    }
+    })
     if (point) {
       const latlng = {
         lat: point.coordinates[1],
@@ -546,9 +591,19 @@ export const deleteRangePoint = (rangeId, canvasId, {sourceId}) => dispatch => b
   }
 })
 
+function canvasBuildKey(canvas) {
+  const {externalId} = canvas
+  const clientKey = externalId.replace(/.*\/([^\/]+)\/canvas\/canvas-([a-zA-Z0-9]+)\.json$/, '$1/$2')
+  if (clientKey !== externalId) {
+    return {...canvas, clientKey}
+  } else {
+    return canvas
+  }
+}
+
 export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatch => {
   const canvasDetail = await fetch(makeUrl('api', `canvas/${canvasId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasDetail})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasBuildKey(canvasDetail)})
 }))
 
 export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags', 'values'], id => makeUrl('api', `canvas/${id}`), id => async dispatch => {
