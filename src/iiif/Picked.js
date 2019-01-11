@@ -12,6 +12,36 @@ function wrapWildcardImport(wildcardImport, name) {
   }
 }
 
+export const byId = (...names) => Component => {
+  function mapDispatchToProps(dispatch, props) {
+    return {}
+  }
+  function mapStateToProps(store, props) {
+    const {iiif} = store
+    let busy = 0
+    const result = names.reduce((result, name) => {
+      switch (name) {
+        case 'collection':
+        case 'manifest':
+        case 'range':
+          const item = result[name] = iiif.getIn([iiifRedux.MODEL[name], props[name + 'Id']])
+          busy += item ? item.get('_busy', 0) : 0
+          break
+      }
+      return result
+    }, {})
+    result.isBusy = busy > 0
+    return result
+  }
+
+  return connectHelper({mapStateToProps, mapDispatchToProps})(class BusyWrapper extends React.Component {
+    render() {
+      const {isBusy, ...props} = this.props
+      return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
+    }
+  })
+}
+
 export const picked = picked => Component => {
   const ownerPick = picked[0]
   const primaryPick = picked[picked.length - 1]

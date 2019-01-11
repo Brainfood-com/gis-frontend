@@ -26,10 +26,13 @@ import { makeUrl } from './api'
 import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
+import { CollectionBrief } from './iiif/Collection'
+import { ManifestBrief } from './iiif/Manifest'
 import { RangeBrief } from './iiif/Range'
 import { ensureBuildings, iiifLocalCache } from './iiif/redux'
+import { byId as iiifPickedById } from './iiif/Picked'
 import { CanvasCardRO } from './iiif/Canvas'
-import { detectAndPick } from './iiif/redux'
+import { getCollection, getManifest, detectAndPick } from './iiif/redux'
 import AwesomeMarkers from './leaflet/AwesomeMarkers'
 import RotatableMarker from './leaflet/RotatableMarker'
 
@@ -261,6 +264,26 @@ export const showBuilding = id => async (dispatch, getState) => {
   }, {})
 
   const ranges = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())))
+  const detectTypeUrl = makeUrl('api', 'iiif/detectType')
+  const detectTypeOptions = {
+		method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+  }
+
+  const locations = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(detectTypeUrl, {...detectTypeOptions, body: JSON.stringify({iiifId: rangeId})}).then(data => data.json())))
+  const manifests = {}, collections = {}, parentsByRange = {}
+  locations.forEach(location => {
+    const manifestId = location.allParents['sc:Manifest'][0]
+    const collectionId = location.allParents['sc:Collection'][0]
+    const rangeId = location.iiifId
+    collections[collectionId] = true
+    manifests[manifestId] = true
+    parentsByRange[rangeId] = {collectionId, manifestId}
+  })
+  Object.keys(manifests).map(manifestId => dispatch(getManifest(parseInt(manifestId))))
+  Object.keys(collections).map(collectionId => dispatch(getCollection(parseInt(collectionId))))
 
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
 
@@ -273,6 +296,7 @@ export const showBuilding = id => async (dispatch, getState) => {
       building,
       canvases,
       canvasPoints,
+      parentsByRange,
       canvasesByRange: Object.entries(canvasesByRange).reduce((canvasesByRange, [rangeId, canvases]) => {
         canvasesByRange[rangeId] = canvases.map(canvas => canvas.iiif_id)
         return canvasesByRange
@@ -554,6 +578,38 @@ class Taxdata extends React.Component {
   }
 }
 
+const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'))(class CurrentBuildingRange extends React.Component {
+  state = {collection: null, manifest: null}
+
+  static getDerivedStateFromProps(props, state) {
+    const {collection, manifest} = props
+    return {
+      collection: collection ? collection.toJS() : null,
+      manifest: manifest ? manifest.toJS() : null,
+    }
+  }
+
+  handleOnItemPicked = () => {
+    const {range: {id}, onItemPicked} = this.props
+    onItemPicked(id)
+  }
+
+  render() {
+    const {onItemPicked, range, currentBuilding} = this.props
+    const {collection, manifest} = this.state
+    const {canvasesByRange, primaryCanvasByRange} = currentBuilding
+    const {id} = range
+    const rangeCanvases = canvasesByRange[id]
+    const primaryCanvas = primaryCanvasByRange[id]
+    return <React.Fragment key={id}>
+      <CollectionBrief collection={collection} onItemPicked={this.handleOnItemPicked}/>
+      <ManifestBrief manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
+      <RangeBrief range={range} onItemPicked={this.handleOnItemPicked}/>
+      <CanvasCardRO range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
+    </React.Fragment>
+  }
+})
+
 export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), pick('currentBuilding'))(class CurrentBuildingInfo extends React.Component {
   handleRangeSelection = id => {
     const {showRange, showCanvas, currentBuilding: {primaryCanvasByRange}} = this.props
@@ -569,19 +625,14 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
     const {
       building: {taxdata},
       ranges,
-      canvasesByRange,
-      primaryCanvasByRange,
+      parentsByRange,
     } = currentBuilding
     return <div className={classnames(classes.root, className)}>
       <Taxdata taxdata={taxdata} clearCurrentBuilding={clearCurrentBuilding}/>
       {ranges.map(range => {
         const {id} = range
-        const rangeCanvases = canvasesByRange[id]
-        const primaryCanvas = primaryCanvasByRange[id]
-        return <React.Fragment key={id}>
-          <RangeBrief range={range} onItemPicked={this.handleRangeSelection}/>
-          <CanvasCardRO range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point}/>
-        </React.Fragment>
+        const {collectionId, manifestId} = parentsByRange[id]
+        return <CurrentBuildingRange key={id} onItemPicked={this.handleRangeSelection} range={range} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} />
       })}
     </div>
   }
