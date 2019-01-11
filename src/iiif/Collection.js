@@ -38,7 +38,7 @@ function getDerivedStateFromProps(props, state) {
   return {collection: collection instanceof imMap ? collection.toJS() : collection}
 }
 
-const CollectionForm = flow(userPicked('permissions'), withStyles(collectionFormStyles))(class CollectionForm extends AbstractForm {
+const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionForm extends AbstractForm {
   static modelName = 'collection'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateCollection'
@@ -48,8 +48,8 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
   }
 
   render() {
-    const {className, classes, collection, onRemoveOverride} = this.props
-    if (!collection) return <div/>
+    const {className, classes, collection, onRemoveOverride, permissions} = this.props
+    if (!collection || !checkPermissions(permissions, null, 'collection', 'form')) return <div/>
     const rootClasses = {
       [classes.root]: true,
     }
@@ -61,6 +61,39 @@ const CollectionForm = flow(userPicked('permissions'), withStyles(collectionForm
   }
 })
 
+const collectionBriefStyles = {
+  root: {
+  },
+}
+
+export const CollectionBrief = flow(withStyles(collectionBriefStyles))(class CollectionBrief extends React.Component {
+  static propTypes = {
+  }
+
+  static defaultProps = {
+    onItemPicked(id) {},
+  }
+
+  handleOnClick = event => {
+    event.preventDefault()
+    const {onItemPicked, collection} = this.props
+    onItemPicked(collection.id)
+  }
+
+  render() {
+    const {className, classes, collection} = this.props
+    if (!collection) {
+      return <div />
+    }
+
+    const {id, label} = collection
+    return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
+      <Typography>collectionId:{id}</Typography>
+      <Typography>{label}</Typography>
+    </Paper>
+  }
+})
+
 class CollectionPick extends React.Component {
   render() {
     const {className, collections, onItemPicked, collection} = this.props
@@ -68,23 +101,29 @@ class CollectionPick extends React.Component {
   }
 }
 
-export const CollectionPanel = picked(['root', 'collection'])(class CollectionPanel extends React.Component {
+export const CollectionPanel = flow(picked(['root', 'collection']), userPicked('permissions'))(class CollectionPanel extends React.Component {
   state = {}
 
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collections, updateCollection, onItemPicked, ...props} = this.props
+    const {className, collections, updateCollection, onItemPicked, permissions, ...props} = this.props
     const {collection} = this.state
 
     const title = collection ? collection.label : 'Collection'
+    let form
+    if (checkPermissions(permissions, null, 'collection', 'form')) {
+      form = <CollectionForm {...props} permissions={permissions} collection={collection} updateCollection={updateCollection}/>
+    } else {
+      form = <CollectionBrief collection={collection}/>
+    }
     return <ItemPanel
       className={className}
       name='collection'
       title={title}
       pick={<CollectionPick collections={collections} onItemPicked={onItemPicked} collection={this.props.collection}/>}
       icon={<CollectionsIcon/>}
-      form={<CollectionForm {...props} collection={collection} updateCollection={updateCollection}/>}
+      form={form}
       busy={collection && collection._busy}
     />
   }

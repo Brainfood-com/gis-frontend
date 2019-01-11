@@ -654,7 +654,7 @@ const fieldInputProcessors = {
   },
 }
 
-export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormStyles))(class CanvasForm extends AbstractForm {
+export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm extends AbstractForm {
   static modelName = 'canvas'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateCanvas'
@@ -721,6 +721,40 @@ export const CanvasForm = flow(userPicked('permissions'), withStyles(canvasFormS
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
+    </Paper>
+  }
+})
+
+const canvasBriefStyles = {
+  root: {},
+  hidden: {},
+  override: {},
+  card: {},
+}
+
+export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief extends React.Component {
+  handleOnCanvasNext = delta => {
+    const {canvases, canvas, onItemPicked} = this.props
+    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+  }
+
+  render() {
+    const {className, classes, range, canvases, canvas, points} = this.props
+    if (!canvas) return <div/>
+    const hasOverride = canvasHasOverride(canvas)
+    const image = canvas.image
+    const point = canvas.point
+    const canvasPoint = points && points.get(canvas.id) || undefined
+    const rootClasses = {
+      [classes.root]: true,
+      [classes.hidden]: !!!canvas,
+      [classes.override]: hasOverride,
+    }
+
+    return <Paper className={classnames(rootClasses, className)}>
+      <CanvasCard range={range} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext}/>
+      {point}
+      <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
     </Paper>
   }
 })
@@ -1078,25 +1112,31 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), withStyles(ca
   }
 })
 
-export const CanvasPanel = picked(['range', 'canvas'])(class CanvasPanel extends React.Component {
+export const CanvasPanel = flow(picked(['range', 'canvas']), userPicked('permissions'))(class CanvasPanel extends React.Component {
   state = {}
 
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, canvases, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, ...props} = this.props
+    const {className, canvases, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, points, permissions, ...props} = this.props
     const {range, canvas} = this.state
 
     if (!range) return <div/>
     const title = canvas ? canvas.label : 'Canvas'
     const image = canvas && canvas.image
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
+    let form
+    if (checkPermissions(permissions, null, 'canvas', 'form')) {
+      form = <CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>
+    } else {
+      form = <CanvasBrief range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} />
+    }
     return <ItemPanel
       className={className}
       name='canvas'
       title={`${lastImagePart} ${title}`}
       icon={<ImageIcon/>}
-      form={<CanvasForm range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint}/>}
+      form={form}
       busy={canvas && canvas._busy}
     />
   }

@@ -71,7 +71,7 @@ function getDerivedStateFromProps(props, state) {
   return {range: range instanceof imMap ? range.toJS() : range}
 }
 
-const RangeForm = flow(userPicked('permissions'), withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
+const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
   static modelName = 'range'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateRange'
@@ -159,24 +159,30 @@ class RangePick extends React.Component {
   }
 }
 
-export const RangePanel = picked(['manifest', 'range'])(class RangePanel extends React.Component {
+export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permissions'))(class RangePanel extends React.Component {
   state = {}
 
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, manifest, rangesWithCanvases, onItemPicked, updateRange} = this.props
+    const {className, manifest, rangesWithCanvases, onItemPicked, updateRange, permissions, ...props} = this.props
     const {range} = this.state
 
     if (!manifest) return <div/>
     const title = range ? range.label : 'Range'
+    let form
+    if (checkPermissions(permissions, null, 'range', 'form')) {
+      form = <RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>
+    } else {
+      form = <RangeBrief range={range}/>
+    }
     return <ItemPanel
       className={className}
       name='range'
       title={title}
       pick={<RangePick manifest={manifest} rangesWithCanvases={rangesWithCanvases} range={this.props.range} onItemPicked={onItemPicked}/>}
       icon={<CameraRollIcon/>}
-      form={<RangeForm range={range} updateRange={updateRange}/>}
+      form={form}
       busy={range && range._busy}
     />
   }

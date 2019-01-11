@@ -38,7 +38,7 @@ function getDerivedStateFromProps(props, state) {
   return {manifest: manifest instanceof imMap ? manifest.toJS() : manifest}
 }
 
-const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyles))(class ManifestForm extends AbstractForm {
+const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestForm extends AbstractForm {
   static modelName = 'manifest'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateManifest'
@@ -62,6 +62,39 @@ const ManifestForm = flow(userPicked('permissions'), withStyles(manifestFormStyl
   }
 })
 
+const manifestBriefStyles = {
+  root: {
+  },
+}
+
+export const ManifestBrief = flow(withStyles(manifestBriefStyles))(class ManifestBrief extends React.Component {
+  static propTypes = {
+  }
+
+  static defaultProps = {
+    onItemPicked(id) {},
+  }
+
+  handleOnClick = event => {
+    event.preventDefault()
+    const {onItemPicked, manifest} = this.props
+    onItemPicked(manifest.id)
+  }
+
+  render() {
+    const {className, classes, manifest} = this.props
+    if (!manifest) {
+      return <div />
+    }
+
+    const {id, label} = manifest
+    return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
+      <Typography>manifestId:{id}</Typography>
+      <Typography>{label}</Typography>
+    </Paper>
+  }
+})
+
 class ManifestPick extends React.Component {
   render() {
     const {className, collection, manifests, manifest, onItemPicked} = this.props
@@ -70,24 +103,30 @@ class ManifestPick extends React.Component {
   }
 }
 
-export const ManifestPanel = picked(['collection', 'manifest'])(class ManifestPanel extends React.Component {
+export const ManifestPanel = flow(picked(['collection', 'manifest']), userPicked('permissions'))(class ManifestPanel extends React.Component {
   state = {}
 
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collection, manifests, onItemPicked, updateManifest} = this.props
+    const {className, collection, manifests, onItemPicked, updateManifest, permissions, ...props} = this.props
     const {manifest} = this.state
 
     if (!collection) return <div/>
     const title = manifest ? manifest.label : 'Manifest'
+    let form
+    if (checkPermissions(permissions, null, 'manifest', 'form')) {
+      form = <ManifestForm {...props} permissions={permissions} manifest={manifest} updateManifest={updateManifest}/>
+    } else {
+      form = <ManifestBrief manifest={manifest}/>
+    }
     return <ItemPanel
       className={className}
       name='manifest'
       title={title}
       pick={<ManifestPick collection={collection} manifests={manifests} manifest={this.props.manifest} onItemPicked={onItemPicked}/>}
       icon={<CollectionsIcon/>}
-      form={<ManifestForm manifest={manifest} updateManifest={updateManifest}/>}
+      form={form}
       busy={manifest && manifest._busy}
     />
   }
