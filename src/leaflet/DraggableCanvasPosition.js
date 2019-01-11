@@ -10,6 +10,7 @@ import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
 import {checkPermissions, picked as userPicked} from '../User'
 import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
+import { rangeRequiredRole } from '../iiif/Range'
 
 const overriddenIcon = AwesomeMarkers.icon({
   markerColor: 'red',
@@ -59,8 +60,8 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
   }
 
   skipChange = name => {
-    const {permissions} = this.props
-    return !checkPermissions(permissions, 'editor', 'canvas', name)
+    const {permissions, range} = this.props
+    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleOnClick = event => {

@@ -51,6 +51,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
     const selected = canvas ? canvas.get('id') : null
     const {camera, buildings: pointBuildings} = canvas && points.get(selected) || {}
     const notNullCanvases = canvases.filter(canvas => canvas && points.get(canvas.get('id')))
+    const rangeJS = range.toJS()
 
 //    const {bearing, point, camera} = rangePoint
 //      { selected && camera ? <GISGeoJSON data={camera}/> : null }
@@ -67,7 +68,7 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
         const rangePoint = points.get(id)
         const isFirst = index === 0
         const isLast = index === notNullCanvases.length - 1
-        return <DraggableCanvasPosition key={id} zoom={zoom} range={range} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
+        return <DraggableCanvasPosition key={id} zoom={zoom} range={rangeJS} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
 
       })}
     </FeatureGroup>
