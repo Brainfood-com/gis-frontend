@@ -90,8 +90,9 @@ const styles = {
 export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class ItemPanel extends React.Component {
   static propTypes = {
     name: PropTypes.string.isRequired,
-    title: PropTypes.string,
+    brief: PropTypes.element,
     pick: PropTypes.element,
+    showForm: PropTypes.bool,
     form: PropTypes.element.isRequired,
     busy: PropTypes.number,
   }
@@ -135,7 +136,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
   }
 
   render() {
-    const {className, classes, name, title, pick, form, expanded, icon} = this.props
+    const {className, classes, name, title, brief, pick, showForm, form, expanded, icon} = this.props
     const {busy} = this.state
 
     return <div className={classnames(classes.root, className)}>
@@ -149,12 +150,13 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
               :
                 <Typography onClick={e => e.stopPropagation()} variant='body2' classes={{body2: classes.name}}>{name}</Typography>
             }
-            <Typography variant='body2' classes={{body2: classes.title}}>{title}</Typography>
+            {React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}
           </div>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.details}>
           {React.cloneElement(pick)}
-          {React.cloneElement(form)}
+          {React.cloneElement(brief)}
+          {showForm ? React.cloneElement(form) : null}
         </ExpansionPanelDetails>
       </ExpansionPanel>
       </BusyPane>

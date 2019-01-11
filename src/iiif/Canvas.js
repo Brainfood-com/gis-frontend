@@ -725,6 +725,17 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
   }
 })
 
+export class CanvasTitle extends React.Component {
+  render() {
+    const {className, canvas} = this.props
+    const title = canvas ? canvas.label : 'Canvas'
+    const image = canvas && canvas.image
+    const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
+
+    return <Typography variant='body2' classes={{body2: className}}>{`${lastImagePart} ${title}`}</Typography>
+  }
+}
+
 const canvasBriefStyles = {
   root: {},
   hidden: {},
@@ -1122,21 +1133,14 @@ export const CanvasPanel = flow(picked(['range', 'canvas']), userPicked('permiss
     const {range, canvas} = this.state
 
     if (!range) return <div/>
-    const title = canvas ? canvas.label : 'Canvas'
-    const image = canvas && canvas.image
-    const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
-    let form
-    if (checkPermissions(permissions, null, 'canvas', 'form')) {
-      form = <CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>
-    } else {
-      form = <CanvasBrief range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} />
-    }
     return <ItemPanel
       className={className}
       name='canvas'
-      title={`${lastImagePart} ${title}`}
+      title={<CanvasTitle canvas={canvas}/>}
+      brief={<CanvasBrief range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} />}
       icon={<ImageIcon/>}
-      form={form}
+      showForm={checkPermissions(permissions, null, 'canvas', 'form')}
+      form={<CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
       busy={canvas && canvas._busy}
     />
   }

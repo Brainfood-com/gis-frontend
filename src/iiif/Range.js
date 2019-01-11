@@ -118,6 +118,15 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
   }
 })
 
+export class RangeTitle extends React.Component {
+  render() {
+    const {className, range} = this.props
+
+    const {id, label} = range || {}
+    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+  }
+}
+
 const rangeBriefStyles = {
   root: {
   },
@@ -145,7 +154,6 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief ex
 
     const {id, label} = range
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
-      <Typography>rangeId:{id}</Typography>
       <Typography>{label}</Typography>
     </Paper>
   }
@@ -169,20 +177,15 @@ export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permis
     const {range} = this.state
 
     if (!manifest) return <div/>
-    const title = range ? range.label : 'Range'
-    let form
-    if (checkPermissions(permissions, null, 'range', 'form')) {
-      form = <RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>
-    } else {
-      form = <RangeBrief range={range}/>
-    }
     return <ItemPanel
       className={className}
       name='range'
-      title={title}
+      title={<RangeTitle range={range}/>}
+      brief={<RangeBrief range={range}/>}
       pick={<RangePick manifest={manifest} rangesWithCanvases={rangesWithCanvases} range={this.props.range} onItemPicked={onItemPicked}/>}
       icon={<CameraRollIcon/>}
-      form={form}
+      showForm={checkPermissions(permissions, null, 'range', 'form')}
+      form={<RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>}
       busy={range && range._busy}
     />
   }

@@ -61,6 +61,15 @@ const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionFo
   }
 })
 
+export class CollectionTitle extends React.Component {
+  render() {
+    const {className, collection} = this.props
+
+    const {id, label} = collection || {}
+    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+  }
+}
+
 const collectionBriefStyles = {
   root: {
   },
@@ -88,7 +97,6 @@ export const CollectionBrief = flow(withStyles(collectionBriefStyles))(class Col
 
     const {id, label} = collection
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
-      <Typography>collectionId:{id}</Typography>
       <Typography>{label}</Typography>
     </Paper>
   }
@@ -110,20 +118,15 @@ export const CollectionPanel = flow(picked(['root', 'collection']), userPicked('
     const {className, collections, updateCollection, onItemPicked, permissions, ...props} = this.props
     const {collection} = this.state
 
-    const title = collection ? collection.label : 'Collection'
-    let form
-    if (checkPermissions(permissions, null, 'collection', 'form')) {
-      form = <CollectionForm {...props} permissions={permissions} collection={collection} updateCollection={updateCollection}/>
-    } else {
-      form = <CollectionBrief collection={collection}/>
-    }
     return <ItemPanel
       className={className}
       name='collection'
-      title={title}
+      title={<CollectionTitle collection={collection}/>}
+      brief={<CollectionBrief collection={collection}/>}
       pick={<CollectionPick collections={collections} onItemPicked={onItemPicked} collection={this.props.collection}/>}
       icon={<CollectionsIcon/>}
-      form={form}
+      showForm={checkPermissions(permissions, null, 'collection', 'form')}
+      form={<CollectionForm {...props} permissions={permissions} collection={collection} updateCollection={updateCollection}/>}
       busy={collection && collection._busy}
     />
   }

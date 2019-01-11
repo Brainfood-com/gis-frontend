@@ -62,6 +62,15 @@ const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestForm ext
   }
 })
 
+export class ManifestTitle extends React.Component {
+  render() {
+    const {className, manifest} = this.props
+
+    const {label} = manifest || {label: 'Manifest'}
+    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+  }
+}
+
 const manifestBriefStyles = {
   root: {
   },
@@ -78,18 +87,16 @@ export const ManifestBrief = flow(withStyles(manifestBriefStyles))(class Manifes
   handleOnClick = event => {
     event.preventDefault()
     const {onItemPicked, manifest} = this.props
-    onItemPicked(manifest.id)
+    if (manifest) {
+      onItemPicked(manifest.id)
+    }
   }
 
   render() {
     const {className, classes, manifest} = this.props
-    if (!manifest) {
-      return <div />
-    }
 
-    const {id, label} = manifest
+    const {label} = manifest || {label: 'Manifest'}
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
-      <Typography>manifestId:{id}</Typography>
       <Typography>{label}</Typography>
     </Paper>
   }
@@ -113,20 +120,15 @@ export const ManifestPanel = flow(picked(['collection', 'manifest']), userPicked
     const {manifest} = this.state
 
     if (!collection) return <div/>
-    const title = manifest ? manifest.label : 'Manifest'
-    let form
-    if (checkPermissions(permissions, null, 'manifest', 'form')) {
-      form = <ManifestForm {...props} permissions={permissions} manifest={manifest} updateManifest={updateManifest}/>
-    } else {
-      form = <ManifestBrief manifest={manifest}/>
-    }
     return <ItemPanel
       className={className}
       name='manifest'
-      title={title}
+      title={<ManifestTitle manifest={manifest}/>}
+      brief={<ManifestBrief manifest={manifest}/>}
       pick={<ManifestPick collection={collection} manifests={manifests} manifest={this.props.manifest} onItemPicked={onItemPicked}/>}
       icon={<CollectionsIcon/>}
-      form={form}
+      showForm={checkPermissions(permissions, null, 'manifest', 'form')}
+      form={<ManifestForm {...props} permissions={permissions} manifest={manifest} updateManifest={updateManifest}/>}
       busy={manifest && manifest._busy}
     />
   }
