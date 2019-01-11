@@ -579,8 +579,20 @@ class Taxdata extends React.Component {
 }
 
 const currentBuildingRangeStyles = {
-  cursor: {
+  root: {
+    border: '2px solid black',
+    marginBottom: 5,
+    '&:hover': {
+      borderColor: 'white',
+    },
+  },
+  briefPane: {
     cursor: 'pointer',
+    padding: 8,
+  },
+  card: {
+    cursor: 'pointer',
+    margin: '0 4px 0 4px',
   }
 }
 const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
@@ -600,18 +612,20 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
   }
 
   render() {
-    const {classes, onItemPicked, range, currentBuilding} = this.props
+    const {className, classes, onItemPicked, range, currentBuilding} = this.props
     const {collection, manifest} = this.state
     const {canvasesByRange, primaryCanvasByRange} = currentBuilding
     const {id} = range
     const rangeCanvases = canvasesByRange[id]
     const primaryCanvas = primaryCanvasByRange[id]
-    return <React.Fragment key={id}>
-      <CollectionBrief className={classes.cursor} collection={collection} onItemPicked={this.handleOnItemPicked}/>
-      <ManifestBrief className={classes.cursor} manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
-      <RangeBrief className={classes.cursor} range={range} onItemPicked={this.handleOnItemPicked}/>
-      <CanvasCardRO className={classes.cursor} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
-    </React.Fragment>
+    return <div className={classnames(classes.root, className)} key={id}>
+      <div className={classes.briefPane}>
+        <CollectionBrief collection={collection} onItemPicked={this.handleOnItemPicked}/>
+        <ManifestBrief manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
+        <RangeBrief range={range} onItemPicked={this.handleOnItemPicked}/>
+      </div>
+      <CanvasCardRO className={classes.card} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
+    </div>
   }
 })
 
