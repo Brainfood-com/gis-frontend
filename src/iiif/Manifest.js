@@ -27,6 +27,9 @@ const manifestFormStyles = {
 }
 
 const fieldInputProcessors = {
+  'values.year'(value, checked) {
+    return value === '' ? null : parseInt(value)
+  },
 }
 
 const manifestTagSuggestions = [
@@ -55,6 +58,7 @@ const ManifestForm = flow(withStyles(manifestFormStyles))(class ManifestForm ext
     }
 
     return <Paper className={classnames(rootClasses, className)}>
+      <TextField name='values.year' fullWidth label='Year' value={this.checkOverrideValueDefault('values.year', '')} onChange={this.handleInputChange}/>
       <TextField name='values.batch' fullWidth label='Batch' value={this.checkOverrideValueDefault('values.batch', '')} onChange={this.handleInputChange}/>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
       <IIIFTagEditor name='tags' modelName='manifest' suggestions={manifestTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>

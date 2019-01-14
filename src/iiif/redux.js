@@ -429,6 +429,9 @@ function manifestBuildLabel(manifest) {
   if (values.batch !== undefined) {
     _extra.push({name: 'batch', value: values.batch})
   }
+  if (values.year !== undefined) {
+    _extra.push({name: 'year', value: values.year})
+  }
   return {...manifest, _extra}
 }
 
@@ -444,7 +447,7 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
   const rangesWithCanvases = []
   const allCanvases = []
   const manifestStructures = (await fetch(makeUrl('api', `manifest/${manifestId}/structures`)).then(data => data.json())).map(rangeBuildKey).map(structure => {
-    const {id, clientKey} = structure
+    const {id, clientKey, manifestYear} = structure
     const canvases = structure.canvases || []
     if (structure.canvases) {
       if (structure.canvases.length) {
@@ -459,6 +462,9 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
     ]
     if (clientKey) {
       _extra.push({name: 'key', value: clientKey})
+    }
+    if (manifestYear) {
+      _extra.push({name: 'year', value: manifestYear})
     }
     return {...structure, canvases: canvases.map(item => item.id), _extra}
   })
