@@ -624,7 +624,7 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
         <ManifestBrief manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
         <RangeBrief range={range} onItemPicked={this.handleOnItemPicked}/>
       </div>
-      <CanvasCardRO className={classes.card} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
+      <CanvasCardRO className={classes.card} collectionId={collection.id} manifestId={manifest.id} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
     </div>
   }
 })
