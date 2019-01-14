@@ -15,9 +15,6 @@ import IconButton from '@material-ui/core/IconButton'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import InputAdornment from '@material-ui/core/InputAdornment'
-import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
-import ListItemText from '@material-ui/core/ListItemText'
 
 import { FeatureGroup, GeoJSON, Popup, PropTypes as LeafletPropTypes } from 'react-leaflet'
 
@@ -26,6 +23,7 @@ import { makeUrl } from './api'
 import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
+import Taxdata from './Taxdata'
 import { CollectionBrief } from './iiif/Collection'
 import { ManifestBrief } from './iiif/Manifest'
 import { RangeBrief } from './iiif/Range'
@@ -545,29 +543,6 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
 const currentBuildingInfoStyles = {
   root: {
   },
-}
-
-class Taxdata extends React.Component {
-  render() {
-    const {taxdata} = this.props
-    if (!taxdata) {
-      return <div />
-    }
-    return <List dense={true}>
-      <ListItem disableGutters>
-        <ListItemText primary={`AIN: ${taxdata.ain}`}/>
-      </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Effective Year Built: ${taxdata.effective_year_built}`}/>
-      </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Location: ${taxdata.property_location}`}/>
-      </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Land Value: ${taxdata.land_value}`}/>
-      </ListItem>
-    </List>
-  }
 }
 
 const currentBuildingRangeStyles = {
