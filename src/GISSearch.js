@@ -548,20 +548,12 @@ const currentBuildingInfoStyles = {
 }
 
 class Taxdata extends React.Component {
-  handleOnClose = ev => {
-    const {clearCurrentBuilding} = this.props
-    clearCurrentBuilding()
-  }
-
   render() {
     const {taxdata} = this.props
     if (!taxdata) {
       return <div />
     }
     return <List dense={true}>
-      <ListItem disableGutters>
-        <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
-      </ListItem>
       <ListItem disableGutters>
         <ListItemText primary={`AIN: ${taxdata.ain}`}/>
       </ListItem>
@@ -636,8 +628,13 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
     showRange(id, primaryCanvas.iiif_id)
   }
 
+  handleOnClose = ev => {
+    const {clearCurrentBuilding} = this.props
+    clearCurrentBuilding()
+  }
+
   render() {
-    const {className, classes, clearCurrentBuilding, currentBuilding} = this.props
+    const {className, classes, currentBuilding} = this.props
     if (!currentBuilding) {
       return <div />
     }
@@ -647,7 +644,8 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
       parentsByRange,
     } = currentBuilding
     return <div className={classnames(classes.root, className)}>
-      <Taxdata taxdata={taxdata} clearCurrentBuilding={clearCurrentBuilding}/>
+      <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
+      <Taxdata taxdata={taxdata}/>
       {ranges.map(range => {
         const {id} = range
         const {collectionId, manifestId} = parentsByRange[id]
