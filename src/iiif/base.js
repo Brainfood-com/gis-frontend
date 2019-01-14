@@ -1,6 +1,6 @@
 import React from 'react'
 import DebouncedForm from '../DebouncedForm'
-import { checkPermissions } from '../User'
+import { checkPermission } from '../User'
 
 export class AbstractDetail extends React.Component {
   static defaultProps = {
@@ -60,7 +60,7 @@ export class AbstractForm extends DebouncedForm {
       return false
     }
     const {permissions} = this.props
-    return !checkPermissions(permissions, this.requiredRole(), modelName, name)
+    return !checkPermission(permissions, this.requiredRole(), modelName, name)
   }
 
   requiredRole() {

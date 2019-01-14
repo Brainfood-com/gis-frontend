@@ -17,7 +17,7 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import { AbstractForm } from './base'
 
@@ -49,7 +49,7 @@ const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionFo
 
   render() {
     const {className, classes, collection, onRemoveOverride, permissions} = this.props
-    if (!collection || !checkPermissions(permissions, null, 'collection', 'form')) return <div/>
+    if (!collection || !checkPermission(permissions, null, 'collection', 'form')) return <div/>
     const rootClasses = {
       [classes.root]: true,
     }
@@ -125,7 +125,7 @@ export const CollectionPanel = flow(picked(['root', 'collection']), userPicked('
       brief={<CollectionBrief collection={collection}/>}
       pick={<CollectionPick collections={collections} onItemPicked={onItemPicked} collection={this.props.collection}/>}
       icon={<CollectionsIcon/>}
-      showForm={checkPermissions(permissions, null, 'collection', 'form')}
+      showForm={checkPermission(permissions, null, 'collection', 'form')}
       form={<CollectionForm {...props} permissions={permissions} collection={collection} updateCollection={updateCollection}/>}
       busy={collection && collection._busy}
     />

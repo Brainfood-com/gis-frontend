@@ -24,7 +24,7 @@ import * as iiifRedux from './redux'
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList} from '../constants'
 import { AbstractForm } from './base'
@@ -184,7 +184,7 @@ export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permis
       brief={<RangeBrief range={range}/>}
       pick={<RangePick manifest={manifest} rangesWithCanvases={rangesWithCanvases} range={this.props.range} onItemPicked={onItemPicked}/>}
       icon={<CameraRollIcon/>}
-      showForm={checkPermissions(permissions, null, 'range', 'form')}
+      showForm={checkPermission(permissions, null, 'range', 'form')}
       form={<RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>}
       busy={range && range._busy}
     />

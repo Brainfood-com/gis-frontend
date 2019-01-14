@@ -47,7 +47,7 @@ import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 import {createScrollHandler} from '../ScrollHelper'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 import { CollectionBrief } from './Collection'
 import { ManifestBrief } from './Manifest'
 import { RangeBrief, rangeRequiredRole } from './Range'
@@ -327,7 +327,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   skipChange = name => {
     const {permissions} = this.props
     const {range} = this.state
-    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
+    return !checkPermission(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleOnClick = event => {
@@ -684,7 +684,7 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
 
   skipChangeParent = (name, value, checked) => {
     const {permissions, range} = this.props
-    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
+    return !checkPermission(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleRemoveOverride = (event) => {
@@ -1147,7 +1147,7 @@ export const CanvasPanel = flow(global('collection', 'manifest'), picked(['range
       title={<CanvasTitle canvas={canvas}/>}
       brief={<CanvasBrief collectionId={collection ? collection.get('id') : null} manifestId={manifest ? manifest.get('id') : null} range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} />}
       icon={<ImageIcon/>}
-      showForm={checkPermissions(permissions, null, 'canvas', 'form')}
+      showForm={checkPermission(permissions, null, 'canvas', 'form')}
       form={<CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
       busy={canvas && canvas._busy}
     />

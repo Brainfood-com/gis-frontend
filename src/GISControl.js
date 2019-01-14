@@ -15,7 +15,7 @@ import {CurrentBuildingInfo} from './GISSearch'
 
 import {CanvasSlidingList} from './iiif/Canvas'
 import {IIIFTree} from './IIIF'
-import {checkPermissions, picked as userPicked} from './User'
+import {checkPermission, picked as userPicked} from './User'
 import { immutableEmptyMap, immutableEmptyOrderedMap } from './constants'
 import connectHelper from './connectHelper'
 
@@ -163,10 +163,10 @@ class GISControl extends React.Component {
 
   render() {
     const {children, classes, center, zoom, permissions} = this.props
-    const hasIIIFTree = checkPermissions(permissions, null, 'iiif', 'tree')
-    const hasIIIFCanvasSlidingList = checkPermissions(permissions, null, 'iiif', 'canvas_sliding_list')
-    const hasSearchMap = checkPermissions(permissions, null, 'search', 'map')
-    const hasSearchResults = checkPermissions(permissions, null, 'search', 'results')
+    const hasIIIFTree = checkPermission(permissions, null, 'iiif', 'tree')
+    const hasIIIFCanvasSlidingList = checkPermission(permissions, null, 'iiif', 'canvas_sliding_list')
+    const hasSearchMap = checkPermission(permissions, null, 'search', 'map')
+    const hasSearchResults = checkPermission(permissions, null, 'search', 'results')
     const rootClasses = {
       [classes.hasIIIFTree]: hasIIIFTree,
       [classes.hasIIIFCanvasSlidingList]: hasIIIFCanvasSlidingList,

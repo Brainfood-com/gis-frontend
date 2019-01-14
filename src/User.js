@@ -34,7 +34,7 @@ const defaultState = immutableEmptyMap.withMutations(map => {
   map.set('loginMessage', null)
 })
 
-export function checkPermissions(permissions, role, model, attr) {
+export function checkPermission(permissions, role, model, attr) {
   if (role === null) {
     return permissions.has(`${model}_${attr}`)
   }

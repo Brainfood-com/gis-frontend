@@ -6,7 +6,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import {WithOutContext as ReactTags} from 'react-tag-input'
 import {immutableEmptyList} from '../constants'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 
 export const commonTagDefinitions = {
   CLAIMED: {roles: ['editor'], label: 'Claimed'},
@@ -75,7 +75,7 @@ function applyTagMutation(props, state, tagOrAccessor, mutator) {
   const tags = [].concat(state.tags)
   const tag = typeof tagOrAccessor === 'function' ? tagOrAccessor(tags).id : tagOrAccessor
   const {suggestionLookup: {[tag]: {roles: wantedRoles = ['freeform']} = {}}} = state
-  const isAllowed = wantedRoles.reduce((skip, role) => checkPermissions(permissions, role, modelName, 'tags') ? true : skip, false)
+  const isAllowed = wantedRoles.reduce((skip, role) => checkPermission(permissions, role, modelName, 'tags') ? true : skip, false)
   if (!isAllowed) {
     return
   }
@@ -149,7 +149,7 @@ class IIIFTagEditor extends React.Component {
         return false
       }
       if (roles) {
-        if (!roles.reduce((skip, role) => checkPermissions(permissions, role, modelName, 'tags') ? true : skip, false)) {
+        if (!roles.reduce((skip, role) => checkPermission(permissions, role, modelName, 'tags') ? true : skip, false)) {
           return false
         }
       }

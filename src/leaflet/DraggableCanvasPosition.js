@@ -8,7 +8,7 @@ import RotatableMarker from './RotatableMarker'
 
 import * as apiRedux from '../api/redux'
 import connectHelper from '../connectHelper'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 import CanvasDragResult, {getGeoJSONPoint} from './CanvasDragResult'
 import { rangeRequiredRole } from '../iiif/Range'
 
@@ -61,7 +61,7 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
 
   skipChange = name => {
     const {permissions, range} = this.props
-    return !checkPermissions(permissions, rangeRequiredRole(range), 'canvas', name)
+    return !checkPermission(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleOnClick = event => {

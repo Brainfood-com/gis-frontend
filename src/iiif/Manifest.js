@@ -17,7 +17,7 @@ import * as iiifRedux from './redux'
 
 import {picked} from './Picked'
 import ItemPanel from '../ItemPanel'
-import {checkPermissions, picked as userPicked} from '../User'
+import {checkPermission, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import { AbstractForm } from './base'
 
@@ -127,7 +127,7 @@ export const ManifestPanel = flow(picked(['collection', 'manifest']), userPicked
       brief={<ManifestBrief manifest={manifest}/>}
       pick={<ManifestPick collection={collection} manifests={manifests} manifest={this.props.manifest} onItemPicked={onItemPicked}/>}
       icon={<CollectionsIcon/>}
-      showForm={checkPermissions(permissions, null, 'manifest', 'form')}
+      showForm={checkPermission(permissions, null, 'manifest', 'form')}
       form={<ManifestForm {...props} permissions={permissions} manifest={manifest} updateManifest={updateManifest}/>}
       busy={manifest && manifest._busy}
     />
