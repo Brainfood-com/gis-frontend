@@ -59,11 +59,15 @@ export class AbstractForm extends DebouncedForm {
     if (complexFields.indexOf(name) !== -1) {
       return false
     }
-    const {permissions} = this.props
-    return !checkPermission(permissions, this.requiredRole(), modelName, name)
+    return !this.checkPermission(modelName, name)
   }
 
   requiredRole() {
     return 'editor'
+  }
+
+  checkPermission(modelName, name) {
+    const {permissions} = this.props
+    return checkPermission(permissions, this.requiredRole(), modelName, name)
   }
 }
