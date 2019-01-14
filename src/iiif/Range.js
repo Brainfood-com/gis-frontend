@@ -93,7 +93,6 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button>
       <FormGroup row>
         <FormControlLabel label='Reverse' control={
           <Checkbox name='reverse' checked={!!this.checkOverrideValueDefault('reverse', false)} onChange={this.handleInputChange}/>
@@ -132,7 +131,7 @@ const rangeBriefStyles = {
   },
 }
 
-export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief extends React.Component {
+export const RangeBrief = flow(withStyles(rangeBriefStyles), userPicked('permissions'))(class RangeBrief extends React.Component {
   static propTypes = {
   }
 
@@ -147,7 +146,7 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief ex
   }
 
   render() {
-    const {className, classes, range} = this.props
+    const {className, classes, range, permissions} = this.props
     if (!range) {
       return <div />
     }
@@ -155,6 +154,7 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles))(class RangeBrief ex
     const {id, label} = range
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
       <Typography>{label}</Typography>
+      {checkPermission(permissions, null, 'range', 'get_geojson') ? <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button> : null}
     </Paper>
   }
 })
