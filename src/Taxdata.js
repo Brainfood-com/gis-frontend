@@ -1,10 +1,33 @@
+import flow from 'lodash-es/flow'
 import React from 'react'
+import classnames from 'classnames'
+import { withStyles } from '@material-ui/core/styles'
+import Collapse from '@material-ui/core/Collapse'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
+import ExpandLessIcon from '@material-ui/icons/ExpandLess'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 
-export default class Taxdata extends React.Component {
-  state = {}
+const taxdataStyles = {
+  root: {
+    border: '1px solid black',
+    marginBottom: 10,
+    '&:hover': {
+      borderColor: 'white',
+    },
+  },
+  detail: {
+    borderTop: '1px solid white',
+  },
+}
+
+export default flow(withStyles(taxdataStyles))(class Taxdata extends React.Component {
+  state = {
+    open: false,
+  }
+
   static getDerivedStateFromProps(props, state) {
     const {taxdata} = props
     return {
@@ -12,25 +35,40 @@ export default class Taxdata extends React.Component {
     }
   }
 
+  handleOnClick = event => {
+    const {open} = this.state
+    this.setState({open: !open})
+  }
+
   render() {
-    const {taxdata} = this.state
+    const {className, classes} = this.props
+    const {open, taxdata} = this.state
     if (!taxdata) {
       return <div />
     }
-    return <List dense={true}>
-      <ListItem disableGutters>
-        <ListItemText primary={`AIN: ${taxdata.ain}`}/>
+    const wantedClasses = {
+      [classes.root]: true,
+    }
+    const {ain, effective_year_built, property_location, ...rest} = taxdata
+    return <List className={classnames(wantedClasses, className)} dense={true}>
+      <ListItem disableGutters onClick={this.handleOnClick}>
+        <ListItemText primary={`AIN: ${ain}`}/>
+        <ListItemIcon>{open ? <ExpandMoreIcon/> : <ExpandLessIcon/>}</ListItemIcon>
       </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Effective Year Built: ${taxdata.effective_year_built}`}/>
+      <ListItem disableGutters onClick={this.handleOnClick}>
+        <ListItemText primary={`Effective Year Built: ${effective_year_built}`}/>
       </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Location: ${taxdata.property_location}`}/>
+      <ListItem disableGutters onClick={this.handleOnClick}>
+        <ListItemText primary={`Location: ${property_location}`}/>
       </ListItem>
-      <ListItem disableGutters>
-        <ListItemText primary={`Land Value: ${taxdata.land_value}`}/>
-      </ListItem>
+      <Collapse in={open}>
+        <List className={classes.detail} dense={true}>
+          {Object.entries(rest).map(([key, value], index) => <ListItem key={key} disableGutters>
+              <ListItemText primary={`${key}: ${value}`}/>
+          </ListItem>)}
+        </List>
+      </Collapse>
     </List>
   }
-}
+})
 
