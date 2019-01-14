@@ -223,12 +223,7 @@ const pick = (...picked) => Component => {
     return result
   }
 
-  return connectHelper({mapStateToProps, mapDispatchToProps})(class BusyWrapper extends React.Component {
-    render() {
-      const {isBusy, ...props} = this.props
-      return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
-    }
-  })
+  return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
 }
 
 export const showBuilding = id => async (dispatch, getState) => {
@@ -623,7 +618,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
   }
 
   render() {
-    const {className, classes, requestCurrentBuilding, currentBuilding} = this.props
+    const {className, classes, isBusy, requestCurrentBuilding, currentBuilding} = this.props
     if (!requestCurrentBuilding) {
       return <div />
     }
@@ -633,13 +628,15 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
       parentsByRange,
     } = (currentBuilding || {})
     return <div className={classnames(classes.root, className)}>
-      <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
-      <Taxdata taxdata={taxdata}/>
-      {ranges.map(range => {
-        const {id} = range
-        const {collectionId, manifestId} = parentsByRange[id]
-        return <CurrentBuildingRange key={id} onItemPicked={this.handleRangeSelection} range={range} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} />
-      })}
+      <BusyPane isBusy={isBusy}>
+        <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
+        <Taxdata taxdata={taxdata}/>
+        {ranges.map(range => {
+          const {id} = range
+          const {collectionId, manifestId} = parentsByRange[id]
+          return <CurrentBuildingRange key={id} onItemPicked={this.handleRangeSelection} range={range} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} />
+        })}
+      </BusyPane>
     </div>
   }
 })
