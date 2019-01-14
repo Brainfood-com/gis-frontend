@@ -41,6 +41,7 @@ import classnames from 'classnames'
 import Relider from 'relider'
 
 import connectHelper from '../connectHelper'
+import Taxdata from '../Taxdata'
 import * as iiifRedux from './redux'
 import { byId, global, picked } from './Picked'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
@@ -550,8 +551,7 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
                 return null
               }
               const ain = building.get('ain')
-              const yearbuilt = taxdata.get('year_built')
-              return <ListItem key={ain}><ListItemText primary={`ain: ${ain}`} secondary={`built: ${yearbuilt}`}/></ListItem>
+              return <Taxdata key={ain} taxdata={taxdata}/>
             })}
           </List>
         </List>

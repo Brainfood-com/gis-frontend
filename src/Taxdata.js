@@ -4,8 +4,16 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 
 export default class Taxdata extends React.Component {
+  state = {}
+  static getDerivedStateFromProps(props, state) {
+    const {taxdata} = props
+    return {
+      taxdata: taxdata && taxdata.toJS ? taxdata.toJS() : taxdata,
+    }
+  }
+
   render() {
-    const {taxdata} = this.props
+    const {taxdata} = this.state
     if (!taxdata) {
       return <div />
     }
