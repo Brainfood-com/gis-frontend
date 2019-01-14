@@ -24,6 +24,7 @@ import connectHelper from './connectHelper'
 import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
 import Taxdata from './Taxdata'
+import { BusyPane } from './GlobalBusy'
 import { CollectionBrief } from './iiif/Collection'
 import { ManifestBrief } from './iiif/Manifest'
 import { RangeBrief } from './iiif/Range'
@@ -193,6 +194,7 @@ const pick = (...picked) => Component => {
   function mapStateToProps(store, props) {
     const {search} = store
     const result = {}
+    let isBusy = false
     picked.forEach(item => {
       switch (item) {
         case 'addresses':
@@ -204,18 +206,29 @@ const pick = (...picked) => Component => {
           result.requestCurrentBuilding = search.get('requestCurrentBuilding')
           break
         case 'currentBuilding':
-          const requestCurrentBuilding = search.get('requestCurrentBuilding')
+          const requestCurrentBuilding = result.requestCurrentBuilding = search.get('requestCurrentBuilding')
           const currentBuilding = search.get('currentBuilding') || {}
-          if (requestCurrentBuilding !== null && (currentBuilding.building || {}).id === requestCurrentBuilding) {
-            result.currentBuilding = currentBuilding
+          if (requestCurrentBuilding !== null) {
+            const isLoaded = (currentBuilding.building || {}).id === requestCurrentBuilding
+            if (isLoaded) {
+              result.currentBuilding = currentBuilding
+            } else {
+              isBusy = true
+            }
           }
           break;
       }
     })
+    result.isBusy = isBusy
     return result
   }
 
-  return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
+  return connectHelper({mapStateToProps, mapDispatchToProps})(class BusyWrapper extends React.Component {
+    render() {
+      const {isBusy, ...props} = this.props
+      return <BusyPane isBusy={isBusy}><Component {...props}/></BusyPane>
+    }
+  })
 }
 
 export const showBuilding = id => async (dispatch, getState) => {
@@ -542,6 +555,7 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
 
 const currentBuildingInfoStyles = {
   root: {
+    minWidth: 100,
   },
 }
 
@@ -609,15 +623,15 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
   }
 
   render() {
-    const {className, classes, currentBuilding} = this.props
-    if (!currentBuilding) {
+    const {className, classes, requestCurrentBuilding, currentBuilding} = this.props
+    if (!requestCurrentBuilding) {
       return <div />
     }
     const {
-      building: {taxdata},
-      ranges,
+      building: {taxdata} = {},
+      ranges = [],
       parentsByRange,
-    } = currentBuilding
+    } = (currentBuilding || {})
     return <div className={classnames(classes.root, className)}>
       <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
       <Taxdata taxdata={taxdata}/>
