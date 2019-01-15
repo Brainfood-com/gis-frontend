@@ -240,10 +240,10 @@ export const showBuilding = id => async (dispatch, getState) => {
   const canvasPoints = {}
   const allBuildings = {}
   const canvases = await fetch(canvasesURL.toString()).then(data => data.json()).then(canvases => canvases.map(canvas => {
-    const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...rest} = canvas
+    const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, googleVision, ...rest} = canvas
     const result = {
       id: iiif_id,
-      range_id, format, height, width, externalId, label, overrides, notes, exclude, hole,
+      range_id, format, height, width, externalId, label, overrides, notes, exclude, hole, googleVision,
       externalId,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
