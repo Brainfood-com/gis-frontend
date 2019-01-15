@@ -49,6 +49,7 @@ import { byId, global, picked } from './Picked'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
 import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
+import { makeUrl } from '../api'
 import {createScrollHandler} from '../ScrollHelper'
 import {checkPermission, picked as userPicked} from '../User'
 import { CollectionTitle } from './Collection'
@@ -427,7 +428,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
         </div>
       </div>
       <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={canvas} onCanvasNext={onCanvasNext}/>
-      <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} collectionId={collectionId} manifestId={manifestId} range={range} canvas={canvas} canvasPoint={canvasPoint}/>
+      <CanvasInfo name='info' onClose={this.handleOnCloseDialog} open={infoDialogOpen} collectionId={collectionId} manifestId={manifestId} range={range} canvas={canvas} canvasPoint={canvasPoint} permissions={permissions}/>
     </div>
     return isDraggable && !this.skipChange('override') ? connectDragSource(result) : result
   }
@@ -505,8 +506,8 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
   }
 
   render() {
-    const {name, className, classes, buildings, collection, collectionId, manifest, manifestId, range, canvas: ignoreCanvas, canvasPoint, ...props} = this.props
-    const {canvas, image} = this.state
+    const {name, className, classes, buildings, collection, collectionId, manifest, manifestId, canvas: ignoreCanvas, canvasPoint, permissions, ...props} = this.props
+    const {canvas, range, image} = this.state
     const canvasLocation = canvasPoint && canvasPoint.point || {}
     const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
 
@@ -519,11 +520,12 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
       <DialogTitle>
         <CollectionTitle collection={this.state.collection}/>
         <ManifestTitle manifest={this.state.manifest}/>
-        <RangeTitle range={this.state.range}/>
+        <RangeTitle range={range}/>
         <CanvasTitle canvas={canvas}/>
       </DialogTitle>
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
+        {checkPermission(permissions, null, 'canvas', 'get_json') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${range.id}/json/${canvas.id}`)}>Get Raw JSON</Button> : null}
         <List dense>
           <ListItem disableGutters>
             <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
