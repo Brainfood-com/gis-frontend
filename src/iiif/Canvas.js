@@ -526,24 +526,22 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
         <List dense>
-          <ListItem>
+          <ListItem disableGutters>
             <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
           </ListItem>
-          <ListItem>
-            <ListItemText inset={false} primary={<CanvasStreetView canvas={canvas}/>}/>
+          <ListItem disableGutters>
+            <ListItemText primary={<CanvasStreetView canvas={canvas}/>}/>
           </ListItem>
-          <ListItem>
+          <ListItem disableGutters>
             <ListItemText primary={`
             Lat: ${canvasLocation && canvasLocation.coordinates[1]}
             Long: ${canvasLocation && canvasLocation.coordinates[0]}
             `}/>
           </ListItem>
-          <ListItem>
+          <ListItem disableGutters>
             <ListItemText primary='Tax Lots'/>
           </ListItem>
-          <List>
             {taxdatas.map(taxdata => <Taxdata key={taxdata.get('ain')} taxdata={taxdata}/>)}
-          </List>
         </List>
       </DialogContent>
     </Dialog>
