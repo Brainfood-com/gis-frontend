@@ -582,6 +582,11 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
     }
   }
 
+  handleOnClick = event => {
+    event.preventDefault()
+    this.handleOnItemPicked()
+  }
+
   handleOnItemPicked = () => {
     const {range: {id}, onItemPicked} = this.props
     onItemPicked(id)
@@ -595,10 +600,10 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
     const rangeCanvases = canvasesByRange[id]
     const primaryCanvas = primaryCanvasByRange[id]
     return <div className={classnames(classes.root, className)} key={id}>
-      <div className={classes.titlePane}>
-        <CollectionTitle collection={collection} onItemPicked={this.handleOnItemPicked}/>
-        <ManifestTitle manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
-        <RangeTitle range={range} onItemPicked={this.handleOnItemPicked}/>
+      <div className={classes.titlePane} onClick={this.handleOnClick}>
+        <CollectionTitle collection={collection}/>
+        <ManifestTitle manifest={manifest}/>
+        <RangeTitle range={range}/>
       </div>
       <CanvasCardRO className={classes.card} collectionId={collection.id} manifestId={manifest.id} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
     </div>
