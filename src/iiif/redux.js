@@ -524,9 +524,9 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
 
   const wantedBuildings = {}
   canvasPoints.forEach((canvasPoint, index) => {
-    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...canvasPointRest} = canvasPoint
+    const {id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, googleVision, ...canvasPointRest} = canvasPoint
     canvases[index] = canvasBuildKey({
-      id, format, height, width, externalId, label, overrides, notes, exclude, hole,
+      id, format, height, width, externalId, label, overrides, notes, exclude, hole, googleVision,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
     })

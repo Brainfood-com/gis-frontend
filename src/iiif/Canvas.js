@@ -43,6 +43,7 @@ import Relider from 'relider'
 
 import connectHelper from '../connectHelper'
 import Taxdata from '../Taxdata'
+import GoogleVision from '../GoogleVision'
 import * as iiifRedux from './redux'
 import { byId, global, picked } from './Picked'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
@@ -448,11 +449,6 @@ const CanvasImage = flow(withStyles(canvasImageStyles))(class CanvasImage extend
   static defaultProps = {
     onClick(event) {},
     onLoad(event) {},
-    canvasPoint: {
-      googleVision: {
-        rgb: [0, 0, 0],
-      },
-    },
   }
 
   state = {
@@ -480,7 +476,7 @@ const CanvasImage = flow(withStyles(canvasImageStyles))(class CanvasImage extend
           blue = 0,
         ] = [],
       } = {},
-    } = canvasPoint
+    } = canvas
 
     return <Card className={classnames(classes.root, className)} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
       <img src={`${canvas.image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
@@ -495,9 +491,6 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
   static defaultProps = {
     onClose(event, name) {},
     canvasPoint: {
-      googleVision: {
-        rgb: [0, 0, 0],
-      },
       point: {
         coordinates: [],
       },
@@ -539,6 +532,7 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
             Long: ${canvasLocation && canvasLocation.coordinates[0]}
             `}/>
           </ListItem>
+          <GoogleVision googleVision={canvas.googleVision}/>
           <ListItem disableGutters>
             <ListItemText primary='Tax Lots'/>
           </ListItem>
