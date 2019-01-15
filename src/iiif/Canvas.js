@@ -701,9 +701,7 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext}/>
       {point}
-      <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
       <FormGroup row>
         <FormControlLabel label='Exclude' control={
           <Checkbox name='exclude' checked={!!this.checkOverrideValueDefault('exclude', false)} onChange={this.handleInputChange}/>
