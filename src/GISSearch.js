@@ -25,9 +25,9 @@ import { immutableEmptyList, immutableEmptyMap } from './constants'
 import GISGeoJSON from './GISGeoJSON'
 import Taxdata from './Taxdata'
 import { BusyPane } from './GlobalBusy'
-import { CollectionBrief } from './iiif/Collection'
-import { ManifestBrief } from './iiif/Manifest'
-import { RangeBrief } from './iiif/Range'
+import { CollectionTitle } from './iiif/Collection'
+import { ManifestTitle } from './iiif/Manifest'
+import { RangeTitle } from './iiif/Range'
 import { ensureBuildings, iiifLocalCache } from './iiif/redux'
 import { byId as iiifPickedById } from './iiif/Picked'
 import { CanvasCardRO } from './iiif/Canvas'
@@ -562,7 +562,7 @@ const currentBuildingRangeStyles = {
       borderColor: 'white',
     },
   },
-  briefPane: {
+  titlePane: {
     cursor: 'pointer',
     padding: 8,
   },
@@ -595,10 +595,10 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
     const rangeCanvases = canvasesByRange[id]
     const primaryCanvas = primaryCanvasByRange[id]
     return <div className={classnames(classes.root, className)} key={id}>
-      <div className={classes.briefPane}>
-        <CollectionBrief collection={collection} onItemPicked={this.handleOnItemPicked}/>
-        <ManifestBrief manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
-        <RangeBrief range={range} onItemPicked={this.handleOnItemPicked}/>
+      <div className={classes.titlePane}>
+        <CollectionTitle collection={collection} onItemPicked={this.handleOnItemPicked}/>
+        <ManifestTitle manifest={manifest} onItemPicked={this.handleOnItemPicked}/>
+        <RangeTitle range={range} onItemPicked={this.handleOnItemPicked}/>
       </div>
       <CanvasCardRO className={classes.card} collectionId={collection.id} manifestId={manifest.id} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
     </div>

@@ -49,9 +49,9 @@ import {immutableEmptyList, immutableEmptyMap} from '../constants'
 
 import {createScrollHandler} from '../ScrollHelper'
 import {checkPermission, picked as userPicked} from '../User'
-import { CollectionBrief } from './Collection'
-import { ManifestBrief } from './Manifest'
-import { RangeBrief, rangeRequiredRole } from './Range'
+import { CollectionTitle } from './Collection'
+import { ManifestTitle } from './Manifest'
+import { RangeTitle, rangeRequiredRole } from './Range'
 import { AbstractForm } from './base'
 
 export function handleCanvasNext(event, onCanvasNext) {
@@ -518,9 +518,9 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
 
 
     return <Dialog {...props} onClose={this.handleOnClose}>
-      <CollectionBrief collection={this.state.collection}/>
-      <ManifestBrief manifest={this.state.manifest}/>
-      <RangeBrief range={this.state.range}/>
+      <CollectionTitle collection={this.state.collection}/>
+      <ManifestTitle manifest={this.state.manifest}/>
+      <RangeTitle range={this.state.range}/>
       <DialogTitle>Canvas {canvas.label}</DialogTitle>
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
