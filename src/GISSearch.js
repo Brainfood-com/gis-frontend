@@ -242,7 +242,8 @@ export const showBuilding = id => async (dispatch, getState) => {
   const canvases = await fetch(canvasesURL.toString()).then(data => data.json()).then(canvases => canvases.map(canvas => {
     const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, ...rest} = canvas
     const result = {
-      id, range_id, iiif_id, format, height, width, externalId, label, overrides, notes, exclude, hole,
+      id: iiif_id,
+      range_id, format, height, width, externalId, label, overrides, notes, exclude, hole,
       externalId,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
@@ -304,7 +305,7 @@ export const showBuilding = id => async (dispatch, getState) => {
       canvasPoints,
       parentsByRange,
       canvasesByRange: Object.entries(canvasesByRange).reduce((canvasesByRange, [rangeId, canvases]) => {
-        canvasesByRange[rangeId] = canvases.map(canvas => canvas.iiif_id)
+        canvasesByRange[rangeId] = canvases.map(canvas => canvas.id)
         return canvasesByRange
       }, {}),
       primaryCanvasByRange: Object.entries(canvasesByRange).reduce((primaryCanvasByRange, [rangeId, canvases]) => {
@@ -614,7 +615,7 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
   handleRangeSelection = id => {
     const {showRange, showCanvas, currentBuilding: {primaryCanvasByRange}} = this.props
     const primaryCanvas = primaryCanvasByRange[id]
-    showRange(id, primaryCanvas.iiif_id)
+    showRange(id, primaryCanvas.id)
   }
 
   handleOnClose = ev => {
