@@ -510,7 +510,10 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
     const canvasLocation = canvasPoint && canvasPoint.point || {}
     const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
 
-    const taxdatas = canvasBuildings.filter(building => building && building.get('taxdata')).map(building => building.get('taxdata'))
+    const taxdatas = canvasBuildings.filter(building => building && building.get('taxdata')).map(building => building.get('taxdata')).reduce((taxdatas, taxdata) => {
+      taxdatas[taxdata.get('ain')] = taxdata
+      return taxdatas
+    }, {})
 
     return <Dialog {...props} onClose={this.handleOnClose}>
       <CollectionTitle collection={this.state.collection}/>
@@ -536,7 +539,7 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
           <ListItem disableGutters>
             <ListItemText primary='Tax Lots'/>
           </ListItem>
-            {taxdatas.map(taxdata => <Taxdata key={taxdata.get('ain')} taxdata={taxdata}/>)}
+            {Object.values(taxdatas).map(taxdata => <Taxdata key={taxdata.get('ain')} taxdata={taxdata}/>)}
         </List>
       </DialogContent>
     </Dialog>
