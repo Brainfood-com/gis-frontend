@@ -516,6 +516,7 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
     const canvasLocation = canvasPoint && canvasPoint.point || {}
     const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
 
+    const taxdatas = canvasBuildings.filter(building => building && building.get('taxdata')).map(building => building.get('taxdata'))
 
     return <Dialog {...props} onClose={this.handleOnClose}>
       <CollectionTitle collection={this.state.collection}/>
@@ -541,18 +542,7 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
             <ListItemText primary='Tax Lots'/>
           </ListItem>
           <List>
-            {canvasBuildings.map(building => {
-              if (!building) {
-                return null
-              }
-              const taxdata = building.get('taxdata')
-              if (!taxdata) {
-                // seems to happen with courtyards
-                return null
-              }
-              const ain = building.get('ain')
-              return <Taxdata key={ain} taxdata={taxdata}/>
-            })}
+            {taxdatas.map(taxdata => <Taxdata key={taxdata.get('ain')} taxdata={taxdata}/>)}
           </List>
         </List>
       </DialogContent>
