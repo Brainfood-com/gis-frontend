@@ -3,6 +3,7 @@ import flow from 'lodash-es/flow'
 import React from 'react'
 import {Link} from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
+import Fab from '@material-ui/core/Fab'
 import Button from '@material-ui/core/Button'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
@@ -403,25 +404,25 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint} onClick={this.handleOnClick}/>
       <div className={classes.upperLeft}>
         <div className={classes.upperLeftContent}>
-          <Button className={classnames(classes.upperLeftItem, classes.excludeButton, this.skipChange('exclude') && classes.hidden)} mini variant='fab' name='exclude' onClick={this.handleOnToggleClick}><BlockIcon titleAccess='Exclude' className={classes.excludeIcon}/></Button>
-          <Button className={classnames(classes.upperLeftItem, classes.holeButton, this.skipChange('hole') && classes.hidden)} mini variant='fab' name='hole' onClick={this.handleOnToggleClick}><LocationDisabledIcon titleAccess='Hole' className={classes.holeIcon}/></Button>
-          <Button className={classnames(classes.upperLeftItem, classes.overrideButton, this.skipChange('override') && classes.hidden)} mini variant='fab' name='override' onClick={this.handleRemoveOverride}><PlaceIcon titleAccess='Override' className={classes.overrideIcon}/></Button>
+          <Fab className={classnames(classes.upperLeftItem, classes.excludeButton, this.skipChange('exclude') && classes.hidden)} size='small' name='exclude' onClick={this.handleOnToggleClick}><BlockIcon titleAccess='Exclude' className={classes.excludeIcon}/></Fab>
+          <Fab className={classnames(classes.upperLeftItem, classes.holeButton, this.skipChange('hole') && classes.hidden)} size='small' name='hole' onClick={this.handleOnToggleClick}><LocationDisabledIcon titleAccess='Hole' className={classes.holeIcon}/></Fab>
+          <Fab className={classnames(classes.upperLeftItem, classes.overrideButton, this.skipChange('override') && classes.hidden)} size='small' name='override' onClick={this.handleRemoveOverride}><PlaceIcon titleAccess='Override' className={classes.overrideIcon}/></Fab>
         </div>
       </div>
       <div className={classes.upperRight}>
         <div className={classes.upperRightContent}>
-          <CanvasStreetView className={classnames(classes.upperRightItem, classes.streetViewButton)} mini variant='fab' canvas={canvas}><StreetviewIcon titleAccess='Street View'/></CanvasStreetView>
+          <CanvasStreetView className={classnames(classes.upperRightItem, classes.streetViewButton)} Component={Fab} size='small' canvas={canvas}><StreetviewIcon titleAccess='Street View'/></CanvasStreetView>
         </div>
       </div>
       <div className={classes.lowerLeft}>
         <div className={classes.lowerLeftContent}>
-          <Button className={classnames(classes.lowerLeftItem, classes.infoButton)} mini variant='fab' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Button>
-          <Button className={classnames(classes.lowerLeftItem, classes.linkButton)} mini variant='fab' name='link' component={Link} replace to={`/iiif?externalId=${encodeURIComponent(canvas.externalId)}`} onClick={this.handleOnClick}><LinkIcon titleAccess='Link' className={classes.linkIcon}/></Button>
+          <Fab className={classnames(classes.lowerLeftItem, classes.infoButton)} size='small' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Fab>
+          <Fab className={classnames(classes.lowerLeftItem, classes.linkButton)} size='small' name='link' component={Link} replace to={`/iiif?externalId=${encodeURIComponent(canvas.externalId)}`} onClick={this.handleOnClick}><LinkIcon titleAccess='Link' className={classes.linkIcon}/></Fab>
         </div>
       </div>
       <div className={classes.lowerRight}>
         <div className={classes.lowerRightContent}>
-          <Button className={classnames(classes.lowerRightItem, classes.inspectButton)} mini variant='fab' name='inspect' onClick={this.handleOnInspectOpen}><ZoomInIcon titleAccess='Inspect' className={classes.inspectcon}/></Button>
+          <Fab className={classnames(classes.lowerRightItem, classes.inspectButton)} size='small' name='inspect' onClick={this.handleOnInspectOpen}><ZoomInIcon titleAccess='Inspect' className={classes.inspectcon}/></Fab>
         </div>
       </div>
       <CanvasInspectDialog name='inspect' onClose={this.handleOnInspectClose} open={inspectDialogOpen} canvas={canvas} onCanvasNext={onCanvasNext}/>
@@ -728,7 +729,7 @@ export class CanvasTitle extends React.Component {
     const image = canvas && canvas.image
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
 
-    return <Typography variant='body2' classes={{body2: className}}>{`${lastImagePart} ${title}`}</Typography>
+    return <Typography variant='body1' classes={{body1: className}}>{`${lastImagePart} ${title}`}</Typography>
   }
 }
 

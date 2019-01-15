@@ -98,9 +98,9 @@ class Stats extends React.Component {
       return <div className={classes.root} />
     }
     return <div className={classes.root}>
-      <Badge color='secondary' badgeContent={range.get('claimed', '')}><PhotoIcon className={classes.claimedIcon} titleAccess='Claimed'/></Badge>
-      <Badge color='secondary' badgeContent={range.get('placed', '')}><RoomIcon className={classes.placedIcon} titleAccess='Placed'/></Badge>
-      <Badge color='secondary' badgeContent={range.get('validated', '')}><CheckCircleIcon className={classes.validatedIcon} titleAccess='Validated'/></Badge>
+      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('claimed', '')}><PhotoIcon className={classes.claimedIcon} titleAccess='Claimed'/></Badge>
+      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('placed', '')}><RoomIcon className={classes.placedIcon} titleAccess='Placed'/></Badge>
+      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('validated', '')}><CheckCircleIcon className={classes.validatedIcon} titleAccess='Validated'/></Badge>
     </div>
   }
 }

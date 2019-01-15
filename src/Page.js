@@ -57,7 +57,7 @@ class Page extends React.Component {
 					<IconButton className={classes.menuButton} color='inherit' aria-label='Menu'>
             <MenuIcon />
           </IconButton>
-          <Typography variant='title'>GIS</Typography>
+          <Typography variant='h6'>GIS</Typography>
           <Search className={classes.grow}/>
           <LoginForm/>
           <Stats/>
@@ -72,7 +72,7 @@ class Page extends React.Component {
         <IconButton className={classes.menuButton} color='inherit' aria-label='Menu'>
           <MenuIcon />
         </IconButton>
-        <Typography variant='title'>footer</Typography>
+        <Typography variant='h6'>footer</Typography>
       </Toolbar>
     </div>
   }

@@ -25,10 +25,10 @@ class GISPicView extends React.Component {
     const {children, classes} = this.props
     return <div className={classes.root}>
       <Paper>
-        <Typography variant='title'>Street View</Typography>
+        <Typography variant='h6'>Street View</Typography>
       </Paper>
       <Paper>
-        <Typography variant='title'>Ruscha</Typography>
+        <Typography variant='h6'>Ruscha</Typography>
       </Paper>
       <Paper className={classes.fillRemaining}>remaining</Paper>
     </div>

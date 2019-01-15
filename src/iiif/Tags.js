@@ -195,7 +195,7 @@ class IIIFTagEditor extends React.Component {
       return <div/>
     }
     return <div>
-      <Typography variant='subheading' color='textSecondary'>Tags</Typography>
+      <Typography variant='subtitle1' color='textSecondary'>Tags</Typography>
       <ReactTags inline={false} className={className} classNames={classes} name={name} tags={tags} suggestions={filteredSuggestions} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
     </div>
   }

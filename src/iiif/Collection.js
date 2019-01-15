@@ -66,7 +66,7 @@ export class CollectionTitle extends React.Component {
     const {className, collection} = this.props
 
     const {id, label} = collection || {}
-    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+    return <Typography variant='body1' classes={{body1: className}}>{label}</Typography>
   }
 }
 

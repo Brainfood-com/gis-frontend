@@ -50,6 +50,9 @@ export function getMuiTheme(themeRO) {
 }
 
 const themeDefaults = {
+  typography: {
+    useNextVariants: true,
+  },
 }
 
 export const Dark = merge({}, themeDefaults, {

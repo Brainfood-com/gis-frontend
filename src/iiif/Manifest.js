@@ -71,7 +71,7 @@ export class ManifestTitle extends React.Component {
     const {className, manifest} = this.props
 
     const {label} = manifest || {label: 'Manifest'}
-    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+    return <Typography variant='body1' classes={{body1: className}}>{label}</Typography>
   }
 }
 

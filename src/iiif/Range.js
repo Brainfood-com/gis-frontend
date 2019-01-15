@@ -122,7 +122,7 @@ export class RangeTitle extends React.Component {
     const {className, range} = this.props
 
     const {id, label} = range || {}
-    return <Typography variant='body2' classes={{body2: className}}>{label}</Typography>
+    return <Typography variant='body1' classes={{body1: className}}>{label}</Typography>
   }
 }
 
@@ -154,7 +154,7 @@ export const RangeBrief = flow(withStyles(rangeBriefStyles), userPicked('permiss
     const {id, label} = range
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
       <Typography>{label}</Typography>
-      {checkPermission(permissions, null, 'range', 'get_geojson') ? <Button fullWidth variant='raised' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button> : null}
+      {checkPermission(permissions, null, 'range', 'get_geojson') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button> : null}
     </Paper>
   }
 })

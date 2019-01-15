@@ -148,7 +148,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
               icon ?
                 <Button color='primary' variant='outlined'>{icon} {name}</Button>
               :
-                <Typography onClick={e => e.stopPropagation()} variant='body2' classes={{body2: classes.name}}>{name}</Typography>
+                <Typography onClick={e => e.stopPropagation()} variant='body1' classes={{body1: classes.name}}>{name}</Typography>
             }
             {React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}
           </div>
