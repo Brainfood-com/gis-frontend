@@ -516,10 +516,12 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
     }, {})
 
     return <Dialog {...props} onClose={this.handleOnClose}>
-      <CollectionTitle collection={this.state.collection}/>
-      <ManifestTitle manifest={this.state.manifest}/>
-      <RangeTitle range={this.state.range}/>
-      <DialogTitle>Canvas {canvas.label}</DialogTitle>
+      <DialogTitle>
+        <CollectionTitle collection={this.state.collection}/>
+        <ManifestTitle manifest={this.state.manifest}/>
+        <RangeTitle range={this.state.range}/>
+        <CanvasTitle canvas={canvas}/>
+      </DialogTitle>
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
         <List dense>
