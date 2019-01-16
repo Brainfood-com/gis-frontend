@@ -481,14 +481,17 @@ const MapBuilding = flow(pick('building'))(class MapBuilding extends React.Compo
     isSelected: PropTypes.bool,
     building: MapBuildingShape,
     showBuilding: PropTypes.func,
-    rangeChoropleth: PropTypes.func,
-    canvasChoropleth: PropTypes.func,
-    doneChoropleth: PropTypes.func,
+    buildingStyler: PropTypes.func,
   }
 
   handleOnClick = event => {
     const {buildingId, showBuilding} = this.props
     showBuilding(buildingId)
+  }
+
+  buildingStyle = (data) => {
+    const {building, buildingStyler} = this.props
+    return buildingStyler(building)
   }
 
   renderMarker() {
@@ -506,20 +509,12 @@ const MapBuilding = flow(pick('building'))(class MapBuilding extends React.Compo
   }
 
   render() {
-    const {isSelected, building, rangeColorizer, canvasColorizer, doneColorizer} = this.props
+    const {isSelected, building} = this.props
     if (!building) return <div/>
     const geojson = building.get('geojson')
-    const rangeIds = building.get('rangeIds')
-    const claimedCount = building.get('claimedCount')
-    const placedCount = building.get('placedCount')
-    const buildingStyle = {
-      color: rangeColorizer(rangeIds.size),
-      fillColor: doneColorizer(Math.abs(claimedCount - placedCount)),
-      fillOpacity: 0.8,
-    }
     return <FeatureGroup>
       {this.renderMarker()}
-      <GISGeoJSON data={geojson} style={buildingStyle} onClick={this.handleOnClick}/>
+      <GISGeoJSON data={geojson} style={this.buildingStyle} onClick={this.handleOnClick}/>
     </FeatureGroup>
   }
 })
@@ -576,18 +571,25 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     showBuilding(buildingId)
   }
 
-  rangeColorizer = value => this.state.rangeColorizer.func(value)
-  canvasColorizer = value => this.state.canvasColorizer.func(value)
-  doneColorizer = value => this.state.doneColorizer.func(value)
+  buildingStyler = building => {
+    const {rangeColorizer, doneColorizer} = this.state
+    const rangeIds = building.get('rangeIds')
+    const claimedCount = building.get('claimedCount')
+    const placedCount = building.get('placedCount')
+    const buildingStyle = {
+      color: rangeColorizer.func(rangeIds.size),
+      fillColor: doneColorizer.func(Math.abs(claimedCount - placedCount)),
+      fillOpacity: 0.8,
+    }
+    return buildingStyle
+  }
 
   render() {
     const {className, classes, buildings, buildingStats} = this.props
 
     return <FeatureGroup>
       {buildings && buildings.map((building, key, index) => <MapBuilding key={building.get('buildingId')} buildingId={building.get('buildingId')}
-        rangeColorizer={this.rangeColorizer}
-        canvasColorizer={this.canvasColorizer}
-        doneColorizer={this.doneColorizer}
+        buildingStyler={this.buildingStyler}
         showBuilding={this.handleShowBuilding}
         />).toIndexedSeq()}
     </FeatureGroup>
