@@ -75,7 +75,7 @@ function applyTagMutation(props, state, tagOrAccessor, mutator) {
   const tags = [].concat(state.tags)
   const tag = typeof tagOrAccessor === 'function' ? tagOrAccessor(tags).id : tagOrAccessor
   const {suggestionLookup: {[tag]: {roles: wantedRoles = ['freeform']} = {}}} = state
-  const isAllowed = wantedRoles.reduce((skip, role) => checkPermission(permissions, role, modelName, 'tags') ? true : skip, false)
+  const isAllowed = wantedRoles.reduce((skip, role) => checkPermission(permissions, role, modelName, name) ? true : skip, false)
   if (!isAllowed) {
     return
   }
@@ -101,6 +101,7 @@ class IIIFTagEditor extends React.Component {
 
   static propTypes = {
     name: PropTypes.string,
+    label: PropTypes.string,
     suggestions: PropTypes.arrayOf(tagSuggestionShape),
     value: PropTypes.array,
     onChange: PropTypes.func,
@@ -108,6 +109,8 @@ class IIIFTagEditor extends React.Component {
   }
 
   static defaultProps = {
+    name: 'tags',
+    label: 'Tags',
     value: immutableEmptyList,
     suggestions: [],
     onChange(event) {},
@@ -138,7 +141,7 @@ class IIIFTagEditor extends React.Component {
         return 0
       }
     })
-    const {modelName, permissions} = props
+    const {name, modelName, permissions} = props
     if (modelName === state.modelName && isEqual(tags, state.tags) && suggestions === state.suggestions && permissions === state.permissions) {
       return {}
     }
@@ -149,7 +152,7 @@ class IIIFTagEditor extends React.Component {
         return false
       }
       if (roles) {
-        if (!roles.reduce((skip, role) => checkPermission(permissions, role, modelName, 'tags') ? true : skip, false)) {
+        if (!roles.reduce((skip, role) => checkPermission(permissions, role, modelName, name) ? true : skip, false)) {
           return false
         }
       }
@@ -189,13 +192,13 @@ class IIIFTagEditor extends React.Component {
   }
 
   render() {
-    const {className, classes, name, suggestions, value} = this.props
+    const {className, classes, name, label, suggestions, value} = this.props
     const {tags, filteredSuggestions} = this.state
     if (value === undefined) {
       return <div/>
     }
     return <div>
-      <Typography variant='subtitle1' color='textSecondary'>Tags</Typography>
+      <Typography variant='subtitle1' color='textSecondary'>{label}</Typography>
       <ReactTags inline={false} className={className} classNames={classes} name={name} tags={tags} suggestions={filteredSuggestions} handleDelete={this.handleDelete} handleAddition={this.handleAddition} handleDrag={this.handleDrag} allowDeleteFromEmptyInput={false} minQueryLength={0} autofocus={false}/>
     </div>
   }
