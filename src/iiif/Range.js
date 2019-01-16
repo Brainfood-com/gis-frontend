@@ -65,6 +65,9 @@ const rangeTagSuggestions = [
   commonTagDefinitions.VALIDATED,
   commonTagDefinitions.CLIENT_APPROVED,
 ]
+const rangeBfTagSuggestions = [
+  commonTagDefinitions.BF_PAID,
+]
 
 function getDerivedStateFromProps(props, state) {
   const {range} = props
@@ -75,7 +78,7 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
   static modelName = 'range'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateRange'
-  static complexFields = ['tags']
+  static complexFields = ['tags', 'values.bftags']
   static defaultProps = {
     updateRange(id, data) {},
   }
@@ -86,7 +89,7 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
   }
 
   render() {
-    const {className, classes, range} = this.props
+    const {className, classes, range, permissions} = this.props
     if (!range) return <div/>
     const rootClasses = {
       [classes.root]: true,
@@ -112,6 +115,10 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
+      {checkPermission(permissions, null, 'brainfood', 'admin')
+        ? <IIIFTagEditor name='values.bftags' label='Brainfood Tags' modelName='range' suggestions={rangeBfTagSuggestions} value={this.checkOverrideValueDefault('values.bftags', [])} onChange={this.handleInputChange}/>
+        : null
+      }
       <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }

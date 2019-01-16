@@ -18,6 +18,7 @@ export const commonTagDefinitions = {
   VALIDATED: {roles: ['editor'], label: 'Validated'},
   BROKEN_IMAGE: {roles: ['editor'], label: 'Broken Image'},
   CLIENT_APPROVED: {roles: ['client'], label: 'Client Approved'},
+  BF_PAID: {roles: ['brainfood'], label: 'Paid'},
 }
 
 const styles = theme => {

@@ -1,9 +1,11 @@
+import flow from 'lodash/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
 import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'
+import AttachMoneyIcon from '@material-ui/icons/AttachMoney'
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank'
 import CheckCircleIcon from '@material-ui/icons/CheckCircle'
 import ErrorIcon from '@material-ui/icons/Error'
@@ -21,6 +23,7 @@ import ListItemText from '@material-ui/core/ListItemText'
 import Menu from '@material-ui/core/Menu'
 import MenuItem from '@material-ui/core/MenuItem'
 import {immutableEmptyList, immutableEmptyMap} from './constants'
+import {picked as userPicked} from './User'
 
 const styles = theme => ({
   root: {},
@@ -83,7 +86,7 @@ const styles = theme => ({
   },
 })
 
-export default withStyles(styles)(class ExpandoList extends React.Component {
+export default flow(withStyles(styles), userPicked('permissions'))(class ExpandoList extends React.Component {
   static defaultProps = {
     onItemPicked(id) {},
     items: immutableEmptyMap,
@@ -121,9 +124,10 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
   }
 
   render() {
-		const {className, classes, selectedItem, items, Icon, IconLabel} = this.props
+		const {className, classes, selectedItem, items, Icon, IconLabel, permissions} = this.props
     const {anchorEl} = this.state
     const isOpen = !!selectedItem
+    const isBrainfoodAdmin = permissions.has('brainfood_admin')
     return <List dense={true}>
       <ListItem button disableGutters className={classnames(classes.root, className)} onClick={this.handleOnMenuOpen}>
         {Icon ? <Avatar>{Icon}</Avatar> : null}
@@ -146,10 +150,18 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           tags.forEach(tag => {
             tagFlags[tag.toLowerCase()] = true
           })
-          let icon
+          const bftagFlags = {}
+          const bftags = item.getIn(['values', 'bftags'], immutableEmptyList)
+          bftags.forEach(tag => {
+            bftagFlags[tag.toLowerCase()] = true
+          })
+          let icon, secondaryIcon
           const statusClasses = {}
           if (tagFlags['excluded']) {
             statusClasses.excluded = true
+          }
+          if (bftagFlags['paid']) {
+            secondaryIcon = <AttachMoneyIcon titleAccess='Paid'/>
           }
           if (tagFlags['needs review']) {
             icon = <ErrorIcon titleAccess='Needs Review'/>
@@ -186,6 +198,7 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           return <MenuItem key={id} classes={{root: classes.menuItemRoot, selected: classes.menuItemSelected}} className={classnames(menuClasses)} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>
             <ListItemIcon className={classnames(iconClasses)}>{icon}</ListItemIcon>
             <ListItemText classes={{primary: classnames(textClasses)}} primary={label} secondary={secondaryItems.join(' ')}/>
+            {isBrainfoodAdmin && secondaryIcon && <ListItemIcon>{secondaryIcon}</ListItemIcon>}
           </MenuItem>
         })}
       </Menu>
