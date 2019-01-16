@@ -506,15 +506,15 @@ const MapBuilding = flow(pick('building'))(class MapBuilding extends React.Compo
   }
 
   render() {
-    const {isSelected, building, rangeChoropleth, canvasChoropleth, doneChoropleth} = this.props
+    const {isSelected, building, rangeColorizer, canvasColorizer, doneColorizer} = this.props
     if (!building) return <div/>
     const geojson = building.get('geojson')
     const rangeIds = building.get('rangeIds')
     const claimedCount = building.get('claimedCount')
     const placedCount = building.get('placedCount')
     const buildingStyle = {
-      color: rangeChoropleth(rangeIds.size),
-      fillColor: doneChoropleth(Math.abs(claimedCount - placedCount)),
+      color: rangeColorizer(rangeIds.size),
+      fillColor: doneColorizer(Math.abs(claimedCount - placedCount)),
       fillOpacity: 0.8,
     }
     return <FeatureGroup>
@@ -523,6 +523,20 @@ const MapBuilding = flow(pick('building'))(class MapBuilding extends React.Compo
     </FeatureGroup>
   }
 })
+
+function attachColorizer(stateResult, name, state, scheme, min, max, builder) {
+  const {[`${name}Colorizer`]: nameData} = state
+  if (nameData && nameData.scheme === scheme && nameData.min === min && nameData.max == max) {
+    return
+  }
+  const func = builder(scheme, min, max)
+  stateResult[`${name}Colorizer`] = {
+    scheme,
+    min,
+    max,
+    func,
+  }
+}
 
 const StatShape = ImmutablePropTypes.mapContains({
   min: PropTypes.number.isRequired,
@@ -549,15 +563,11 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     const claimedCount = buildingStats.get('claimedCount')
     const placedCount = buildingStats.get('placedCount')
 
-    const rangeChoropleth = makeChoropleth('diverging', rangeCount.get('min'), rangeCount.get('max'))
-    const canvasChoropleth = makeChoropleth('growing', canvasCount.get('min'), canvasCount.get('max'))
-    const doneChoropleth = makeChoropleth('growing', 0, placedCount.get('max'))
-
-    return {
-      rangeChoropleth,
-      canvasChoropleth,
-      doneChoropleth,
-    }
+    const newState = {}
+    attachColorizer(newState, 'range', state, 'diverging', rangeCount.get('min'), rangeCount.get('max'), makeChoropleth)
+    attachColorizer(newState, 'canvas', state, 'growing', canvasCount.get('min'), canvasCount.get('max'), makeChoropleth)
+    attachColorizer(newState, 'done', state, 'growing', 0, placedCount.get('max'), makeChoropleth)
+    return newState
   }
 
   handleShowBuilding = buildingId => {
@@ -566,18 +576,18 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     showBuilding(buildingId)
   }
 
-  rangeChoropleth = value => this.state.rangeChoropleth(value)
-  canvasChoropleth = value => this.state.canvasChoropleth(value)
-  doneChoropleth = value => this.state.doneChoropleth(value)
+  rangeColorizer = value => this.state.rangeColorizer.func(value)
+  canvasColorizer = value => this.state.canvasColorizer.func(value)
+  doneColorizer = value => this.state.doneColorizer.func(value)
 
   render() {
     const {className, classes, buildings, buildingStats} = this.props
 
     return <FeatureGroup>
       {buildings && buildings.map((building, key, index) => <MapBuilding key={building.get('buildingId')} buildingId={building.get('buildingId')}
-        rangeChoropleth={this.rangeChoropleth}
-        canvasChoropleth={this.canvasChoropleth}
-        doneChoropleth={this.doneChoropleth}
+        rangeColorizer={this.rangeColorizer}
+        canvasColorizer={this.canvasColorizer}
+        doneColorizer={this.doneColorizer}
         showBuilding={this.handleShowBuilding}
         />).toIndexedSeq()}
     </FeatureGroup>
