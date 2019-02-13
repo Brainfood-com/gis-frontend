@@ -4,9 +4,7 @@ var path = require('path');
 var escapeRegExp = require('lodash/escapeRegExp')
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 var CompressionPlugin = require('compression-webpack-plugin');
-var UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 var devOverrides = {
@@ -19,83 +17,27 @@ var devOverrides = {
     'react-material-tags': 'react-material-tags/src/tags.js',
 }
 
-const srcDir = path.resolve(__dirname, 'src')
-const mockDir = path.resolve(srcDir, 'mock')
-const srcPathRegExp = new RegExp('^' + escapeRegExp(srcDir))
-
-const pluginIndirection = {
-    htmlWebpack: {
-        constructor: HtmlWebpackPlugin,
-        args: [
-            {
-                template: 'src/index.html',
-            }
-        ],
-    },
-    analyzer: {
-        constructor: BundleAnalyzerPlugin,
-        args: [
-            {
-                openAnalyzer: false,
-                analyzerMode: 'static',
-                reportFilename: 'bundle-report.html',
-                generateStatsFile: true,
-                statsFilename: 'bundle-stats.json',
-            },
-        ],
-    },
-    uglifyJs: {
-        constructor: UglifyJsPlugin,
-        args: [
-            {
-                extractComments: true,
-                parallel: true,
-                sourceMap: true,
-                uglifyOptions: {
-                    compress: true,
-                    mangle: true,
-                },
-            },
-        ],
-    },
-    srcReplacement: {
-        constructor: webpack.NormalModuleReplacementPlugin,
-        args: [
-            srcPathRegExp,
-            function(resource) {
-                if (process.env.NODE_ENV === undefined && !resource.request.match(/\?.*mock/)) {
-                    // look for MOCK overrides
-                    //console.log('resource', resource)
-                    const possibleMockFile = resource.resource.replace(srcPathRegExp, mockDir)
-                    if (fs.existsSync(possibleMockFile)) {
-                        resource.resource = possibleMockFile
-                    }
-                }
-            },
-        ],
-    },
-}
-
 let plugins = [
-    new webpack.DefinePlugin({
-        'process.env.GIS_GA_ID': JSON.stringify(process.env['GIS_GA_ID']),
-    }),
-    'htmlWebpack',
-    'analyzer',
-    'srcReplacement',
-]
-const splittingPlugins = [
-    new webpack.optimize.AggressiveMergingPlugin(),
-]
-const reducingPlugins = [
-    'uglifyJs',
-    new CompressionPlugin({
-        asset: "[path].gz[query]",
-        algorithm: "gzip",
-        test: /\.js$|\.css$|\.html$/,
-        threshold: 10240,
-        minRatio: 0.8,
-    }),
+  new webpack.DefinePlugin({
+    'process.env.GIS_GA_ID': JSON.stringify(process.env['GIS_GA_ID']),
+  }),
+  new HtmlWebpackPlugin({
+    template: 'src/index.html',
+  }),
+  new BundleAnalyzerPlugin({
+    openAnalyzer: false,
+    analyzerMode: 'static',
+    reportFilename: 'bundle-report.html',
+    generateStatsFile: true,
+    statsFilename: 'bundle-stats.json',
+  }),
+  new CompressionPlugin({
+    asset: "[path].gz[query]",
+    algorithm: "gzip",
+    test: /\.js$|\.css$|\.html$/,
+    threshold: 10240,
+    minRatio: 0.8,
+  }),
 ]
 
 console.log('GIS_BUILD_TARGET', process.env.GIS_BUILD_TARGET)
@@ -107,28 +49,6 @@ const gisHost = gisHostBase ? 'www.' + gisHostBase : undefined
 if (gisHost) {
     console.log('Using ' + gisHost + ' for deployment in ' + process.env.GIS_BUILD_TARGET)
 }
-
-switch (process.env.GIS_BUILD_TARGET) {
-    case 'production':
-        objectPath.set(pluginIndirection.uglifyJs.args[0], 'uglifyOptions.output.max_line_len', 500)
-        plugins = [].concat(plugins, splittingPlugins, reducingPlugins)
-        process.env.NODE_ENV = process.env.GIS_BUILD_TARGET
-        break;
-    case 'development':
-        plugins = [].concat(plugins, splittingPlugins)
-        process.env.NODE_ENV = process.env.GIS_BUILD_TARGET
-        break;
-    default:
-        // standalone MOCK type checkouts
-}
-plugins = plugins.map(function(pluginOrRef) {
-    if (typeof pluginOrRef !== 'string') {
-        return pluginOrRef
-    }
-    const {constructor, args} = pluginIndirection[pluginOrRef]
-    return new constructor(...args)
-})
-
 
 module.exports = {
     mode: 'development',
