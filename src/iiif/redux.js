@@ -406,6 +406,7 @@ export const getCollection = requiredId(busyCall('collection', collectionId => a
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildKey).map(manifestBuildLabel)})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionBuildLabel(collectionBuildKey(collectionDetail))})
+  collectionDetail.manifests.forEach(manifestId => dispatch(getManifest(manifestId)))
 }))
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags', 'values'], id => makeUrl('api', `collection/${id}`), getCollection)
