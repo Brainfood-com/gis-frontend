@@ -41,7 +41,7 @@ export function reducer(state = defaultState, {type, actionType, ...rest}) {
   switch (actionType) {
     case ACTION['set-viewport']:
       if (!isEqual(rest.center, state.get('center'))) {
-        state = state.set('center', rest.center)
+        //state = state.set('center', rest.center)
       }
       state = state.set('zoom', rest.zoom)
       break
