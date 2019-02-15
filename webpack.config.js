@@ -219,6 +219,7 @@ module.exports = {
       //poll: true,
     },
     devServer: {
+      compress: true,
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
