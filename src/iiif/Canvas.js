@@ -1033,7 +1033,13 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
         return a.value - b.value
       }
     }).toJSON()
-    return {canvases, classes, handles, position}
+    const cardClasses = {
+      upperLeft: classes.cardUpperLeft,
+      upperRight: classes.cardUpperRight,
+      lowerLeft: classes.cardLowerLeft,
+      lowerRight: classes.cardLowerRight,
+    }
+    return {canvases, classes, handles, position, cardClasses}
   }
 
   state = {
@@ -1063,7 +1069,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
   render() {
     const {className, classes, collectionId, manifestId, range, deleteRangePoint, updateCanvas, canvases, canvas, points, onItemPicked} = this.props
     if (!!!canvases) return <div/>
-    const {handles, position, canvasInspectDelta} = this.state
+    const {handles, position, canvasInspectDelta, cardClasses} = this.state
     if (position === -1) return <div/>
 
     const pickCanvas = offset => {
@@ -1078,12 +1084,6 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
         const item = canvases.get(index)
         if (item) {
           const id = item.get('id')
-          const cardClasses = {
-            upperLeft: classes.cardUpperLeft,
-            upperRight: classes.cardUpperRight,
-            lowerLeft: classes.cardLowerLeft,
-            lowerRight: classes.cardLowerRight,
-          }
           const canvasPoint = points && points.get(id) || undefined
           return <div key={`canvas-${id}`} className={className}><CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} canvas={item} canvasPoint={canvasPoint} selected={item === canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
         } else {
