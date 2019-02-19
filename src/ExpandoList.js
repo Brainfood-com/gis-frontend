@@ -31,6 +31,11 @@ const styles = theme => ({
   },
   menuItemRoot: {},
   menuItemSelected: {},
+  excludedText: {
+    textDecoration: 'line-through',
+  },
+  excludedIcon: {
+  },
   errorText: {
     color: '#ffaaaa',
   },
@@ -143,6 +148,9 @@ export default withStyles(styles)(class ExpandoList extends React.Component {
           })
           let icon
           const statusClasses = {}
+          if (tagFlags['excluded']) {
+            statusClasses.excluded = true
+          }
           if (tagFlags['needs review']) {
             icon = <ErrorIcon titleAccess='Needs Review'/>
             statusClasses.error = true
