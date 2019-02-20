@@ -126,7 +126,7 @@ export function CanvasDragResultLookup(Clz) {
       })
     }
 
-    debouncedDrag = debounce(this.flushDrag, 200)
+    debouncedDrag = debounce(this.flushDrag, 50)
     render() {
       const {props: {target}, state: {result}} = this
       return <Clz target={target} result={result}/>
