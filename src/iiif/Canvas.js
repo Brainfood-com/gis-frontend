@@ -125,7 +125,9 @@ const canvasCardBaseStyles = {
     width: '100%',
     height: '100%',
     '&> img': {
-      width: '100%',
+      display: 'block',
+      marginLeft: 'auto',
+      marginRight: 'auto',
       height: '100%',
     },
     '$root$selected > &': {
