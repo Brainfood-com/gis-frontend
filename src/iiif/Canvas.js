@@ -890,29 +890,29 @@ const canvasSlidingListStyles = {
     display: 'inline-block',
     width: '20%',
     overflow: 'hidden',
-    '& $cardUpperLeftContent': {
+    '& $cardUpperLeft': {
     },
-    '& $cardUpperRightContent': {
+    '& $cardUpperRight': {
     },
-    '& $cardLowerLeftContent': {
+    '& $cardLowerLeft': {
     },
-    '& $cardLowerRightContent': {
+    '& $cardLowerRight': {
     },
   },
   container1: {
     display: 'inline-block',
     width: '15%',
     overflow: 'hidden',
-    '& $cardUpperLeftContent': {
+    '& $cardUpperLeft': {
       transform: 'scale(0.85)',
     },
-    '& $cardUpperRightContent': {
+    '& $cardUpperRight': {
       transform: 'scale(0.85)',
     },
-    '& $cardLowerLeftContent': {
+    '& $cardLowerLeft': {
       transform: 'scale(0.85)',
     },
-    '& $cardLowerRightContent': {
+    '& $cardLowerRight': {
       transform: 'scale(0.85)',
     },
   },
@@ -920,16 +920,16 @@ const canvasSlidingListStyles = {
     display: 'inline-block',
     width: '11%',
     overflow: 'hidden',
-    '& $cardUpperLeftContent': {
+    '& $cardUpperLeft': {
       transform: 'scale(0.70)',
     },
-    '& $cardUpperRightContent': {
+    '& $cardUpperRight': {
       transform: 'scale(0.70)',
     },
-    '& $cardLowerLeftContent': {
+    '& $cardLowerLeft': {
       transform: 'scale(0.70)',
     },
-    '& $cardLowerRightContent': {
+    '& $cardLowerRight': {
       transform: 'scale(0.70)',
     },
   },
@@ -937,16 +937,16 @@ const canvasSlidingListStyles = {
     display: 'inline-block',
     width: '8%',
     overflow: 'hidden',
-    '& $cardUpperLeftContent': {
+    '& $cardUpperLeft': {
       transform: 'scale(0.60)',
     },
-    '& $cardUpperRightContent': {
+    '& $cardUpperRight': {
       transform: 'scale(0.60)',
     },
-    '& $cardLowerLeftContent': {
+    '& $cardLowerLeft': {
       transform: 'scale(0.60)',
     },
-    '& $cardLowerRightContent': {
+    '& $cardLowerRight': {
       transform: 'scale(0.60)',
     },
   },
@@ -954,33 +954,33 @@ const canvasSlidingListStyles = {
     display: 'inline-block',
     width: '6%',
     overflow: 'hidden',
-    '& $cardUpperLeftContent': {
+    '& $cardUpperLeft': {
       transform: 'scale(0.50)',
       display: 'none',
     },
-    '& $cardUpperRightContent': {
+    '& $cardUpperRight': {
       transform: 'scale(0.50)',
       display: 'none',
     },
-    '& $cardLowerLeftContent': {
+    '& $cardLowerLeft': {
       transform: 'scale(0.50)',
       display: 'none',
     },
-    '& $cardLowerRightContent': {
+    '& $cardLowerRight': {
       transform: 'scale(0.50)',
       display: 'none',
     },
   },
-  cardUpperLeftContent: {
+  cardUpperLeft: {
     transformOrigin: ['top', 'left'],
   },
-  cardUpperRightContent: {
+  cardUpperRight: {
     transformOrigin: ['top', 'right'],
   },
-  cardLowerLeftContent: {
+  cardLowerLeft: {
     transformOrigin: ['bottom', 'left'],
   },
-  cardLowerRightContent: {
+  cardLowerRight: {
     transformOrigin: ['bottom', 'right'],
   },
   handleDefault: {
@@ -1079,10 +1079,10 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
         if (item) {
           const id = item.get('id')
           const cardClasses = {
-            upperLeftContent: classes.cardUpperLeftContent,
-            upperRightContent: classes.cardUpperRightContent,
-            lowerLeftContent: classes.cardLowerLeftContent,
-            lowerRightContent: classes.cardLowerRightContent,
+            upperLeft: classes.cardUpperLeft,
+            upperRight: classes.cardUpperRight,
+            lowerLeft: classes.cardLowerLeft,
+            lowerRight: classes.cardLowerRight,
           }
           const canvasPoint = points && points.get(id) || undefined
           return <div key={`canvas-${id}`} className={className}><CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} canvas={item} canvasPoint={canvasPoint} selected={item === canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
