@@ -73,7 +73,7 @@ export default flow(withStyles(googleVisionStyles))(class GoogleVision extends R
       <ListItem disableGutters>
         <ListItemText primary='Labels'/>
         <div className={classes.row}>
-          {labels.map((label, index) => <Chip key={label} label={label}/>)}
+          {labels.map((label, index) => <Chip key={label.description} label={`${label.description}:${label.score}`}/>)}
         </div>
       </ListItem>
       <ListItem disableGutters>
