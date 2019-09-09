@@ -15,8 +15,8 @@ export default picked(['range', 'canvas'])(class CameraPosition extends React.Co
   }
 
   static defaultProps = {
-    fieldOfView: 60,
-    depth: 100,
+    fieldOfView: 30,
+    depth: 70,
     placement: 'left',
 
     fieldPathOptions: {
@@ -75,8 +75,8 @@ export default picked(['range', 'canvas'])(class CameraPosition extends React.Co
     if (!range || !points || !canvas) {
       return {fieldPoints: [], carPoints: []}
     }
-    pickedProps.fovAngle = range.get('fovAngle') || 60
-    pickedProps.fovDepth = range.get('fovDepth') || 100
+    pickedProps.fovAngle = range.get('fovAngle') || 30
+    pickedProps.fovDepth = range.get('fovDepth') || 70
     pickedProps.fovOrientation = range.get('fovOrientation', 'left')
 
     const canvasId = canvas.get('id')

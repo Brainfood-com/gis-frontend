@@ -110,8 +110,8 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
       </FormControl>
       <FormControl>
         <FormGroup row>
-          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={this.checkOverrideValueDefault('fovAngle', 60)} onChange={this.handleInputChange} margin='dense'/>
-          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={this.checkOverrideValueDefault('fovDepth', 100)} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovAngle' label='Angle(degrees)' value={this.checkOverrideValueDefault('fovAngle', 30)} onChange={this.handleInputChange} margin='dense'/>
+          <TextField className={classes.numberTextField} name='fovDepth' label='Depth(meters?)' value={this.checkOverrideValueDefault('fovDepth', 70)} onChange={this.handleInputChange} margin='dense'/>
         </FormGroup>
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
