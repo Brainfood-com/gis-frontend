@@ -1,5 +1,6 @@
 import flow from 'lodash-es/flow'
 import React from 'react'
+import ReactGA from 'react-ga'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 import classnames from 'classnames'
@@ -47,6 +48,12 @@ function processLoginBackendResponse(dispatch, getState, results) {
     name,
     permissions = [],
   } = results
+  if (isLoggedIn) {
+    ReactGA.set({userId: name})
+  } else {
+    ReactGA.set({userId: undefined})
+  }
+  ReactGA.event({category: 'Login', action: 'response'})
   dispatch({
     type: 'user',
     actionType: ACTION['set-info'],
@@ -60,6 +67,7 @@ export const login = (username, password) => async (dispatch, getState) => {
   const dataToSend = new URLSearchParams()
   dataToSend.append('username', username)
   dataToSend.append('password', password)
+  ReactGA.event({category: 'Login', action: 'login-submit'})
   processLoginBackendResponse(dispatch, getState, await fetch(new URL(makeUrl('api', 'user/login')), {
     credentials: 'include',
     method: 'POST',
@@ -68,6 +76,7 @@ export const login = (username, password) => async (dispatch, getState) => {
 }
 
 export const logout = () => async (dispatch, getState) => {
+  ReactGA.event({category: 'Login', action: 'logout-submit'})
   processLoginBackendResponse(dispatch, getState, await fetch(new URL(makeUrl('api', 'user/logout')), {
     credentials: 'include',
     method: 'POST',
@@ -95,6 +104,7 @@ export const fetchPermissions = () => async (dispatch, getState) => {
 }
 
 export const getUserInfo = () => async (dispatch, getState) => {
+  ReactGA.event({category: 'Login', action: 'user-info-submit'})
   processLoginBackendResponse(dispatch, getState, await fetch(makeUrl('api', 'user/info'), {credentials: 'include'}).then(data => data.json()))
 }
 

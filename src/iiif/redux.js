@@ -1,3 +1,4 @@
+import ReactGA from 'react-ga'
 import Enum from 'es6-enum'
 import {fromJS} from 'immutable'
 
@@ -189,9 +190,10 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
 
 const json = promise => promise.then(data => data.json())
 
-export const pick = (type, id) => {
+export const pick = (type, id) => async (dispatch, getState) => {
   const toPick = {[type]: id}
-  return pickMany(toPick)
+  await dispatch(pickMany(toPick))
+  dispatch(gaEvent(type, id))
 }
 
 export const pickMany = toPick => async (dispatch, getState) => {
@@ -240,6 +242,7 @@ export const pickMany = toPick => async (dispatch, getState) => {
     } else if (needsUnset) {
       if (currentId !== undefined || currentId !== null) {
         await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: null}})
+        ReactGA.event({category: 'iiif-fetch-' + modelType, action: 'unset'})
       }
       // TODO: unset items from redux
     }
@@ -253,6 +256,7 @@ export const pickMany = toPick => async (dispatch, getState) => {
     const currentExternalId = getExternalId(currentCanvasId)
     if (existingExternalId !== currentExternalId) {
       if (currentExternalId) {
+        ReactGA.pageview(`/iiif?externalId=${encodeURIComponent(currentExternalId)}`)
         history.replace(`/iiif?externalId=${encodeURIComponent(currentExternalId)}`)
       } else {
         history.replace('/')
@@ -625,6 +629,11 @@ export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', '
   const rangeIds = typeInfo.allParents['sc:Range'] || []
   rangeIds.forEach(rangeId => dispatch(searchRefreshBuildings({rangeId})))
 })
+
+const gaEvent = (modelType, id) => async (dispatch, getState) => {
+  const externalId = getState().iiif.getIn([MODEL[modelType], id, 'externalId'])
+  ReactGA.event({category: 'iiif-fetch-' + modelType, action: 'set', label: externalId})
+}
 
 const modelTypeToFetchers = {
   collection: [getCollection],

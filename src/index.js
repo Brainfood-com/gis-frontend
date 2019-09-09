@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import ReactGA from 'react-ga'
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
 import { routerReducer, routerMiddleware, push } from 'react-router-redux'
 import createHistory from 'history/createBrowserHistory'
@@ -20,6 +21,8 @@ import {GlobalBusy} from './GlobalBusy'
 import history from './history'
 
 import App from './App'
+
+ReactGA.initialize(process.env.GIS_GA_ID)
 
 const middleware = routerMiddleware(history)
 const enhancer = compose(
