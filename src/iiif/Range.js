@@ -67,6 +67,7 @@ const rangeTagSuggestions = [
 ]
 const rangeBfTagSuggestions = [
   commonTagDefinitions.BF_PAID,
+  commonTagDefinitions.BF_TRAINING_EXAMPLE,
 ]
 
 function getDerivedStateFromProps(props, state) {

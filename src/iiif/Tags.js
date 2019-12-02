@@ -19,6 +19,7 @@ export const commonTagDefinitions = {
   BROKEN_IMAGE: {roles: ['editor'], label: 'Broken Image'},
   CLIENT_APPROVED: {roles: ['client'], label: 'Client Approved'},
   BF_PAID: {roles: ['brainfood'], label: 'Paid'},
+  BF_TRAINING_EXAMPLE: {roles: ['brainfood'], label: 'Training Example'},
 }
 
 const styles = theme => {

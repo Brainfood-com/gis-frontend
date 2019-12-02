@@ -29,6 +29,9 @@ const collectionFormStyles = {
 const collectionTagSuggestions = [
   commonTagDefinitions.CLAIMED,
 ]
+const collectionBfTagSuggestions = [
+  commonTagDefinitions.BF_TRAINING_EXAMPLE,
+]
 
 const fieldInputProcessors = {
 }
@@ -42,7 +45,7 @@ const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionFo
   static modelName = 'collection'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateCollection'
-  static complexFields = ['tags']
+  static complexFields = ['tags', 'values.bftags']
   static defaultProps = {
     updateCollection(id, data) {},
   }
@@ -56,6 +59,10 @@ const CollectionForm = flow(withStyles(collectionFormStyles))(class CollectionFo
 
     return <Paper className={classnames(rootClasses, className)}>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
+      {checkPermission(permissions, null, 'brainfood', 'admin')
+        ? <IIIFTagEditor name='values.bftags' label='Brainfood Tags' modelName='collection' suggestions={collectionBfTagSuggestions} value={this.checkOverrideValueDefault('values.bftags', [])} onChange={this.handleInputChange}/>
+        : null
+      }
       <IIIFTagEditor name='tags' modelName='collection' suggestions={collectionTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
     </Paper>
   }

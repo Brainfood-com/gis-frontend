@@ -12,6 +12,7 @@ import ErrorIcon from '@material-ui/icons/Error'
 import RoomIcon from '@material-ui/icons/Room'
 import PhotoIcon from '@material-ui/icons/Photo'
 import CloseIcon from '@material-ui/icons/Close'
+import HelpIcon from '@material-ui/icons/Help'
 import Collapse from '@material-ui/core/Collapse'
 
 import List from '@material-ui/core/List'
@@ -155,13 +156,17 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
           bftags.forEach(tag => {
             bftagFlags[tag.toLowerCase()] = true
           })
-          let icon, secondaryIcon
+          let icon
+          const secondaryIcon = []
           const statusClasses = {}
           if (tagFlags['excluded']) {
             statusClasses.excluded = true
           }
           if (bftagFlags['paid']) {
-            secondaryIcon = <AttachMoneyIcon titleAccess='Paid'/>
+            secondaryIcon.push(<AttachMoneyIcon key='paid' titleAccess='Paid'/>)
+          }
+          if (bftagFlags['training example']) {
+            secondaryIcon.push(<HelpIcon key='training example' titleAccess='Training Example'/>)
           }
           if (tagFlags['needs review']) {
             icon = <ErrorIcon titleAccess='Needs Review'/>
@@ -198,7 +203,7 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
           return <MenuItem key={id} classes={{root: classes.menuItemRoot, selected: classes.menuItemSelected}} className={classnames(menuClasses)} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>
             <ListItemIcon className={classnames(iconClasses)}>{icon}</ListItemIcon>
             <ListItemText classes={{primary: classnames(textClasses)}} primary={label} secondary={secondaryItems.join(' ')}/>
-            {isBrainfoodAdmin && secondaryIcon && <ListItemIcon>{secondaryIcon}</ListItemIcon>}
+            {isBrainfoodAdmin && secondaryIcon.length > 0 && <ListItemIcon><React.Fragment>{secondaryIcon}</React.Fragment></ListItemIcon>}
           </MenuItem>
         })}
       </Menu>
