@@ -533,7 +533,7 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
     canvases[index] = canvasBuildKey({
       id, format, height, width, externalId, label, overrides, notes, exclude, hole, googleVision,
       image: iiifLocalCache(image),
-      thumbnail: iiifLocalCache(thumbnail),
+      thumbnail: thumbnail ? iiifLocalCache(thumbnail): null,
     })
     if (point) {
       const latlng = {
