@@ -137,6 +137,7 @@ const styles = {
     },
   },
   mapViewTop: {
+    minHeight: 0,
     display: 'flex',
     flexDirection: 'row',
     '& > *': {
