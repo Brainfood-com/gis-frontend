@@ -67,6 +67,12 @@ const styles = {
     paddingRight: 0,
     backgroundColor:'white',
   },
+  summaryExpanded: {},
+  summaryContent: {
+    '&$summaryExpanded': {
+      margin: [12, 0],
+    },
+  },
   name: {
     color:'black',
     userSelect: 'text',
@@ -143,7 +149,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
     return <div className={classnames(classes.root, className)}>
       <BusyPane isBusy={busy}>
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
-        <ExpansionPanelSummary className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
+        <ExpansionPanelSummary classes={{expanded: classes.summaryExpanded, content: classes.summaryContent}} className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
             {
               icon ?
