@@ -513,6 +513,9 @@ const REGEXES = [
   /^http:\/\/(media.getty.edu\/iiif\/research\/archives\/[^\/]+?(?:_thumb)?)$/,
 ]
 export const iiifLocalCache = service => {
+  if (!service) {
+    return service
+  }
   for (const regex of REGEXES) {
     const match = service.match(regex)
     if (match) {
