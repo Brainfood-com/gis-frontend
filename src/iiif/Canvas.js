@@ -381,7 +381,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
     if (this.skipChange('override')) {
       return
     }
-    deleteRangePoint(range.get('id'), canvas.id, {sourceId: 'web'})
+    deleteRangePoint(range.id, canvas.id, {sourceId: 'web'})
   }
 
   render() {
@@ -748,7 +748,7 @@ export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief exten
   }
 
   render() {
-    const {className, classes, collectionId, manifestId, range, canvases, canvas, points} = this.props
+    const {className, classes, collectionId, manifestId, range, canvases, canvas, points, deleteRangePoint} = this.props
     if (!canvas) return <div/>
     const hasOverride = canvasHasOverride(canvas)
     const image = canvas.image
@@ -761,7 +761,7 @@ export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief exten
     }
 
     return <Paper className={classnames(rootClasses, className)}>
-      <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext}/>
+      <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext} deleteRangePoint={deleteRangePoint}/>
       {point}
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
     </Paper>
@@ -1135,7 +1135,7 @@ export const CanvasPanel = flow(global('collection', 'manifest'), picked(['range
       className={className}
       name='canvas'
       title={<CanvasTitle canvas={canvas}/>}
-      brief={<CanvasBrief collectionId={collection ? collection.get('id') : null} manifestId={manifest ? manifest.get('id') : null} range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} />}
+      brief={<CanvasBrief collectionId={collection ? collection.get('id') : null} manifestId={manifest ? manifest.get('id') : null} range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} />}
       icon={<ImageIcon/>}
       showForm={checkPermission(permissions, null, 'canvas', 'form')}
       form={<CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
