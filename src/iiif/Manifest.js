@@ -77,7 +77,7 @@ export class ManifestTitle extends React.Component {
   render() {
     const {className, manifest} = this.props
 
-    const {label} = manifest || {label: 'Manifest'}
+    const {label} = manifest || {}
     return <Typography variant='body1' classes={{body1: className}}>{label}</Typography>
   }
 }
@@ -106,7 +106,7 @@ export const ManifestBrief = flow(withStyles(manifestBriefStyles))(class Manifes
   render() {
     const {className, classes, manifest} = this.props
 
-    const {label} = manifest || {label: 'Manifest'}
+    const {label} = manifest || {}
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
       <Typography>{label}</Typography>
     </Paper>
