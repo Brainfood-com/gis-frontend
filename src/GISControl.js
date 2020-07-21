@@ -106,6 +106,7 @@ const styles = {
   mapViewLeft: {
     //width: '20%',
     maxWidth: '20%',
+    minWidth: 250,
     height: 'auto',
     display: 'flex',
     flexDirection: 'column',
