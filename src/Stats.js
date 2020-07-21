@@ -62,6 +62,9 @@ import {immutableEmptyList, immutableEmptyMap} from './constants'
 */
 
 const styles = {
+  badge: {
+    marginRight: 15,
+  },
   errorText: {
     color: '#ffaaaa',
     display:'inline-block',
@@ -98,9 +101,9 @@ class Stats extends React.Component {
       return <div className={classes.root} />
     }
     return <div className={classes.root}>
-      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('claimed', '')}><PhotoIcon className={classes.claimedIcon} titleAccess='Claimed'/></Badge>
-      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('placed', '')}><RoomIcon className={classes.placedIcon} titleAccess='Placed'/></Badge>
-      <Badge max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('validated', '')}><CheckCircleIcon className={classes.validatedIcon} titleAccess='Validated'/></Badge>
+      <Badge className={classes.badge} max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('claimed', '')}><PhotoIcon className={classes.claimedIcon} titleAccess='Claimed'/></Badge>
+      <Badge className={classes.badge} max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('placed', '')}><RoomIcon className={classes.placedIcon} titleAccess='Placed'/></Badge>
+      <Badge className={classes.badge} max={Number.MAX_VALUE} color='secondary' badgeContent={range.get('validated', '')}><CheckCircleIcon className={classes.validatedIcon} titleAccess='Validated'/></Badge>
     </div>
   }
 }
