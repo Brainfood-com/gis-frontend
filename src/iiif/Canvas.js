@@ -761,6 +761,7 @@ export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief exten
     }
 
     return <Paper className={classnames(rootClasses, className)}>
+      <CanvasTitle canvas={canvas}/>
       <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext} deleteRangePoint={deleteRangePoint}/>
       {point}
       <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
