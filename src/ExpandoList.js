@@ -132,7 +132,7 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
     return <List dense={true}>
       <ListItem button disableGutters className={classnames(classes.root, className)} onClick={this.handleOnMenuOpen}>
         {Icon ? <Avatar>{Icon}</Avatar> : null}
-        <ListItemText primary={`Select a ${IconLabel}`}/>
+        <ListItemText primary={(!!!selectedItem ? 'Select a' : 'Change') + ` ${IconLabel}`}/>
         <ListItemSecondaryAction disabled={!isOpen}>
           <Button disabled={!isOpen} color='secondary' onClick={this.handleOnClose}>
             <CloseIcon/>
