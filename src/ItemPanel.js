@@ -57,6 +57,7 @@ const itemPanelRedux = {
 const styles = {
   root: {
     position: 'relative',
+    marginTop: 1,
   },
   expanded: {
     margin: [4, 0],
