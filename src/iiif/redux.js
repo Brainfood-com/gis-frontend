@@ -341,7 +341,7 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
   }
 }
 
-const requiredId = chain => id => !!id ? chain(id) : async dispatch => {}
+const requiredId = chain => (id, ...rest) => !!id ? chain(id, ...rest) : async dispatch => {}
 async function busyCallWrapper(modelName, id, dispatch, next) {
   dispatch(globalIncrBusy())
   dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
@@ -353,9 +353,9 @@ async function busyCallWrapper(modelName, id, dispatch, next) {
   }
 }
 
-const busyCall = (modelName, chain) => id => {
+const busyCall = (modelName, chain) => (id, ...rest) => {
   return async (dispatch, getState) => {
-    return busyCallWrapper(modelName, id, dispatch, () => chain(id)(dispatch, getState))
+    return busyCallWrapper(modelName, id, dispatch, () => chain(id, ...rest)(dispatch, getState))
   }
 }
 
@@ -405,12 +405,14 @@ function collectionBuildLabel(collection) {
   return {...collection, _extra}
 }
 
-export const getCollection = requiredId(busyCall('collection', collectionId => async dispatch => {
+export const getCollection = requiredId(busyCall('collection', (collectionId, {full = true} = {}) => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildKey).map(manifestBuildLabel)})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionBuildLabel(collectionBuildKey(collectionDetail))})
-  collectionDetail.manifests.forEach(manifestId => dispatch(getManifest(manifestId)))
+  if (full) {
+    collectionDetail.manifests.forEach(manifestId => dispatch(getManifest(manifestId)))
+  }
 }))
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags', 'values'], id => makeUrl('api', `collection/${id}`), getCollection)

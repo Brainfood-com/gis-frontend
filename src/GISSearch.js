@@ -290,7 +290,7 @@ export const showBuilding = id => async (dispatch, getState) => {
     parentsByRange[rangeId] = {collectionId, manifestId}
   })
   Object.keys(manifests).map(manifestId => dispatch(getManifest(parseInt(manifestId))))
-  Object.keys(collections).map(collectionId => dispatch(getCollection(parseInt(collectionId))))
+  Object.keys(collections).map(collectionId => dispatch(getCollection(parseInt(collectionId), {full: false})))
 
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
 
@@ -594,7 +594,7 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
   }
 
   render() {
-    const {className, classes, onItemPicked, range, currentBuilding} = this.props
+    const {className, classes, onItemPicked, range, currentBuilding, collectionId, manifestId} = this.props
     const {collection, manifest} = this.state
     const {canvasesByRange, primaryCanvasByRange} = currentBuilding
     const {id} = range
@@ -606,7 +606,7 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
         <ManifestTitle manifest={manifest}/>
         <RangeTitle range={range}/>
       </div>
-      <CanvasCardRO className={classes.card} collectionId={collection.id} manifestId={manifest.id} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
+      <CanvasCardRO className={classes.card} collectionId={collectionId} manifestId={manifestId} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
     </div>
   }
 })
