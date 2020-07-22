@@ -79,11 +79,17 @@ const styles = {
     userSelect: 'text',
     cursor: 'initial',
   },
+  button: {
+    paddingLeft: 3,
+  },
   title: {
     color:'black',
   },
   icon: {
     color:'black',
+  },
+  collapseInner: {
+    paddingLeft: 3,
   },
   details: {
     borderTop: '1px solid black',
@@ -152,8 +158,8 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary classes={{expanded: classes.summaryExpanded, content: classes.summaryContent}} className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
-            <Button color='primary' variant='outlined'>{icon} <Typography color='primary' variant='body1'>{name}</Typography></Button>
-            <Collapse in={!expanded}>{React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}</Collapse>
+            <Button className={classes.button} color='primary' variant='text'>{icon} <Typography color='primary' variant='body1'>{name}</Typography></Button>
+            <Collapse in={!expanded} classes={{wrapperInner: classes.collapseInner}}>{React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}</Collapse>
           </div>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.details}>
