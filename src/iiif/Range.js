@@ -30,7 +30,13 @@ import {immutableEmptyList} from '../constants'
 import { AbstractForm } from './base'
 
 export function rangeRequiredRole(range) {
-  const {tags} = range
+  let tags
+  if (range.get) {
+    tags = range.get('tags')
+  } else {
+    tags = range.tags
+  }
+  tags = tags || []
   const isClientApproved = tags.indexOf('Client Approved') !== -1
   return isClientApproved ? 'client' : 'editor'
 }
