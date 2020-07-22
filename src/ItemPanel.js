@@ -152,12 +152,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
       <ExpansionPanel classes={{expanded: classes.expanded}} disabled={false} expanded={expanded} onChange={this.handleOnChange}>
         <ExpansionPanelSummary classes={{expanded: classes.summaryExpanded, content: classes.summaryContent}} className={classes.summary} expandIcon={<ExpandMoreIcon className={classes.icon}/>} onChange={e => e.preventDefault()} disabled={true}>
           <div>
-            {
-              icon ?
-                <Button color='primary' variant='outlined'>{icon} {name}</Button>
-              :
-                <Typography onClick={e => e.stopPropagation()} variant='body1' classes={{body1: classes.name}}>{name}</Typography>
-            }
+            <Button color='primary' variant='outlined'>{icon} <Typography color='primary' variant='body1'>{name}</Typography></Button>
             <Collapse in={!expanded}>{React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}</Collapse>
           </div>
         </ExpansionPanelSummary>
