@@ -5,6 +5,7 @@ import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 import classnames from 'classnames'
 import Button from '@material-ui/core/Button'
+import Collapse from '@material-ui/core/Collapse'
 import Typography from '@material-ui/core/Typography'
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
@@ -157,7 +158,7 @@ export default flow(connectHelper(itemPanelRedux), withStyles(styles))(class Ite
               :
                 <Typography onClick={e => e.stopPropagation()} variant='body1' classes={{body1: classes.name}}>{name}</Typography>
             }
-            {React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}
+            <Collapse in={!expanded}>{React.cloneElement(title, {className: classnames(title.props.className, classes.title)})}</Collapse>
           </div>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails className={classes.details}>
