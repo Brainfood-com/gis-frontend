@@ -1,5 +1,7 @@
 import flow from 'lodash-es/flow'
 import React from 'react'
+import ImmutablePropTypes from 'react-immutable-proptypes'
+import PropTypes from 'prop-types'
 import classnames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
 import Collapse from '@material-ui/core/Collapse'
@@ -9,6 +11,12 @@ import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import ExpandLessIcon from '@material-ui/icons/ExpandLess'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+
+export const TaxdataShape = ImmutablePropTypes.mapContains({
+  ain: PropTypes.number,
+  effective_year_built: PropTypes.number,
+  property_location: PropTypes.string,
+})
 
 const taxdataStyles = {
   root: {
@@ -24,15 +32,12 @@ const taxdataStyles = {
 }
 
 export default flow(withStyles(taxdataStyles))(class Taxdata extends React.Component {
-  state = {
-    open: false,
+  static propTypes = {
+    taxdata: TaxdataShape,
   }
 
-  static getDerivedStateFromProps(props, state) {
-    const {taxdata} = props
-    return {
-      taxdata: taxdata && taxdata.toJS ? taxdata.toJS() : taxdata,
-    }
+  state = {
+    open: false,
   }
 
   handleOnClick = event => {
@@ -41,15 +46,15 @@ export default flow(withStyles(taxdataStyles))(class Taxdata extends React.Compo
   }
 
   render() {
-    const {className, classes} = this.props
-    const {open, taxdata} = this.state
+    const {className, classes, taxdata} = this.props
+    const {open} = this.state
     if (!taxdata) {
       return <div />
     }
     const wantedClasses = {
       [classes.root]: true,
     }
-    const {ain, effective_year_built, property_location, ...rest} = taxdata
+    const {ain, effective_year_built, property_location, ...rest} = taxdata.toJS()
     return <List className={classnames(wantedClasses, className)} dense={true}>
       <ListItem disableGutters onClick={this.handleOnClick}>
         <ListItemText primary={`AIN: ${ain}`}/>

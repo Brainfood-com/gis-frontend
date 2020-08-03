@@ -1,6 +1,8 @@
-import {Map as imMap} from 'immutable'
+import {fromJS, Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
+import ImmutablePropTypes from 'react-immutable-proptypes'
+import PropTypes from 'prop-types'
 import {Link} from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles'
 import Fab from '@material-ui/core/Fab'
@@ -56,6 +58,7 @@ import { CollectionTitle } from './Collection'
 import { ManifestTitle } from './Manifest'
 import { RangeTitle, rangeRequiredRole } from './Range'
 import { AbstractForm } from './base'
+import { CanvasStatusShape, CanvasShape, CanvasesShape } from './Types'
 
 export function handleCanvasNext(event, onCanvasNext) {
   const {deltaX, deltaY, deltaZ, deltaMode} = event
@@ -67,13 +70,15 @@ export function handleCanvasNext(event, onCanvasNext) {
   onCanvasNext(delta)
 }
 
-export function onCanvasNext(delta, {canvases, canvas, onItemPicked}) {
-  if (!!!canvases) return
-  const position = canvases.findIndex(item => item === canvas)
+export function onCanvasNext(delta, {canvasList, canvas, onItemPicked}) {
+  if (!!!canvasList) return
+  const canvasId = canvas.get('id')
+  const position = canvasList.findIndex(item => ('' + item) === ('' + canvasId))
   if (position === -1) return
   const nextPosition = position + Math.sign(delta)
-  if (nextPosition >= 0 && nextPosition < canvases.size) {
-    onItemPicked(canvases.get(nextPosition).get('id'))
+  if (nextPosition >= 0 && nextPosition < canvasList.size) {
+    const newCanvasId = canvasList.get(nextPosition)
+    onItemPicked(newCanvasId)
   }
 }
 export function handleCanvasWheel({event, ...context}) {
@@ -81,15 +86,9 @@ export function handleCanvasWheel({event, ...context}) {
 }
 
 function getDerivedStateFromProps(props, state = {}) {
-  const {collection, manifest, range, canvas} = props
-  const newRange = range instanceof imMap ? range.toJS() : range
-  const newCanvas = canvas instanceof imMap ? canvas.toJS() : canvas
-  const image = newCanvas ? newCanvas.image : null
+  const {canvas} = props
+  const image = canvas ? canvas.get('image', null) : null
   return {
-    collection: collection instanceof imMap ? collection.toJS() : collection,
-    manifest: manifest instanceof imMap ? manifest.toJS() : manifest,
-    range: newRange,
-    canvas: newCanvas,
     image,
     loading: state.image !== image,
   }
@@ -272,14 +271,8 @@ const canvasCardBaseStyles = {
 }
 
 const canvasHasOverride = canvas => {
-  if (canvas instanceof imMap) {
-    const overrides = canvas.get('overrides')
-    return overrides && !!overrides.find(override => override.get('point'))
-  } else {
-    const overrides = canvas.overrides
-    return overrides && !!overrides.find(override => override.point)
-  }
-  return false
+  const overrides = canvas.get('overrides')
+  return overrides && !!overrides.find(override => override.get('point'))
 }
 
 const CanvasCardType = Symbol('CanvasCard')
@@ -300,6 +293,10 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   connectDragPreview: connect.dragPreview(),
   isDragging: monitor.isDragging(),
 })), userPicked('permissions'), withStyles(canvasCardBaseStyles))(class CanvasCardBase extends React.Component {
+  static propTypes = {
+    canvas: CanvasShape,
+  }
+
   static defaultProps = {
     onItemPicked(id) {},
     onInspectClose() {},
@@ -325,34 +322,30 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   handleOnWheel = createScrollHandler(delta => {
-    const {canvases, onItemPicked} = this.props
-    const {canvas} = this.state
-    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+    const {canvas, canvasList, onItemPicked} = this.props
+    onCanvasNext(delta, {canvas, canvasList, onItemPicked})
   })
 
   skipChange = name => {
-    const {permissions} = this.props
-    const {range} = this.state
+    const {permissions, range} = this.props
     return !checkPermission(permissions, rangeRequiredRole(range), 'canvas', name)
   }
 
   handleOnClick = event => {
-    const {onItemPicked} = this.props
-    const {canvas} = this.state
-    onItemPicked(canvas.id)
+    const {canvas, onItemPicked} = this.props
+    onItemPicked(canvas.get('id'))
   }
 
   handleOnToggleClick = event => {
-    const {updateCanvas} = this.props
-    const {canvas} = this.state
+    const {canvas, updateCanvas} = this.props
     const {name, value, checked} = event.currentTarget
     if (this.skipChange(name)) {
       return
     }
     const {[name]: inputProcessor = (value, checked) => value} = fieldInputProcessors
-    const currentValue = canvas[name]
+    const currentValue = canvas.get(name)
     const processedValue = inputProcessor(value, !currentValue)
-    updateCanvas(canvas.id, {[name]: processedValue})
+    updateCanvas(canvas.get('id'), {[name]: processedValue})
   }
 
   handleOnInspectOpen = event => {
@@ -376,17 +369,16 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
   }
 
   handleRemoveOverride = (event) => {
-    const {range, deleteRangePoint} = this.props
-    const {canvas} = this.state
+    const {canvas, range, deleteRangePoint} = this.props
     if (this.skipChange('override')) {
       return
     }
-    deleteRangePoint(range.id, canvas.id, {sourceId: 'web'})
+    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
   }
 
   render() {
-    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, collectionId, manifestId, range, canvasPoint, permissions} = this.props
-    const {inspectDialogOpen, infoDialogOpen, canvas, image} = this.state
+    const {className, readOnly, classes, connectDragSource, isDraggable, isDragging, points, selected, onCanvasNext, collectionId, manifestId, range, canvas, canvasPoint, permissions} = this.props
+    const {inspectDialogOpen, infoDialogOpen, image} = this.state
     if (!image) {
       return <div/>
     }
@@ -396,8 +388,8 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       [classes.selected]: selected,
       [classes.range]: !!range,
       [classes.override]: canvasHasOverride(canvas),
-      [classes.exclude]: canvas.exclude,
-      [classes.hole]: canvas.hole,
+      [classes.exclude]: canvas.get('exclude'),
+      [classes.hole]: canvas.get('hole'),
       [classes.isDraggable]: isDraggable,
       [classes.isDragging]: isDragging,
     }
@@ -421,7 +413,7 @@ const CanvasCardBase = flow(DragSource(CanvasCardType, canvasCardSource, (connec
       <div className={classes.lowerLeft}>
         <div className={classes.lowerLeftContent}>
           <Fab className={classnames(classes.lowerLeftItem, classes.infoButton)} size='small' name='info' onClick={this.handleOnOpenDialog}><InfoIcon titleAccess='Info' className={classes.infoIcon}/></Fab>
-          <Fab className={classnames(classes.lowerLeftItem, classes.linkButton)} size='small' name='link' component={Link} replace to={`/iiif?externalId=${encodeURIComponent(canvas.externalId)}`} onClick={this.handleOnClick}><LinkIcon titleAccess='Link' className={classes.linkIcon}/></Fab>
+          <Fab className={classnames(classes.lowerLeftItem, classes.linkButton)} size='small' name='link' component={Link} replace to={`/iiif?externalId=${encodeURIComponent(canvas.get('externalId'))}`} onClick={this.handleOnClick}><LinkIcon titleAccess='Link' className={classes.linkIcon}/></Fab>
         </div>
       </div>
       <div className={classes.lowerRight}>
@@ -471,18 +463,11 @@ const CanvasImage = flow(withStyles(canvasImageStyles))(class CanvasImage extend
 
   render() {
     const {className, classes, canvas, canvasPoint} = this.props
-    const {
-      googleVision: {
-        rgb: [
-          red = 0,
-          green = 0,
-          blue = 0,
-        ] = [],
-      } = {},
-    } = canvas
+    const googleVision = canvas.getIn(['googleVision', 'rgb'], immutableEmptyList).toJS()
+    const [red = 0, green = 0, blue = 0] = googleVision
 
     return <Card className={classnames(classes.root, className)} style={{backgroundColor: `rgb(${red}, ${green}, ${blue})`}}>
-      <img src={`${canvas.image}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
+      <img src={`${canvas.get('image')}/full/400,/0/default.jpg`} onLoad={this.handleOnLoad} onClick={this.handleOnClick} />
     </Card>
   }
 })
@@ -490,14 +475,31 @@ const CanvasImage = flow(withStyles(canvasImageStyles))(class CanvasImage extend
 const canvasInfoStyles = {
 }
 
+const TaxdataShape = ImmutablePropTypes.mapContains({
+  ain: PropTypes.string,
+})
+
 export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manifest'), withStyles(canvasInfoStyles))(class CanvasInfo extends React.Component {
+  static propTypes = {
+    canvasPoint: ImmutablePropTypes.mapContains({
+      addr_number: PropTypes.string,
+      addr_fullname: PropTypes.string,
+      addr_zipcode: PropTypes.string,
+      buildings: ImmutablePropTypes.listOf(PropTypes.any),
+      point: ImmutablePropTypes.mapContains({
+        coordinates: ImmutablePropTypes.listOf(PropTypes.number),
+      }),
+    }),
+  }
+
   static defaultProps = {
     onClose(event, name) {},
-    canvasPoint: {
+    canvasPoint: fromJS({
+      buildings: [],
       point: {
         coordinates: [],
       },
-    },
+    }),
   }
 
   state = {}
@@ -508,10 +510,14 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
   }
 
   render() {
-    const {name, className, classes, buildings, collection, collectionId, manifest, manifestId, canvas: ignoreCanvas, canvasPoint, permissions, ...props} = this.props
-    const {canvas, range, image} = this.state
-    const canvasLocation = canvasPoint && canvasPoint.point || {}
-    const canvasBuildings = buildings ? (canvasPoint.buildings || []).map(id => buildings.get(id)) : []
+    const {name, className, classes, buildings, collection, collectionId, manifest, manifestId, range, canvas, canvasPoint, permissions, ...props} = this.props
+    const {image} = this.state
+    const canvasLocation = canvasPoint.get('point', immutableEmptyMap)
+    const canvasBuildingList = canvasPoint.get('buildings') || immutableEmptyList
+    if (!canvasBuildingList) {
+      debugger
+    }
+    const canvasBuildings = buildings ? canvasBuildingList.map(id => buildings.get(id)) : immutableEmptyList
 
     const taxdatas = canvasBuildings.filter(building => building && building.get('taxdata')).map(building => building.get('taxdata')).reduce((taxdatas, taxdata) => {
       taxdatas[taxdata.get('ain')] = taxdata
@@ -520,28 +526,28 @@ export const CanvasInfo = flow(picked(['buildings']), byId('collection', 'manife
 
     return <Dialog {...props} onClose={this.handleOnClose}>
       <DialogTitle>
-        <CollectionTitle collection={this.state.collection}/>
-        <ManifestTitle manifest={this.state.manifest}/>
+        <CollectionTitle collection={collection}/>
+        <ManifestTitle manifest={manifest}/>
         <RangeTitle range={range}/>
         <CanvasTitle canvas={canvas}/>
       </DialogTitle>
       <DialogContent>
         <CanvasImage className={classes.card} canvas={canvas} canvasPoint={canvasPoint}/>
-        {checkPermission(permissions, null, 'canvas', 'get_json') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${range.id}/json/${canvas.id}`)}>Get Raw JSON</Button> : null}
+        {range && checkPermission(permissions, null, 'canvas', 'get_json') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${range.get('id')}/json/${canvas.get('id')}`)}>Get Raw JSON</Button> : null}
         <List dense>
           <ListItem disableGutters>
-            <ListItemText primary={`${canvasPoint && canvasPoint['addr_number']} ${canvasPoint && canvasPoint['addr_fullname']} ${canvasPoint && canvasPoint['addr_zipcode']}`}/>
+            <ListItemText primary={`${canvasPoint.get('addr_number')} ${canvasPoint.get('addr_fullname')} ${canvasPoint.get('addr_zipcode')}`}/>
           </ListItem>
           <ListItem disableGutters>
             <ListItemText primary={<CanvasStreetView canvas={canvas}/>}/>
           </ListItem>
           <ListItem disableGutters>
             <ListItemText primary={`
-            Lat: ${canvasLocation && canvasLocation.coordinates[1]}
-            Long: ${canvasLocation && canvasLocation.coordinates[0]}
+            Lat: ${canvasLocation.getIn(['coordinates', 1])}
+            Long: ${canvasLocation.getIn(['coordinates', 0])}
             `}/>
           </ListItem>
-          <GoogleVision googleVision={canvas.googleVision}/>
+          <GoogleVision googleVision={canvas.get('googleVision')}/>
           <ListItem disableGutters>
             <ListItemText primary='Tax Lots'/>
           </ListItem>
@@ -584,6 +590,8 @@ export class CanvasCard extends React.Component {
   static PREVIEW = CanvasCardDragPreview
 
   render() {
+    const {canvas} = this.props
+    if (!canvas) return <div/>
     return <CanvasCardBase {...this.props} readOnly={false} isDraggable={true}/>
   }
 }
@@ -598,31 +606,26 @@ const canvasStreetViewStyles = {
 }
 
 export const CanvasStreetView = flow(picked(['range']), withStyles(canvasStreetViewStyles))(class CanvasStreetView extends React.Component {
-  static defaultProps = {
-    onItemPicked(id) {},
-  }
-
-  state = {}
-
-  static getDerivedStateFromProps(props, state) {
-    const nextState = getDerivedStateFromProps(props, state)
-    const {canvas} = nextState
-    const {points} = props
-    const rangePoint = points && canvas && points.get(canvas.id)
-    return {
-      ...nextState,
-      rangePoint,
-    }
+  static propTypes = {
+    canvas: PropTypes.object,
+    points: ImmutablePropTypes.mapOf(
+      ImmutablePropTypes.mapContains({
+        latlng: ImmutablePropTypes.map.isRequired,
+        bearing: PropTypes.number.isRequired,
+      }),
+      PropTypes.number
+    ),
   }
 
   render() {
-    const {buildings, range, points, canvases, canvas, updateOwner, updateRange, onItemPicked, ...props} = this.props
-    const {rangePoint} = this.state
+    const {buildings, range, points, canvas, updateOwner, updateRange, onItemPicked, rangeStatus, ...props} = this.props
+
+    const rangePoint = points && canvas ? points.get(canvas.get('id')) : undefined
     if (!rangePoint) {
       return <div/>
     }
     const fovOrientation = range.get('fovOrientation', 'left')
-    return <GoogleStreetView {...props} location={rangePoint.latlng} heading={rangePoint.bearing + (fovOrientation === 'left' ? -90 : 90)}/>
+    return <GoogleStreetView {...props} location={rangePoint.get('latlng')} heading={rangePoint.get('bearing') + (fovOrientation === 'left' ? -90 : 90)}/>
   }
 })
 
@@ -668,8 +671,8 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
   state = {dialogOpen: false}
 
   handleOnCanvasNext = delta => {
-    const {canvases, canvas, onItemPicked} = this.props
-    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+    const {canvasList, canvas, onItemPicked} = this.props
+    onCanvasNext(delta, {canvasList, canvas, onItemPicked})
   }
 
   handleOnWheel = createScrollHandler(delta => this.handleOnCanvasNext(delta))
@@ -684,7 +687,7 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
       return
     }
     const {canvas, range, deleteRangePoint} = this.props
-    deleteRangePoint(range.id, canvas.id, {sourceId: 'web'})
+    deleteRangePoint(range.get('id'), canvas.get('id'), {sourceId: 'web'})
   }
 
   handleClose = () => {
@@ -692,11 +695,11 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
   }
 
   render() {
-    const {className, classes, range, deleteRangePoint, canvases, canvas, points, updateCanvas, selected, onItemPicked} = this.props
+    const {className, classes, range, deleteRangePoint, canvas, points, updateCanvas, selected, onItemPicked} = this.props
     if (!canvas) return <div />
     const hasOverride = canvasHasOverride(canvas)
-    const image = canvas.image
-    const point = canvas.point
+    const image = canvas.get('image')
+    const point = canvas.get('point')
     const canvasPoint = points && points.get(canvas.id) || undefined
     const rootClasses = {
       [classes.root]: true,
@@ -718,7 +721,7 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
         }/>
       </FormGroup>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange}/>
-      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='canvas' suggestions={canvasTagSuggestions} value={this.checkOverrideValueDefault('tags', immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
@@ -726,8 +729,8 @@ export const CanvasForm = flow(withStyles(canvasFormStyles))(class CanvasForm ex
 export class CanvasTitle extends React.Component {
   render() {
     const {className, canvas} = this.props
-    const title = canvas ? canvas.label : 'Canvas'
-    const image = canvas && canvas.image
+    const title = canvas ? canvas.get('label') : 'Canvas'
+    const image = canvas && canvas.get('image')
     const lastImagePart = image && image.replace(/%2F/g, '/').replace(/.*\//, '')
 
     return <Typography variant='body1' classes={{body1: className}}>{`${lastImagePart} ${title}`}</Typography>
@@ -742,18 +745,22 @@ const canvasBriefStyles = {
 }
 
 export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief extends React.Component {
+  static defaultProps = {
+    points: immutableEmptyMap,
+  }
+
   handleOnCanvasNext = delta => {
-    const {canvases, canvas, onItemPicked} = this.props
-    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+    const {canvasList, canvas, onItemPicked} = this.props
+    onCanvasNext(delta, {canvasList, canvas, onItemPicked})
   }
 
   render() {
-    const {className, classes, collectionId, manifestId, range, canvases, canvas, points, deleteRangePoint} = this.props
+    const {className, classes, collectionId, manifestId, range, canvasList, canvasMap, canvas, points, deleteRangePoint} = this.props
     if (!canvas) return <div/>
     const hasOverride = canvasHasOverride(canvas)
-    const image = canvas.image
-    const point = canvas.point
-    const canvasPoint = points && points.get(canvas.id) || undefined
+    const image = canvas.get('image')
+    const point = canvas.get('point')
+    const canvasPoint = points.get(canvas.get('id'), immutableEmptyMap)
     const rootClasses = {
       [classes.root]: true,
       [classes.hidden]: !!!canvas,
@@ -762,9 +769,9 @@ export const CanvasBrief = withStyles(canvasBriefStyles)(class CanvasBrief exten
 
     return <Paper className={classnames(rootClasses, className)}>
       <CanvasTitle canvas={canvas}/>
-      <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} canvases={canvases} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext} deleteRangePoint={deleteRangePoint}/>
+      <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} canvasList={canvasList} canvasMap={canvasMap} canvas={canvas} canvasPoint={canvasPoint} className={classes.card} onCanvasNext={this.handleOnCanvasNext} deleteRangePoint={deleteRangePoint}/>
       {point}
-      <Typography>{canvasPoint && canvasPoint['addr_number']} {canvasPoint && canvasPoint['addr_fullname']} {canvasPoint && canvasPoint['addr_zipcode']}</Typography>
+      <Typography>{canvasPoint.get('addr_number')} {canvasPoint.get('addr_fullname')} {canvasPoint.get('addr_zipcode')}</Typography>
     </Paper>
   }
 })
@@ -998,19 +1005,25 @@ const canvasSlidingListStyles = {
 
 export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collectionId', 'manifestId'), withStyles(canvasSlidingListStyles))(class CanvasSlidingList extends React.Component {
   static getDerivedStateFromProps(props, state) {
-    const {canvas, canvases, classes} = props
-    if (!!!canvases || (canvas === state.canvas && canvases === state.canvases && classes === state.classes)) {
+    const {range, canvas, canvases, classes} = props
+    let canvasList = range ? range.get('canvases') : undefined
+    if (!!!range || !canvasList || (canvas === state.canvas && range === state.range && classes === state.classes)) {
       return {}
     }
-    const position = canvases.findIndex(item => item === canvas)
-    const handles = canvases.map((item, index) => {
-      if (!item) {
+    const canvasId = canvas ? canvas.get('id') : undefined
+    if (range.get('reverse', false)) {
+      canvasList = canvasList.reverse()
+    }
+    const position = !canvas ? -1 : canvasList.findIndex(rangeCanvasId => rangeCanvasId === canvasId)
+    const handles = canvasList.map((canvasId, index) => {
+      const rangeCanvas = canvases.get(canvasId)
+      if (!rangeCanvas) {
         return
       }
-      const hasOverrides = item.get('overrides')
-      const isExcluded = item.get('exclude')
-      const isCurrent = item === canvas
-      const tags = item.get('tags', immutableEmptyList)
+      const hasOverrides = rangeCanvas.get('overrides')
+      const isExcluded = rangeCanvas.get('exclude')
+      const isCurrent = rangeCanvas === canvas
+      const tags = rangeCanvas.get('tags', immutableEmptyList)
       const needsReview = tags.find(tag => tag === 'Needs Review')
       const wantedClasses = {
         [classes.handleDefault]: true,
@@ -1025,7 +1038,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
         className: classnames(wantedClasses),
       }
       return needsReview || hasOverrides || isExcluded || isCurrent ? result : null
-    }).filter(item => item).sort((a, b) => {
+    }).filter(rangeCanvas => rangeCanvas).sort((a, b) => {
       if (a.readOnly === false) {
         return -1
       } else if (b.readOnly === false) {
@@ -1040,7 +1053,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
       lowerLeft: classes.cardLowerLeft,
       lowerRight: classes.cardLowerRight,
     }
-    return {canvases, classes, handles, position, cardClasses}
+    return {range, canvas, classes, handles, position, cardClasses}
   }
 
   state = {
@@ -1048,15 +1061,16 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
   }
 
   handleOnReliderChange = (handles) => {
-    const {onItemPicked, canvases} = this.props
+    const {onItemPicked, range} = this.props
     const {value: position} = handles.find(handle => !handle.readOnly)
-    const canvas = canvases.get(position)
-    onItemPicked(canvas.get('id'))
+    const canvasId = range.getIn(['canvases', position])
+    onItemPicked(canvasId)
   }
 
   handleOnWheel = createScrollHandler(delta => {
-    const {canvases, canvas, onItemPicked} = this.props
-    onCanvasNext(delta, {canvases, canvas, onItemPicked})
+    const {range, canvas, onItemPicked} = this.props
+    const canvasList = range.get('canvases')
+    onCanvasNext(delta, {canvasList, canvas, onItemPicked})
   })
 
   handleOnInspectClose = () => {
@@ -1068,8 +1082,10 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
   }
 
   render() {
-    const {className, classes, collectionId, manifestId, range, deleteRangePoint, updateCanvas, canvases, canvas, points, onItemPicked} = this.props
-    if (!!!canvases) return <div/>
+    const {className, classes, collectionId, manifestId, range, canvases, deleteRangePoint, updateCanvas, canvas, points, onItemPicked} = this.props
+    if (!!!range || !!!canvases) return <div/>
+    const canvasList = range.get('canvases')
+    if (!!!canvasList) return <div/>
     const {handles, position, canvasInspectDelta, cardClasses} = this.state
     if (position === -1) return <div/>
 
@@ -1079,14 +1095,16 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
       const className = classes[`container${absOffset}`]
       if (index < 0) {
         return <div key={`in-${absOffset}`} className={className}/>
-      } else if (index >= canvases.size) {
+      } else if (index >= canvasList.size) {
         return <div key={`out-${absOffset}`} className={className}/>
-      } else if (canvases) {
-        const item = canvases.get(index)
+      } else if (canvasList) {
+        const item = canvases.get(canvasList.get(index))
         if (item) {
           const id = item.get('id')
           const canvasPoint = points && points.get(id) || undefined
-          return <div key={`canvas-${id}`} className={className}><CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} canvas={item} canvasPoint={canvasPoint} selected={item === canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/></div>
+          return <div key={`canvas-${id}`} className={className}>
+            <CanvasCard collectionId={collectionId} manifestId={manifestId} range={range} deleteRangePoint={deleteRangePoint} updateCanvas={updateCanvas} classes={cardClasses} canvas={item} canvasPoint={canvasPoint} selected={item === canvas} onItemPicked={onItemPicked} onCanvasNext={this.handleOnCanvasNext} onInspectClose={this.handleOnInspectClose}/>
+            </div>
         } else {
           return <div key={`not-loaded-${index}`} className={className}>[canvas-not-loaded{offset}:{index}]</div>
         }
@@ -1110,7 +1128,7 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
           horizontal={true}
           reversed={false}
           min={0}
-          max={canvases.size - 1}
+          max={canvasList.size - 1}
           step={1}
           tickStep={5}
           handles={handles}
@@ -1122,24 +1140,25 @@ export const CanvasSlidingList = flow(picked(['range', 'canvas']), byId('collect
   }
 })
 
-export const CanvasPanel = flow(global('collection', 'manifest'), picked(['range', 'canvas']), userPicked('permissions'))(class CanvasPanel extends React.Component {
+export const CanvasPanel = flow(picked(['collection', 'manifest', 'range', 'canvas']), userPicked('permissions'))(class CanvasPanel extends React.Component {
   state = {}
 
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collection, manifest, canvases, canvasStatus, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, points, permissions, ...props} = this.props
-    const {range, canvas} = this.state
+    const {className, canvases, canvasStatus, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, points, permissions, ...props} = this.props
+    const {collection, manifest, range, canvas} = this.props
 
-    if (!range) return <div/>
+    if (!collection || !manifest || !range) return <div/>
+    const canvasList = range.get('canvases')
     return <ItemPanel
       className={className}
       name='canvas'
       title={<CanvasTitle canvas={canvas}/>}
-      brief={<CanvasBrief collectionId={collection ? collection.get('id') : null} manifestId={manifest ? manifest.get('id') : null} range={range} canvases={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} />}
+      brief={<CanvasBrief collectionId={collection.get('id', null)} manifestId={manifest.get('id', null)} range={range} canvasList={canvasList} canvasMap={canvases} canvas={canvas} points={points} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} />}
       icon={<ImageIcon/>}
       showForm={checkPermission(permissions, null, 'canvas', 'form')}
-      form={<CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
+      form={<CanvasForm permissions={permissions} range={range} canvasList={canvasList} canvasMap={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
       busy={canvasStatus.get('busy')}
     />
   }

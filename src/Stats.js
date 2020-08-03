@@ -1,5 +1,7 @@
 import flow from 'lodash-es/flow'
 import React from 'react'
+import ImmutablePropTypes from 'react-immutable-proptypes'
+import PropTypes from 'prop-types'
 
 import { withStyles } from '@material-ui/core/styles'
 
@@ -95,6 +97,14 @@ const styles = {
   },
 }
 class Stats extends React.Component {
+  static propTypes = {
+    range: ImmutablePropTypes.mapContains({
+      claimed: PropTypes.number,
+      placed: PropTypes.number,
+      validated: PropTypes.number,
+    }),
+  }
+
   render() {
     const {classes, range, hasAllRoles} = this.props
     if (!hasAllRoles) {

@@ -53,7 +53,6 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
 
   constructor(props) {
     super(props)
-    const {point} = props.rangePoint.point
     this.state = {
       dragLatLng: null,
     }
@@ -68,7 +67,7 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
     const {onCanvasSelect, canvas, rangePoint, setPoint} = this.props
     onCanvasSelect(canvas.get('id'))
     if (rangePoint) {
-      setPoint(rangePoint.latlng)
+      setPoint(rangePoint.get('latlng'))
     }
   }
 
@@ -89,8 +88,9 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
 
   render() {
     const {selected, canvas, rangePoint, isFirst, isLast, zoom, fovOrientation} = this.props
-    const overrides = canvas.get('overrides') || []
-    const {bearing, point} = rangePoint
+    const overrides = canvas.get('overrides', [])
+    const bearing = rangePoint.get('bearing')
+    const point = rangePoint.get('point')
     const {dragLatLng} = this.state
 
     const overridePoint = (overrides || []).find(override => {
@@ -116,7 +116,7 @@ export default flow(userPicked('permissions'), connectHelper({mapStateToProps: a
         rotationAngle={rotationAngle}
         draggable={isDraggable}
         opacity={isFullOpacity ? 1 : isHidden ? 0 : 0.6}
-        position={getGeoJSONPoint(point)}
+        position={getGeoJSONPoint(point.toJS())}
         onClick={this.handleOnClick}
         onDragstart={this.handleOnDragStart}
         onDrag={this.handleOnDrag}

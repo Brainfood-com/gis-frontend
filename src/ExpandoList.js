@@ -2,6 +2,7 @@ import flow from 'lodash/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames'
+import Immutable from 'immutable'
 import { withStyles } from '@material-ui/core/styles'
 import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'
@@ -88,6 +89,15 @@ const styles = theme => ({
 })
 
 export default flow(withStyles(styles), userPicked('permissions'))(class ExpandoList extends React.Component {
+  static propTypes = {
+    itemList: PropTypes.instanceOf(Immutable.Collection),
+    itemMap: PropTypes.instanceOf(Immutable.Map),
+    selectedId: PropTypes.number,
+    onItemPicked: PropTypes.func,
+    Icon: PropTypes.node,
+    IconLabel: PropTypes.string,
+  }
+
   static defaultProps = {
     onItemPicked(id) {},
     items: immutableEmptyMap,
@@ -125,14 +135,15 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
   }
 
   render() {
-		const {className, classes, selectedItem, items, Icon, IconLabel, permissions} = this.props
+		const {className, classes, selectedItem, itemList, itemMap, Icon, IconLabel, permissions} = this.props
     const {anchorEl} = this.state
     const isOpen = !!selectedItem
+    const selectedId = selectedItem && selectedItem.get('id')
     const isBrainfoodAdmin = permissions.has('brainfood_admin')
     return <List dense={true}>
       <ListItem button disableGutters className={classnames(classes.root, className)} onClick={this.handleOnMenuOpen}>
         {Icon ? <Avatar>{Icon}</Avatar> : null}
-        <ListItemText primary={(!!!selectedItem ? 'Select a' : 'Change') + ` ${IconLabel}`}/>
+        <ListItemText primary={(!!!selectedId ? 'Select a' : 'Change') + ` ${IconLabel}`}/>
         <ListItemSecondaryAction disabled={!isOpen}>
           <Button disabled={!isOpen} color='secondary' onClick={this.handleOnClose}>
             <CloseIcon/>
@@ -140,8 +151,12 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
         </ListItemSecondaryAction>
       </ListItem>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleOnMenuClose}>
-        {items.toIndexedSeq().map((item, index) => {
+        {(itemList ? itemList : itemMap.keySeq()).map((itemKey, index) => {
+          const item = itemMap.get(itemKey)
           const id = item.get('id')
+          if (!id) {
+            return null
+          }
           const label = item.get('label')
           const type = item.get('type')
           const extra = item.get('_extra', immutableEmptyList)
@@ -200,7 +215,7 @@ export default flow(withStyles(styles), userPicked('permissions'))(class Expando
             const value = item.get('value')
             secondaryItems.push(`${name}=${value}`)
           })
-          return <MenuItem key={id} classes={{root: classes.menuItemRoot, selected: classes.menuItemSelected}} className={classnames(menuClasses)} selected={selectedItem === item} value={id} onClick={this.handleOnMenuClose}>
+          return <MenuItem key={id} classes={{root: classes.menuItemRoot, selected: classes.menuItemSelected}} className={classnames(menuClasses)} selected={selectedId === id} value={id} onClick={this.handleOnMenuClose}>
             <ListItemIcon className={classnames(iconClasses)}>{icon}</ListItemIcon>
             <ListItemText classes={{primary: classnames(textClasses)}} primary={label} secondary={secondaryItems.join(' ')}/>
             {isBrainfoodAdmin && secondaryIcon.length > 0 && <ListItemIcon><React.Fragment>{secondaryIcon}</React.Fragment></ListItemIcon>}

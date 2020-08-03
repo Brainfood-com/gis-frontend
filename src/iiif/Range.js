@@ -1,4 +1,4 @@
-import {Map as imMap} from 'immutable'
+import {Collection as imCollection, List as imList, Map as imMap} from 'immutable'
 import flow from 'lodash-es/flow'
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -26,17 +26,12 @@ import ItemPanel from '../ItemPanel'
 import {makeUrl} from '../api'
 import {checkPermission, picked as userPicked} from '../User'
 import IIIFTagEditor, {commonTagDefinitions} from './Tags'
-import {immutableEmptyList} from '../constants'
+import {immutableEmptyList, immutableEmptyMap, immutableEmptyOrderedMap} from '../constants'
 import { AbstractForm } from './base'
+import { ManifestShape, RangeStatusShape, RangeShape, RangesShape } from './Types'
 
-export function rangeRequiredRole(range) {
-  let tags
-  if (range.get) {
-    tags = range.get('tags')
-  } else {
-    tags = range.tags
-  }
-  tags = tags || []
+export function rangeRequiredRole(range = immutableEmptyMap) {
+  const tags = range.get('tags', immutableEmptyList)
   const isClientApproved = tags.indexOf('Client Approved') !== -1
   return isClientApproved ? 'client' : 'editor'
 }
@@ -76,18 +71,14 @@ const rangeBfTagSuggestions = [
   commonTagDefinitions.BF_TRAINING_EXAMPLE,
 ]
 
-function getDerivedStateFromProps(props, state) {
-  const {range} = props
-  return {range: range instanceof imMap ? range.toJS() : range}
-}
-
 const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends AbstractForm {
   static modelName = 'range'
   static fieldInputProcessors = fieldInputProcessors
   static updaterName = 'updateRange'
   static complexFields = ['tags', 'values.bftags']
-  static defaultProps = {
-    updateRange(id, data) {},
+  static propTypes = {
+    range: RangeShape,
+    updateRange: PropTypes.func,
   }
 
   requiredRole() {
@@ -110,7 +101,7 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
       </FormGroup>
       <FormControl>
         <FormLabel>Orientation</FormLabel>
-        <RadioGroup row name='fovOrientation' value={range.fovOrientation} onChange={this.handleInputChange} margin='dense'>
+        <RadioGroup row name='fovOrientation' value={range.get('fovOrientation')} onChange={this.handleInputChange} margin='dense'>
           <FormControlLabel value='left' control={<Radio color='primary' />} label='Left' margin='dense'/>
           <FormControlLabel value='right' control={<Radio color='primary' />} label='Right' margin='dense'/>
         </RadioGroup>
@@ -123,19 +114,24 @@ const RangeForm = flow(withStyles(rangeFormStyles))(class RangeForm extends Abst
       </FormControl>
       <TextField name='notes' fullWidth label='Notes' value={this.checkOverrideValueDefault('notes', '')} multiline={true} rows={3} onChange={this.handleInputChange} margin='dense'/>
       {checkPermission(permissions, null, 'brainfood', 'admin')
-        ? <IIIFTagEditor name='values.bftags' label='Brainfood Tags' modelName='range' suggestions={rangeBfTagSuggestions} value={this.checkOverrideValueDefault('values.bftags', [])} onChange={this.handleInputChange}/>
+        ? <IIIFTagEditor name='values.bftags' label='Brainfood Tags' modelName='range' suggestions={rangeBfTagSuggestions} value={this.checkOverrideValueDefault('values.bftags', immutableEmptyList)} onChange={this.handleInputChange}/>
         : null
       }
-      <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault('tags', [])} onChange={this.handleInputChange}/>
+      <IIIFTagEditor name='tags' modelName='range' suggestions={rangeTagSuggestions} value={this.checkOverrideValueDefault('tags', immutableEmptyList)} onChange={this.handleInputChange}/>
     </Paper>
   }
 })
 
 export class RangeTitle extends React.Component {
+  static propTypes = {
+    range: RangeShape,
+  }
+
   render() {
     const {className, range} = this.props
+    if (!range) return <div/>
 
-    const {id, label} = range || {}
+    const label = range.get('label')
     return <Typography variant='body1' classes={{body1: className}}>{label}</Typography>
   }
 }
@@ -147,56 +143,74 @@ const rangeBriefStyles = {
 
 export const RangeBrief = flow(withStyles(rangeBriefStyles), userPicked('permissions'))(class RangeBrief extends React.Component {
   static propTypes = {
-  }
-
-  static defaultProps = {
-    onItemPicked(id) {},
+    range: RangeShape,
+    onItemPicked: PropTypes.func.isRequired,
   }
 
   handleOnClick = event => {
     event.preventDefault()
     const {onItemPicked, range} = this.props
-    onItemPicked(range.id)
+    const id = range.get('id')
+    if (id !== undefined) {
+      onItemPicked(id)
+    }
   }
 
   render() {
     const {className, classes, range, permissions} = this.props
-    if (!range) {
+    if (!range || !range.get('id')) {
       return <div />
     }
 
-    const {id, label} = range
+    const id = range.get('id')
+    const label = range.get('label')
     return <Paper className={classnames(classes.root, className)} onClick={this.handleOnClick}>
       <Typography>{label}</Typography>
-      {checkPermission(permissions, null, 'range', 'get_geojson') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${range.id}/geoJSON`)}>Get GeoJSON</Button> : null}
+      {checkPermission(permissions, null, 'range', 'get_geojson') ? <Button fullWidth variant='contained' target='blank' href={makeUrl('api', `range/${id}/geoJSON`)}>Get GeoJSON</Button> : null}
     </Paper>
   }
 })
 
 class RangePick extends React.Component {
+  static propTypes = {
+    manifest: ManifestShape,
+    range: RangeShape,
+    ranges: RangesShape,
+    onItemPicked: PropTypes.func
+  }
+
   render() {
-    const {manifest, rangesWithCanvases, range, onItemPicked} = this.props
+    const {manifest, ranges, range, onItemPicked} = this.props
     if (!manifest) return <Typography>Please select a manifest.</Typography>
-    return <ExpandoList items={rangesWithCanvases} selectedItem={range} IconLabel='Range' onItemPicked={onItemPicked}/>
+    return <ExpandoList itemList={manifest.get('rangesWithCanvases')} itemMap={ranges} selectedItem={range} IconLabel='Range' onItemPicked={onItemPicked}/>
   }
 }
 
 export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permissions'))(class RangePanel extends React.Component {
-  state = {}
+  static propTypes = {
+    manifest: ManifestShape,
+    range: RangeShape,
+    ranges: RangesShape,
+    rangeStatus: RangeStatusShape,
+    onItemPicked: PropTypes.func,
+    updateRange: PropTypes.func,
+  }
 
-  static getDerivedStateFromProps = getDerivedStateFromProps
+  static defaultProps = {
+    onItemPicked(id) {},
+    updateRange(id, data) {},
+  }
 
   render() {
-    const {className, manifest, rangesWithCanvases, rangeStatus, onItemPicked, updateRange, permissions, ...props} = this.props
-    const {range} = this.state
+    const {className, manifest, range, ranges, rangeStatus, onItemPicked, updateRange, permissions, ...props} = this.props
 
     if (!manifest) return <div/>
     return <ItemPanel
       className={className}
       name='range'
       title={<RangeTitle range={range}/>}
-      brief={<RangeBrief range={range}/>}
-      pick={<RangePick manifest={manifest} rangesWithCanvases={rangesWithCanvases} range={this.props.range} onItemPicked={onItemPicked}/>}
+      brief={<RangeBrief range={range} onItemPicked={onItemPicked}/>}
+      pick={<RangePick manifest={manifest} ranges={ranges} range={range} onItemPicked={onItemPicked}/>}
       icon={<CameraRollIcon/>}
       showForm={checkPermission(permissions, null, 'range', 'form')}
       form={<RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>}

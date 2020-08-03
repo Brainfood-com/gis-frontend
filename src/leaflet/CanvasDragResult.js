@@ -1,3 +1,4 @@
+import {fromJS} from 'immutable'
 import PropTypes from 'prop-types'
 import debounce from 'lodash-es/debounce'
 import memoize from 'lodash-es/memoize'
@@ -64,11 +65,14 @@ export function getGeoJSONPoint(point) {
   if (!point) {
     return null
   }
-  if (point.type === 'Point') {
-    return memoizePoint(point.coordinates[1], point.coordinates[0])
+  const {type} = point
+  if (type === 'Point') {
+    const {coordinates} = point
+    return memoizePoint(coordinates[1], coordinates[0])
   }
-  if (point.lat && point.lng) {
-    return memoizePoint(point.lat, point.lng)
+  const {lat, lng} = point
+  if (lat && lng) {
+    return memoizePoint(lat, lng)
   }
   throw new Error(JSON.stringify(point))
 }
@@ -117,7 +121,7 @@ export function CanvasDragResultLookup(Clz) {
             this.setState((state, props) => {
               if (props.target === target) {
                 const {number, fullname, zipcode, point, edge} = result
-                return {result: {number, fullname, zipcode, point, position: getGeoJSONPoint(point), edge}}
+                return {result: {number, fullname, zipcode, point, position: getGeoJSONPoint(point), edge: fromJS(edge)}}
               }
             })
           })

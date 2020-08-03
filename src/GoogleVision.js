@@ -1,5 +1,8 @@
 import flow from 'lodash-es/flow'
 import React from 'react'
+import ImmutablePropTypes from 'react-immutable-proptypes'
+import PropTypes from 'prop-types'
+
 import classnames from 'classnames'
 import { withStyles } from '@material-ui/core/styles'
 import Collapse from '@material-ui/core/Collapse'
@@ -11,6 +14,18 @@ import Chip from '@material-ui/core/Chip'
 import Typography from '@material-ui/core/Typography'
 import ExpandLessIcon from '@material-ui/icons/ExpandLess'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+
+export const GoogleVisionShape = ImmutablePropTypes.mapContains({
+  labels: ImmutablePropTypes.listOf(ImmutablePropTypes.mapContains({
+    description: PropTypes.string.isRequired,
+    score: PropTypes.number.isRequired,
+  })),
+  ocr: ImmutablePropTypes.listOf(PropTypes.string),
+  grey: PropTypes.any,
+  hsv: PropTypes.any,
+  rgb: PropTypes.any,
+})
+
 
 const googleVisionStyles = {
   root: {
@@ -39,15 +54,12 @@ const googleVisionStyles = {
 }
 
 export default flow(withStyles(googleVisionStyles))(class GoogleVision extends React.Component {
-  state = {
-    open: false,
+  static propTypes = {
+    googleVision: GoogleVisionShape,
   }
 
-  static getDerivedStateFromProps(props, state) {
-    const {googleVision} = props
-    return {
-      googleVision: googleVision && googleVision.toJS ? googleVision.toJS() : googleVision,
-    }
+  state = {
+    open: false,
   }
 
   handleOnClick = event => {
@@ -56,16 +68,15 @@ export default flow(withStyles(googleVisionStyles))(class GoogleVision extends R
   }
 
   render() {
-    const {className, classes} = this.props
-    const {open, googleVision} = this.state
+    const {className, classes, googleVision} = this.props
+    const {open} = this.state
     if (!googleVision) {
       return <div />
     }
-    const {grey, hsv, rgb, labels, ocr} = googleVision
+    const {grey, hsv, rgb, labels, ocr} = googleVision.toJS()
     const wantedClasses = {
       [classes.root]: true,
     }
-    const {ain, effective_year_built, property_location, ...rest} = googleVision
     return <List className={classnames(wantedClasses, className)} dense={true}>
       <ListItem disableGutters>
         <ListItemText primary='Google Vision'/>

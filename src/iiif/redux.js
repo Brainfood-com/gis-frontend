@@ -579,7 +579,7 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
     dispatch(ensureBuildings(buildingIds))
   }
 
-  const pointsMap = immutableEmptyOrderedMap.withMutations(map => points.forEach(point => map.set(point.id, point)))
+  const pointsMap = immutableEmptyOrderedMap.withMutations(map => points.forEach(point => map.set(point.id, fromJS(point))))
 
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: {id: rangeId, canvases: canvases.map(canvas => canvas.id)}})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvases})

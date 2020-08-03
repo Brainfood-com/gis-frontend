@@ -166,13 +166,13 @@ export const picked = picked => Component => {
             switch (type) {
               case 'collection':
                 // .members
-                result.manifests = pickedValue.get('manifests', immutableEmptyList).map(id => iiif.getIn([iiifRedux.MODEL.manifest, id]))
+                result.manifests = iiif.get(iiifRedux.MODEL.manifest)
                 break
               case 'manifest':
                 // .ranges
                 // .rangesWithCanvases
-                result.ranges = pickedValue.get('ranges', immutableEmptyList).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
-                result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', immutableEmptyList).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
+                result.ranges = iiif.get(iiifRedux.MODEL.range)
+                //result.rangesWithCanvases = pickedValue.get('rangesWithCanvases', immutableEmptyList).map(id => iiif.getIn([iiifRedux.MODEL.range, id]))
                 break
               case 'range':
                 // .canvases
@@ -180,16 +180,19 @@ export const picked = picked => Component => {
                 //console.log('rangeCanvases', rangeCanvases)
                 result.buildings = iiif.get(iiifRedux.MODEL['buildings'])
                 result.points = iiif.getIn([iiifRedux.MODEL['range_points'], pickedId, 'points'])
+                result.canvases = iiif.get(iiifRedux.MODEL['canvas'])
+                /*
                 result.canvases = pickedValue.get('canvases', immutableEmptyList).map(id => {
                   return iiif.getIn([iiifRedux.MODEL.canvas, id])
                 })
                 if (pickedValue.get('reverse', false)) {
                   result.canvases = result.canvases.reverse()
                 }
+                */
                 break
               case 'pickedBuilding':
                 const canvasesByRange = result.canvasesByRange = iiif.getIn([iiifRedux.MODEL['building_canvases'], pickedId, 'canvasesByRange'], immutableEmptyMap)
-                result.rangesById = canvasesByRange.reduce((result, canvases, rangeId) => {
+                if (false) result.rangesById = canvasesByRange.reduce((result, canvases, rangeId) => {
                   result[rangeId] = iiif.getIn([iiifRedux.MODEL.range, parseInt(rangeId)])
                   return result
                 }, {})

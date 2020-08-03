@@ -1,12 +1,15 @@
+import {fromJS, List as imList} from 'immutable'
 import isEqual from 'lodash-es/isEqual'
 import flow from 'lodash-es/flow'
 import PropTypes from 'prop-types'
+import ImmutablePropTypes from 'react-immutable-proptypes'
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import {WithOutContext as ReactTags} from 'react-tag-input'
 import {immutableEmptyList} from '../constants'
 import {checkPermission, picked as userPicked} from '../User'
+import { TagSuggestionShape, TagsShape } from './Types'
 
 export const commonTagDefinitions = {
   CLAIMED: {roles: ['editor'], label: 'Claimed'},
@@ -82,17 +85,8 @@ function applyTagMutation(props, state, tagOrAccessor, mutator) {
     return
   }
   mutator(tags)
-  onChange({currentTarget: {name, value: tags.map(tag => tag.id)}})
+  onChange({currentTarget: {name, value: fromJS(tags.map(tag => tag.id))}})
 }
-
-
-const tagSuggestionShape = PropTypes.oneOfType([
-  PropTypes.string,
-  PropTypes.shape({
-    label: PropTypes.string.isRequired,
-    roles: PropTypes.arrayOf(PropTypes.string),
-  })
-])
 
 function suggestionToShape(suggestion) {
   return typeof suggestion === 'string' ? {label: suggestion} : suggestion
@@ -104,8 +98,8 @@ class IIIFTagEditor extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     label: PropTypes.string,
-    suggestions: PropTypes.arrayOf(tagSuggestionShape),
-    value: PropTypes.array,
+    suggestions: PropTypes.arrayOf(TagSuggestionShape),
+    value: TagsShape,
     onChange: PropTypes.func,
     modelName: PropTypes.string.isRequired,
   }
@@ -131,7 +125,7 @@ class IIIFTagEditor extends React.Component {
         permissions: null,
       }
     }
-    const tags = value.sort().map(s => ({id: s, text: s}))
+    const tags = value.toJS().sort().map(s => ({id: s, text: s}))
     const suggestions = [].concat(props.suggestions).map(suggestionToShape).sort((a, b) => {
       const {label: aLabel} = a
       const {label: bLabel} = b

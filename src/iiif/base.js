@@ -1,4 +1,5 @@
 import React from 'react'
+import {immutableEmptyMap} from '../constants'
 import DebouncedForm from '../DebouncedForm'
 import { checkPermission } from '../User'
 
@@ -25,10 +26,9 @@ export class AbstractForm extends DebouncedForm {
     const {constructor: {modelName}} = this
     const {props: {[modelName]: model}} = this
     if (name.startsWith('values.')) {
-      const {values = {}} = model
-      return values[name.substring('values.'.length)]
+      return model.getIn(['values',name.substring('values.'.length)])
     } else {
-      return model[name]
+      return model.get(name)
     }
   }
 
@@ -39,8 +39,7 @@ export class AbstractForm extends DebouncedForm {
     const currentValue = this.getValue(name)
     if (currentValue !== processedValue) {
       if (name.startsWith('values.')) {
-        const values = Object.assign({}, this.getValue('values'))
-        values[name.substring('values.'.length)] = processedValue
+        const values = this.getValue('values', immutableEmptyMap).set(name.substring('values.'.length), processedValue)
         updater(this.getValue('id'), {values})
       } else {
         updater(this.getValue('id'), {[name]: processedValue})

@@ -1,7 +1,9 @@
 import Enum from 'es6-enum'
 import flow from 'lodash-es/flow'
 import React from 'react'
-import {fromJS} from 'immutable'
+import PropTypes from 'prop-types'
+import ImmutablePropTypes from 'react-immutable-proptypes'
+import {fromJS, Map as imMap, Set as imSet} from 'immutable'
 import polylabel from 'polylabel'
 
 import classnames from 'classnames'
@@ -21,9 +23,9 @@ import { FeatureGroup, GeoJSON, Popup, PropTypes as LeafletPropTypes } from 'rea
 import { requiredRoles } from './User'
 import { makeUrl } from './api'
 import connectHelper from './connectHelper'
-import { immutableEmptyList, immutableEmptyMap } from './constants'
+import { immutableEmptyList, immutableEmptyMap, immutableEmptySet } from './constants'
 import GISGeoJSON from './GISGeoJSON'
-import Taxdata from './Taxdata'
+import Taxdata, { TaxdataShape } from './Taxdata'
 import { BusyPane } from './GlobalBusy'
 import { CollectionTitle } from './iiif/Collection'
 import { ManifestTitle } from './iiif/Manifest'
@@ -31,7 +33,8 @@ import { RangeTitle } from './iiif/Range'
 import { ensureBuildings, iiifLocalCache } from './iiif/redux'
 import { byId as iiifPickedById } from './iiif/Picked'
 import { CanvasCardRO } from './iiif/Canvas'
-import { getCollection, getManifest, detectAndPick } from './iiif/redux'
+import { CollectionShape, ManifestShape, RangeShape, CanvasShape } from './iiif/Types'
+import { getCollection, getManifest, getRange, detectAndPick } from './iiif/redux'
 import AwesomeMarkers from './leaflet/AwesomeMarkers'
 import RotatableMarker from './leaflet/RotatableMarker'
 
@@ -52,7 +55,12 @@ const ACTION = Enum(
 const defaultState = immutableEmptyMap.withMutations(map => {
   map.set('addresses', immutableEmptyList)
   map.set('buildings', immutableEmptyMap)
-  map.set('buildingStats', fromJS({rangeCount: {}, canvasCount: {}, claimedCount: {}, placedCount: {}}))
+  map.set('buildingStats', fromJS({
+    rangeCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
+    canvasCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
+    claimedCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
+    placedCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
+  })),
   map.set('requestCurrentBuilding', null)
   map.set('currentBuilding', null)
 })
@@ -76,41 +84,28 @@ export function reducer(state = defaultState, {type, action, ...rest}) {
     case ACTION.setBuildings:
       const buildings = state.get('buildings').withMutations(map => {
         const {buildings, rangeId} = rest
-        const newIds = Object.keys(buildings).reduce((newIds, id) => {
-          newIds[id] = true
-          return newIds
-        }, {})
-        const oldIds = {}
-        for (const [key, value] of map.entries()) {
-          if (newIds[key]) {
-            delete newIds[key]
-          } else if (rangeId) {
-            if (value.rangeIds.indexOf(rangeId) !== -1 && value.rangeIds.length === 1) {
-              oldIds[key] = true
-            }
-          } else {
-            oldIds[key] = true
-          }
-        }
-        map.merge(buildings)
-        for (const key of Object.keys(oldIds).sort()) {
-          map.delete(key)
-        }
+        const newBuildings = imMap(buildings.map(building => {
+          const {buildingId} = building
+          return [buildingId, fromJS(building)]
+        }))
+        map.deleteAll(map.keySeq().filterNot(buildingId => newBuildings.has(buildingId)))
+        map.mergeDeep(newBuildings)
       })
       state = state.set('buildings', buildings)
-      state = state.mergeDeep({
-        buildingStats: fromJS(buildings.reduce((stats, building) => {
-          adjustMinMax(stats.rangeCount, building.rangeIds.length)
-          adjustMinMax(stats.canvasCount, building.canvasIds.length)
-          adjustMinMax(stats.claimedCount, building.claimedCount)
-          adjustMinMax(stats.placedCount, building.placedCount)
+      const foo = buildings.reduce((stats, building) => {
+          adjustMinMax(stats.rangeCount, building.get('rangeIds').size)
+          adjustMinMax(stats.canvasCount, building.get('canvasIds').size)
+          adjustMinMax(stats.claimedCount, building.get('claimedCount'))
+          adjustMinMax(stats.placedCount, building.get('placedCount'))
           return stats
         }, {
           rangeCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
           canvasCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
           claimedCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
           placedCount: {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
-        })),
+        })
+      state = state.mergeDeep({
+        buildingStats: fromJS(foo),
       })
       break
     case ACTION.requestCurrentBuilding:
@@ -122,10 +117,10 @@ export function reducer(state = defaultState, {type, action, ...rest}) {
         const {building: {id}} = currentBuilding
         const requestCurrentBuilding = state.get('requestCurrentBuilding')
         if (id === requestCurrentBuilding) {
-          state = state.set('currentBuilding', currentBuilding)
+          state = state.set('currentBuilding', fromJS(currentBuilding))
         }
       } else {
-        state = state.set('currentBuilding', currentBuilding)
+        state = state.set('currentBuilding', fromJS(currentBuilding))
       }
       break
   }
@@ -138,10 +133,7 @@ export const refreshBuildings = ({rangeId} = {}) => async (dispatch, getState) =
     type: 'gis-search',
     action: ACTION.setBuildings,
     rangeId,
-    buildings: buildings.reduce((byId, building) => {
-      byId[building.buildingId] = building
-      return byId
-    }, {}),
+    buildings,
   })
 }
 
@@ -207,9 +199,9 @@ const pick = (...picked) => Component => {
           break
         case 'currentBuilding':
           const requestCurrentBuilding = result.requestCurrentBuilding = search.get('requestCurrentBuilding')
-          const currentBuilding = search.get('currentBuilding') || {}
-          if (requestCurrentBuilding !== null) {
-            const isLoaded = (currentBuilding.building || {}).id === requestCurrentBuilding
+          const currentBuilding = search.get('currentBuilding', immutableEmptyMap)
+          if (requestCurrentBuilding !== null && currentBuilding !== null) {
+            const isLoaded = currentBuilding.getIn(['building', 'id']) === requestCurrentBuilding
             if (isLoaded) {
               result.currentBuilding = currentBuilding
             } else {
@@ -238,18 +230,32 @@ export const showBuilding = id => async (dispatch, getState) => {
   const building = (await fetch(searchURL.toString()).then(data => data.json()))[0]
   const canvasesURL = new URL(makeUrl('api', 'buildings/' + id + '/canvases'))
   const canvasPoints = {}
-  const allBuildings = {}
-  const canvases = await fetch(canvasesURL.toString()).then(data => data.json()).then(canvases => canvases.map(canvas => {
-    const {id, range_id, iiif_id, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, googleVision, ...rest} = canvas
+  const allBuildings = imSet().asMutable()
+  const canvases = imMap().asMutable()
+  const canvasesByRange = imMap().asMutable()
+  await fetch(canvasesURL.toString()).then(data => data.json()).then(canvasesPojo => canvasesPojo.forEach(canvasPojo => {
+    const {id, range_id: rangeId, iiif_id: canvasId, point_building_distance: pointBuildingDistance, format, height, image, thumbnail, width, external_id: externalId, label, overrides, point, buildings, notes, exclude, hole, googleVision, ...rest} = canvasPojo
     const result = {
-      id: iiif_id,
-      range_id, format, height, width, externalId, label, overrides, notes, exclude, hole, googleVision,
+      id,
+      canvasId,
+      rangeId,
+      point,
+      format,
+      height,
+      width,
+      externalId,
+      label,
+      overrides,
+      notes,
+      exclude,
+      hole,
+      googleVision,
       externalId,
       image: iiifLocalCache(image),
       thumbnail: iiifLocalCache(thumbnail),
     }
     if (point) {
-      buildings.forEach(id => allBuildings[id] = true)
+      allBuildings.concat(buildings)
       result.point = {
         latlng: {
           lat: point.coordinates[1],
@@ -259,18 +265,13 @@ export const showBuilding = id => async (dispatch, getState) => {
         buildings,
       }
     }
-    return result
+    canvases.set(canvasId, fromJS(result))
+    canvasesByRange.updateIn([rangeId], (rangeCanvases = immutableEmptySet) => rangeCanvases.add(canvasId))
   }))
-  dispatch(ensureBuildings(Object.keys(allBuildings)))
+  dispatch(ensureBuildings(allBuildings.toArray()))
 
-  const canvasesByRange = canvases.reduce((result, canvas) => {
-    const {range_id: rangeId} = canvas
-    const rangeCanvases = result[rangeId] || (result[rangeId] = [])
-    rangeCanvases.push(canvas)
-    return result
-  }, {})
-
-  const ranges = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())))
+  const rangeIdSeq = canvasesByRange.keySeq()
+  //const ranges = await Promise.all(rangeIdSeq.map(rangeId => fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())))
   const detectTypeUrl = makeUrl('api', 'iiif/detectType')
   const detectTypeOptions = {
 		method: 'POST',
@@ -279,18 +280,20 @@ export const showBuilding = id => async (dispatch, getState) => {
     },
   }
 
-  const locations = await Promise.all(Object.keys(canvasesByRange).map(rangeId => fetch(detectTypeUrl, {...detectTypeOptions, body: JSON.stringify({iiifId: rangeId})}).then(data => data.json())))
-  const manifests = {}, collections = {}, parentsByRange = {}
+  const locations = await Promise.all(rangeIdSeq.map(rangeId => fetch(detectTypeUrl, {...detectTypeOptions, body: JSON.stringify({iiifId: rangeId})}).then(data => data.json())))
+  const parentsByRange = imMap().asMutable()
+  const manifestIdSet = imSet().asMutable(), collectionIdSet = imSet().asMutable()
   locations.forEach(location => {
     const manifestId = location.allParents['sc:Manifest'][0]
     const collectionId = location.allParents['sc:Collection'][0]
     const rangeId = location.iiifId
-    collections[collectionId] = true
-    manifests[manifestId] = true
-    parentsByRange[rangeId] = {collectionId, manifestId}
+    collectionIdSet.add(collectionId)
+    manifestIdSet.add(manifestId)
+    parentsByRange.set(rangeId, fromJS({collectionId, manifestId}))
   })
-  Object.keys(manifests).map(manifestId => dispatch(getManifest(parseInt(manifestId))))
-  Object.keys(collections).map(collectionId => dispatch(getCollection(parseInt(collectionId), {full: false})))
+  rangeIdSeq.forEach(rangeId => dispatch(getRange(rangeId)))
+  manifestIdSet.forEach(manifestId => dispatch(getManifest(manifestId)))
+  collectionIdSet.forEach(collectionId => dispatch(getCollection(collectionId, {full: false})))
 
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
 
@@ -304,16 +307,16 @@ export const showBuilding = id => async (dispatch, getState) => {
       canvases,
       canvasPoints,
       parentsByRange,
-      canvasesByRange: Object.entries(canvasesByRange).reduce((canvasesByRange, [rangeId, canvases]) => {
-        canvasesByRange[rangeId] = canvases.map(canvas => canvas.id)
-        return canvasesByRange
-      }, {}),
-      primaryCanvasByRange: Object.entries(canvasesByRange).reduce((primaryCanvasByRange, [rangeId, canvases]) => {
-        const distanceSortedCanvases = [].concat(canvases).sort((a, b) => a.point_building_distance - b.point_building_distance)
-        primaryCanvasByRange[rangeId] = distanceSortedCanvases[0]
-        return primaryCanvasByRange
-      }, {}),
-      ranges,
+      canvasesByRange: canvasesByRange.asImmutable(),
+      primaryCanvasByRange: canvasesByRange.toKeyedSeq().reduce((primaryCanvasByRange, canvasIdSet, rangeId) => {
+        const distanceSortedCanvases = canvasIdSet.sort((a, b) => {
+          const canvasA = canvases.get(a)
+          const canvasB = canvases.get(b)
+          return canvasA.point_building_distance - canvasB.point_building_distance
+        })
+        return primaryCanvasByRange.set(rangeId, distanceSortedCanvases)
+      }, immutableEmptyMap),
+      ranges: rangeIdSeq,
     },
   })
 }
@@ -458,53 +461,82 @@ function makeChoropleth(scheme, min, max) {
   }
 }
 
+const MapBuildingShape = ImmutablePropTypes.mapContains({
+  buildingId: PropTypes.number.isRequired,
+  geojson: ImmutablePropTypes.mapContains({
+    coordinates: ImmutablePropTypes.listOf(PropTypes.any),
+  }),
+  rangeIds: ImmutablePropTypes.listOf(PropTypes.number),
+  claimedCount: PropTypes.number,
+  placedCount: PropTypes.number,
+})
+const MapBuildingsShape = ImmutablePropTypes.mapOf(MapBuildingShape, PropTypes.number)
+
 const MapBuilding = class MapBuilding extends React.Component {
-  state = {buildingPoint: null}
-
-  static defaultProps = {
-    showBuilding(buildingId) {},
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    const {isSelected} = props
-    if (isSelected) {
-      const {building} = props
-      const {geojson} = building
-      const buildingPoint = polylabel(geojson.coordinates[0], 1.0)
-      return {buildingPoint: {lat: buildingPoint[1], lng: buildingPoint[0]}}
-    } else {
-      return {buildingPoint: null}
-    }
+  static propTypes = {
+    isSelected: PropTypes.bool,
+    building: MapBuildingShape,
+    showBuilding: PropTypes.func,
+    rangeChoropleth: PropTypes.func,
+    canvasChoropleth: PropTypes.func,
+    doneChoropleth: PropTypes.func,
   }
 
   handleOnClick = event => {
     const {building, showBuilding} = this.props
-    const {buildingId} = building
-    showBuilding(buildingId)
+    showBuilding(building.get('buildingId'))
+  }
+
+  renderMarker() {
+    const {isSelected, building} = this.props
+    if (!isSelected) return null
+    const geojson = building.get('geojson')
+    const coordinates = geojson.getIn(['coordinates', 0])
+    const buildingPoint = polylabel(coordinates.toJS(), 1.0)
+    const position = {lat: buildingPoint[1], lng: buildingPoint[0]}
+    return <RotatableMarker
+      icon={defaultIcon}
+      rotationAngle={0}
+      position={position}
+    />
   }
 
   render() {
     const {isSelected, building, rangeChoropleth, canvasChoropleth, doneChoropleth} = this.props
-    const {buildingPoint} = this.state
-    const {rangeIds, canvasIds, claimedCount, placedCount, geojson} = building
+    const geojson = building.get('geojson')
+    const rangeIds = building.get('rangeIds')
+    const claimedCount = building.get('claimedCount')
+    const placedCount = building.get('placedCount')
     const buildingStyle = {
-      color: rangeChoropleth(rangeIds.length),
+      color: rangeChoropleth(rangeIds.size),
       fillColor: doneChoropleth(Math.abs(claimedCount - placedCount)),
       fillOpacity: 0.8,
     }
     return <FeatureGroup>
-      {buildingPoint && <RotatableMarker
-        icon={defaultIcon}
-        rotationAngle={0}
-        position={buildingPoint}
-        />
-      }
+      {this.renderMarker()}
       <GISGeoJSON data={geojson} style={buildingStyle} onClick={this.handleOnClick}/>
     </FeatureGroup>
   }
 }
 
+const StatShape = ImmutablePropTypes.mapContains({
+  min: PropTypes.number.isRequired,
+  max: PropTypes.number.isRequired,
+})
+
 export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildings'))(class MapBuildings extends React.Component {
+  static propTypes = {
+    buildings: MapBuildingsShape,
+    buildingStats: ImmutablePropTypes.mapContains({
+      rangeCount: StatShape.isRequired,
+      canvasCount: StatShape.isRequired,
+      claimedCount: StatShape.isRequired,
+      placedCount: StatShape.isRequired,
+    }).isRequired,
+    showBuilding: PropTypes.func.isRequired,
+    requestCurrentBuilding: PropTypes.number,
+  }
+
   state = {}
   static getDerivedStateFromProps(props, state) {
     const {buildingStats} = props
@@ -526,7 +558,7 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
 
   handleShowBuilding = buildingId => {
     const {buildings, showBuilding} = this.props
-    const foundBuilding = buildings.get('' + buildingId)
+    const foundBuilding = buildings.get(buildingId)
     showBuilding(buildingId)
   }
 
@@ -538,12 +570,12 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
     const {className, classes, buildings, buildingStats, requestCurrentBuilding} = this.props
 
     return <FeatureGroup>
-      {buildings && buildings.map((building, key, index) => <MapBuilding key={`${building.buildingId === requestCurrentBuilding}:${building.buildingId}`} building={building}
+      {buildings && buildings.map((building, key, index) => <MapBuilding key={`${building.get('buildingId') === requestCurrentBuilding}:${building.get('buildingId')}`} building={building}
         rangeChoropleth={this.rangeChoropleth}
         canvasChoropleth={this.canvasChoropleth}
         doneChoropleth={this.doneChoropleth}
         showBuilding={this.handleShowBuilding}
-        isSelected={building.buildingId === requestCurrentBuilding}
+        isSelected={building.get('buildingId') === requestCurrentBuilding}
         />).toIndexedSeq()}
     </FeatureGroup>
   }
@@ -572,15 +604,48 @@ const currentBuildingRangeStyles = {
     margin: '0 4px 0 4px',
   }
 }
-const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
-  state = {collection: null, manifest: null}
 
-  static getDerivedStateFromProps(props, state) {
-    const {collection, manifest} = props
-    return {
-      collection: collection ? collection.toJS() : null,
-      manifest: manifest ? manifest.toJS() : null,
-    }
+export const BuildingCanvasShape = ImmutablePropTypes.mapContains({
+  id: PropTypes.number,
+  point: PropTypes.any,
+})
+
+export const CurrentBuildingShape = ImmutablePropTypes.mapContains({
+  primaryCanvasByRange: ImmutablePropTypes.mapOf(
+    ImmutablePropTypes.setOf(PropTypes.number),
+    PropTypes.number
+  ),
+  building: ImmutablePropTypes.mapContains({
+    taxdata: TaxdataShape,
+    canvases: ImmutablePropTypes.mapOf(
+      BuildingCanvasShape,
+      PropTypes.number
+    ),
+    ranges: ImmutablePropTypes.listOf(PropTypes.number),
+    parentsByRange: ImmutablePropTypes.mapOf(
+      ImmutablePropTypes.mapContains({
+        collectionId: PropTypes.number,
+        manifestId: PropTypes.number,
+      }),
+      PropTypes.number
+    )
+  }),
+})
+
+
+const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest', 'range', 'canvas'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
+  static propTypes = {
+    onItemPicked: PropTypes.func.isRequired,
+    collection: CollectionShape,
+    collectionId: PropTypes.number.isRequired,
+    manifest: ManifestShape,
+    manifestId: PropTypes.number.isRequired,
+    range: RangeShape,
+    rangeId: PropTypes.number.isRequired,
+    canvas: CanvasShape.isRequired,
+    canvasId: PropTypes.number.isRequired,
+    currentBuilding: CurrentBuildingShape.isRequired,
+    buildingCanvas: BuildingCanvasShape.isRequired,
   }
 
   handleOnClick = event => {
@@ -589,33 +654,41 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest'), with
   }
 
   handleOnItemPicked = () => {
-    const {range: {id}, onItemPicked} = this.props
-    onItemPicked(id)
+    const {range, onItemPicked} = this.props
+    onItemPicked(range.get('id'))
   }
 
   render() {
-    const {className, classes, onItemPicked, range, currentBuilding, collectionId, manifestId} = this.props
-    const {collection, manifest} = this.state
-    const {canvasesByRange, primaryCanvasByRange} = currentBuilding
-    const {id} = range
-    const rangeCanvases = canvasesByRange[id]
-    const primaryCanvas = primaryCanvasByRange[id]
-    return <div className={classnames(classes.root, className)} key={id}>
+    const {className, classes, onItemPicked, collection, manifest, range, rangeId, canvas, buildingCanvas, currentBuilding, collectionId, manifestId} = this.props
+    const canvasPoint = buildingCanvas.get('point')
+    return <div className={classnames(classes.root, className)} key={rangeId}>
       <div className={classes.titlePane} onClick={this.handleOnClick}>
         <CollectionTitle collection={collection}/>
         <ManifestTitle manifest={manifest}/>
         <RangeTitle range={range}/>
       </div>
-      <CanvasCardRO className={classes.card} collectionId={collectionId} manifestId={manifestId} range={range} canvas={primaryCanvas} canvasPoint={primaryCanvas.point} onItemPicked={this.handleOnItemPicked}/>
+      <CanvasCardRO className={classes.card} collection={collection} manifest={manifest} range={range} canvas={buildingCanvas} canvasPoint={canvasPoint} onItemPicked={this.handleOnItemPicked}/>
     </div>
   }
 })
 
 export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), pick('currentBuilding'))(class CurrentBuildingInfo extends React.Component {
+  static propTypes = {
+    isBusy: PropTypes.bool.isRequired,
+    currentBuilding: CurrentBuildingShape,
+    requestCurrentBuilding: PropTypes.number,
+    clearCurrentBuilding: PropTypes.func.isRequired,
+    showRange: PropTypes.func.isRequired,
+  }
+
+  static defaultProps = {
+    currentBuilding: immutableEmptyMap,
+  }
+
   handleRangeSelection = id => {
-    const {showRange, showCanvas, currentBuilding: {primaryCanvasByRange}} = this.props
-    const primaryCanvas = primaryCanvasByRange[id]
-    showRange(id, primaryCanvas.id)
+    const {showRange, currentBuilding} = this.props
+    const primaryCanvasId = currentBuilding.getIn(['primaryCanvasByRange', id])
+    showRange(id, primaryCanvasId)
   }
 
   handleOnClose = ev => {
@@ -628,19 +701,20 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
     if (!requestCurrentBuilding) {
       return <div />
     }
-    const {
-      building: {taxdata} = {},
-      ranges = [],
-      parentsByRange,
-    } = (currentBuilding || {})
+    const taxdata = currentBuilding.getIn(['building', 'taxdata'])
+    const ranges = currentBuilding.get('ranges', immutableEmptyList)
+    const buildingCanvases = currentBuilding.get('canvases')
+    const parentsByRange = currentBuilding.get('parentsByRange')
+    const primaryCanvasByRange = currentBuilding.get('primaryCanvasByRange')
     return <div className={classnames(classes.root, className)}>
       <BusyPane isBusy={isBusy}>
         <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
         <Taxdata taxdata={taxdata}/>
-        {ranges.map(range => {
-          const {id} = range
-          const {collectionId, manifestId} = parentsByRange[id]
-          return <CurrentBuildingRange key={id} onItemPicked={this.handleRangeSelection} range={range} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} />
+        {ranges.map(rangeId => {
+          const {collectionId, manifestId} = parentsByRange.get(rangeId).toJSON()
+          const primaryCanvasId = primaryCanvasByRange.get(rangeId).first()
+          const buildingCanvas = buildingCanvases.get(primaryCanvasId)
+          return <CurrentBuildingRange key={rangeId} onItemPicked={this.handleRangeSelection} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} rangeId={rangeId} canvasId={primaryCanvasId} buildingCanvas={buildingCanvas} />
         })}
       </BusyPane>
     </div>

@@ -48,14 +48,15 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
     const {zoom, range, buildings, points, canvases, canvas, onItemPicked} = this.props
     if (!range || !points || !canvases) return <div/>
     const fovOrientation = range.get('fovOrientation', 'left')
-    const selected = canvas ? canvas.get('id') : null
-    const {camera, buildings: pointBuildings} = canvas && points.get(selected) || {}
-    const notNullCanvases = canvases.filter(canvas => canvas && points.get(canvas.get('id')))
-    const rangeJS = range.toJS()
+    const selectedCanvasId = canvas ? canvas.get('id') : undefined
+    const selectedPoint = canvas && points.get(selectedCanvasId) || immutableEmptyMap
+    const camera = selectedPoint.get('camera')
+    const pointBuildings = selectedPoint.get('buildings')
+    const notNullCanvases = range.get('canvases').filter(canvasId => canvasId && points.get(canvasId))
 
 //    const {bearing, point, camera} = rangePoint
-//      { selected && camera ? <GISGeoJSON data={camera}/> : null }
-//      { selected && buildings ? buildings.map(building => <GISGeoJSON key={building.id} data={building.geojson}/>) : null }
+//      { selectedCanvasId && camera ? <GISGeoJSON data={camera}/> : null }
+//      { selectedCanvasId && buildings ? buildings.map(building => <GISGeoJSON key={building.id} data={building.geojson}/>) : null }
 
     return <FeatureGroup>
       { camera ? <GISGeoJSON pane='tilePane' data={camera}/> : null }
@@ -63,12 +64,12 @@ export default picked(['range', 'canvas'])(class RangePoints extends React.Compo
         const building = buildings.get(id)
         return <Building key={id} building={building}/>
       }) }
-      {notNullCanvases.map((canvas, index) => {
-        const id = canvas.get('id')
-        const rangePoint = points.get(id)
+      {notNullCanvases.map((canvasId, index) => {
+        const canvas = canvases.get(canvasId)
+        const rangePoint = points.get(canvasId)
         const isFirst = index === 0
-        const isLast = index === notNullCanvases.length - 1
-        return <DraggableCanvasPosition key={id} zoom={zoom} range={rangeJS} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={onItemPicked} selected={selected === id} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
+        const isLast = index === notNullCanvases.size - 1
+        return <DraggableCanvasPosition key={canvasId} zoom={zoom} range={range} canvas={canvas} rangePoint={rangePoint} onUpdatePoint={this.handleOnUpdatePoint} onCanvasSelect={onItemPicked} selected={selectedCanvasId === canvasId} fovOrientation={fovOrientation} isFirst={isFirst} isLast={isLast} />
 
       })}
     </FeatureGroup>
