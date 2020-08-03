@@ -187,7 +187,7 @@ export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permis
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, manifest, rangesWithCanvases, onItemPicked, updateRange, permissions, ...props} = this.props
+    const {className, manifest, rangesWithCanvases, rangeStatus, onItemPicked, updateRange, permissions, ...props} = this.props
     const {range} = this.state
 
     if (!manifest) return <div/>
@@ -200,7 +200,7 @@ export const RangePanel = flow(picked(['manifest', 'range']), userPicked('permis
       icon={<CameraRollIcon/>}
       showForm={checkPermission(permissions, null, 'range', 'form')}
       form={<RangeForm {...props} permissions={permissions} range={range} updateRange={updateRange}/>}
-      busy={range && range._busy}
+      busy={rangeStatus.get('busy')}
     />
   }
 })

@@ -127,7 +127,7 @@ export const ManifestPanel = flow(picked(['collection', 'manifest']), userPicked
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collection, manifests, onItemPicked, updateManifest, permissions, ...props} = this.props
+    const {className, collection, manifests, manifestStatus, onItemPicked, updateManifest, permissions, ...props} = this.props
     const {manifest} = this.state
 
     if (!collection) return <div/>
@@ -140,7 +140,7 @@ export const ManifestPanel = flow(picked(['collection', 'manifest']), userPicked
       icon={<CollectionsIcon/>}
       showForm={checkPermission(permissions, null, 'manifest', 'form')}
       form={<ManifestForm {...props} permissions={permissions} manifest={manifest} updateManifest={updateManifest}/>}
-      busy={manifest && manifest._busy}
+      busy={manifestStatus.get('busy')}
     />
   }
 })

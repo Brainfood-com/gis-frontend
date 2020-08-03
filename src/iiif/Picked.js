@@ -30,8 +30,10 @@ export const byId = (...names) => Component => {
         case 'collection':
         case 'manifest':
         case 'range':
-          const item = result[name] = iiif.getIn([iiifRedux.MODEL[name], props[name + 'Id']])
-          busy += item ? item.get('_busy', 0) : 0
+          const id = props[name + 'Id']
+          result[name] = iiif.getIn([iiifRedux.MODEL[name], id])
+          const itemStatus = iiif.getIn(['status', iiifRedux.MODEL[name], id], iiifRedux.defaultItemStatusValue)
+          busy += itemStatus.get('busy')
           break
       }
       return result
@@ -63,7 +65,8 @@ export const global = (...names) => Component => {
         case 'canvas':
           const id = iiif.getIn([iiifRedux.MODEL['picked'], name, 'value'], null)
           const item = result[name] = iiif.getIn([iiifRedux.MODEL[name], id])
-          busy += item ? item.get('_busy', 0) : 0
+          const itemStatus = result[name + 'Status'] = iiif.getIn(['status', iiifRedux.MODEL[name], id], iiifRedux.defaultItemStatusValue)
+          busy += itemStatus.get('busy')
           break
       }
       return result
@@ -147,7 +150,7 @@ export const picked = picked => Component => {
       }
       let busy = 0
       const owner = props[ownerPick]
-      busy += owner ? owner.get('_busy', 0) : 0
+      busy += owner ? iiif.getIn(['status', iiifRedux.MODEL[ownerPick], owner.get('id')], iiifRedux.defaultItemStatusValue).get('busy') : 0
       switch (type) {
         case 'root':
           result.collections = iiif.get(iiifRedux.MODEL['collection'])
@@ -157,7 +160,8 @@ export const picked = picked => Component => {
           break
         default:
           const pickedValue = result[type] = iiif.getIn([iiifRedux.MODEL[modelType], pickedId])
-          busy += pickedValue ? pickedValue.get('_busy', 0) : 0
+          const itemStatus = result[type + 'Status'] = iiif.getIn(['status', iiifRedux.MODEL[modelType], pickedId], iiifRedux.defaultItemStatusValue)
+          busy += itemStatus.get('busy')
           if (pickedValue) {
             switch (type) {
               case 'collection':

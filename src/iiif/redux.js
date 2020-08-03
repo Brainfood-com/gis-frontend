@@ -50,8 +50,20 @@ const defaultState = immutableEmptyMap.withMutations(map => {
   map.set(MODEL['stats'], immutableEmptyMap.withMutations(map => {
     map.set('range', immutableEmptyMap)
   }))
+  map.set('status', immutableEmptyMap.withMutations(map => {
+    map.set(MODEL['collection'], immutableEmptyMap)
+    map.set(MODEL['manifest'], immutableEmptyMap)
+    map.set(MODEL['range'], immutableEmptyMap)
+    map.set(MODEL['range_points'], immutableEmptyMap)
+    map.set(MODEL['canvas'], immutableEmptyMap)
+    map.set(MODEL['buildings'], immutableEmptyMap)
+  }))
 })
 
+export const defaultItemStatusValue = immutableEmptyMap.merge(fromJS({
+  busy: 0,
+  exists: false,
+}))
 
 /*
   Brief: {
@@ -116,65 +128,76 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
   if (type !== 'redux-iiif') {
     return state
   }
-  const existingModelValue = state.get(modelType)
   switch (actionType) {
     case ACTION.clear:
-      return state.set(modelType, existingModelValue.clear())
+      return state
+        .set(modelType, state.get(modelType).clear())
+        .set('status', state.get('status').set(modelType, immutableEmptyMap))
       break
   }
-  let itemHandler
+  let itemHandler, statusHandler
   switch (actionType) {
     // brief types
     case ACTION.set:
-      itemHandler = (map, item) => {
-        if (!!!item) debugger
-        const {id} = item
-        const currentValue = map.get(id)
-        const immutableItem = fromJS(item).delete('_busy')
+      itemHandler = (currentValue, item) => {
+        const immutableItem = fromJS(item)
         let newValue
         if (!currentValue) {
-          newValue = immutableItem
+          return immutableItem
         } else {
-          newValue = currentValue.merge(immutableItem)
+          return currentValue.merge(immutableItem)
         }
-        return map.set(id, newValue)
       }
       break
     case ACTION.delete:
-      itemHandler = (map, item) => map.delete(item.id)
+      itemHandler = (currentValue, item) => undefined
+      statusHandler = (currentValue, item) => undefined
       break
     case ACTION.incrBusy:
-      itemHandler = (map, id) => {
-        const currentValue = map.get(id)
-        if (!currentValue) {
-          return map.set(id, fromJS({_busy: 1}))
-        } else {
-          return map.set(id, currentValue.set('_busy', (currentValue.get('_busy') || 0) + 1))
-        }
+      statusHandler = (currentItemStatus = defaultItemStatusValue, item) => {
+        return currentItemStatus.set('busy', currentItemStatus.get('busy', 0) + 1)
       }
       break
     case ACTION.decrBusy:
-      itemHandler = (map, id) => {
-        const currentValue = map.get(id)
-        if (!currentValue) {
-          return map
-        }
-        const busy = currentValue.get('_busy')
-        if (busy && busy > 1) {
-          return map.set(id, currentValue.set('_busy', busy - 1))
-        }
-        return map.set(id, currentValue.delete('_busy'))
+      statusHandler = (currentItemStatus, item) => {
+        return currentItemStatus.set('busy', currentItemStatus.get('busy') - 1)
       }
       break
   }
-  if (Array.isArray(itemOrItems)) {
-    const singletonHandler = itemHandler
-    itemHandler = (map, items) => map.withMutations(map => items.map(item => singletonHandler(map, item)))
+  const itemStateUpdater = (state, keyPath, itemHandler) => {
+    if (!itemHandler) {
+      return state
+    }
+    const loopHandler = (map, itemOrString) => {
+      const id = typeof itemOrString === 'string' || typeof itemOrString === 'number' ? itemOrString : itemOrString.id
+      if (id === undefined) {
+        debugger
+      }
+      const currentValue = map.get(id)
+      const newValue = itemHandler(currentValue, itemOrString)
+      if (newValue === undefined) {
+        return map.delete(id)
+      } else {
+        return map.set(id, newValue)
+      }
+    }
+    const map = state.getIn(keyPath)
+    const arrayHandler = map => {
+      if (Array.isArray(itemOrItems)) {
+        return map.withMutations(map => {
+          itemOrItems.map(item => loopHandler(map, item))
+        })
+      } else {
+        return loopHandler(map, itemOrItems)
+      }
+    }
+    return state.setIn(keyPath, arrayHandler(state.getIn(keyPath)))
   }
-  const newModelValue = itemHandler(existingModelValue, itemOrItems)
+  const stateWithUpdatedItems = itemStateUpdater(state, [modelType], itemHandler)
+
   switch (modelType) {
     case MODEL['picked']:
-      const newPicked = newModelValue.reduce((result, value, key, newPicked) => {
+      const newPicked = stateWithUpdatedItems.get(modelType).reduce((result, value, key, newPicked) => {
         const id = value.get('value')
         if (!!id) {
           result[key] = id
@@ -185,7 +208,7 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
       break
   }
   //console.log('reducer', actionType, modelType, itemOrItems, newModelValue.toJSON())
-  return state.set(modelType, newModelValue)
+  return itemStateUpdater(stateWithUpdatedItems, ['status', modelType], statusHandler)
 }
 
 const json = promise => promise.then(data => data.json())
@@ -459,7 +482,7 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
     if (structure.canvases) {
       if (structure.canvases.length) {
         rangesWithCanvases.push(id)
-        allCanvases.splice(-1, 0, structure.canvases)
+        allCanvases.splice(-1, 0, ...structure.canvases)
       }
     }
     ranges.push(id)

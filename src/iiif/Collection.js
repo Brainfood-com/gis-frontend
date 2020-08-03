@@ -122,7 +122,7 @@ export const CollectionPanel = flow(picked(['root', 'collection']), userPicked('
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collections, updateCollection, onItemPicked, permissions, ...props} = this.props
+    const {className, collections, collectionStatus, updateCollection, onItemPicked, permissions, ...props} = this.props
     const {collection} = this.state
 
     return <ItemPanel
@@ -134,7 +134,7 @@ export const CollectionPanel = flow(picked(['root', 'collection']), userPicked('
       icon={<CollectionsIcon/>}
       showForm={checkPermission(permissions, null, 'collection', 'form')}
       form={<CollectionForm {...props} permissions={permissions} collection={collection} updateCollection={updateCollection}/>}
-      busy={collection && collection._busy}
+      busy={collectionStatus.get('busy')}
     />
   }
 })

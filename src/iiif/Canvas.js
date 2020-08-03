@@ -1128,7 +1128,7 @@ export const CanvasPanel = flow(global('collection', 'manifest'), picked(['range
   static getDerivedStateFromProps = getDerivedStateFromProps
 
   render() {
-    const {className, collection, manifest, canvases, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, points, permissions, ...props} = this.props
+    const {className, collection, manifest, canvases, canvasStatus, updateCanvas, deleteCanvasPointOverride, onItemPicked, deleteRangePoint, points, permissions, ...props} = this.props
     const {range, canvas} = this.state
 
     if (!range) return <div/>
@@ -1140,7 +1140,7 @@ export const CanvasPanel = flow(global('collection', 'manifest'), picked(['range
       icon={<ImageIcon/>}
       showForm={checkPermission(permissions, null, 'canvas', 'form')}
       form={<CanvasForm permissions={permissions} range={range} canvases={canvases} canvas={canvas} updateCanvas={updateCanvas} deleteCanvasPointOverride={deleteCanvasPointOverride} onItemPicked={onItemPicked} deleteRangePoint={deleteRangePoint} points={points}/>}
-      busy={canvas && canvas._busy}
+      busy={canvasStatus.get('busy')}
     />
   }
 })
