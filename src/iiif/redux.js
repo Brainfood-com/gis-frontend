@@ -148,6 +148,11 @@ export function reducer(state = defaultState, {type, actionType, modelType, item
           return currentValue.merge(immutableItem)
         }
       }
+      if (action.exists) {
+        statusHandler = (currentStatus = defaultItemStatusValue, item) => {
+          return currentStatus.set('exists', true)
+        }
+      }
       break
     case ACTION.delete:
       itemHandler = (currentValue, item) => undefined
@@ -364,7 +369,7 @@ const buildUpdater = (model, keys, urlBuilder, getModel) => (id, data) => async 
   }
 }
 
-const requiredId = chain => (id, ...rest) => !!id ? chain(id, ...rest) : async dispatch => {}
+const requiredId = (modelName, chain) => (id, ...rest) => !!id ? chain(id, ...rest) : async dispatch => {}
 async function busyCallWrapper(modelName, id, dispatch, next) {
   dispatch(globalIncrBusy())
   dispatch({type: 'redux-iiif', actionType: ACTION.incrBusy, modelType: MODEL[modelName], itemOrItems: id})
@@ -382,6 +387,23 @@ const busyCall = (modelName, chain) => (id, ...rest) => {
   }
 }
 
+const ifExists = (modelName, chain) => (id, options, ...rest) => (dispatch, getState) => {
+  const {ifExists = true} = options
+
+  if (!ifExists && getState().iiif.getIn(['status', MODEL[modelName], id, 'exists'])) {
+    return
+  }
+  return chain(id, options, ...rest)(dispatch, getState)
+}
+
+const modelPipeline = (modelName, ...args) => {
+  const defOptions = (args.length && typeof args[0] !== 'function' && args.shift())
+  const pipeline = args.reverse().reduce((next, chain) => {
+    return chain(modelName, (id, options, ...rest) => next(id, options, ...rest))
+  })
+  return (id, options, ...rest) => pipeline(id, {...defOptions, ...options}, ...rest)
+}
+
 export const getBuilding = busyCall('buildings', id => async (dispatch, getState) => {
   if (id === null || id === undefined) {
     return
@@ -397,7 +419,7 @@ export const getBuilding = busyCall('buildings', id => async (dispatch, getState
     return result
   }, {})
   Object.keys(canvasesByRange).forEach(rangeId => dispatch(getRange(parseInt(rangeId))))
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}, exists: true})
 })
 
 export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch, getState) => {
@@ -406,7 +428,7 @@ export const ensureBuildings = busyCall('buildings', ogcFids => async (dispatch,
   const apiUrl = new URL(makeUrl('api', `buildings`))
   wantedOgcFids.forEach(ogcFid => apiUrl.searchParams.append('id', ogcFid))
   const buildingResults = await fetch(apiUrl).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['buildings'], itemOrItems: buildingResults})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['buildings'], itemOrItems: buildingResults, exists: true})
 })
 
 function collectionBuildKey(collection) {
@@ -428,15 +450,15 @@ function collectionBuildLabel(collection) {
   return {...collection, _extra}
 }
 
-export const getCollection = requiredId(busyCall('collection', (collectionId, {full = true} = {}) => async dispatch => {
+export const getCollection = modelPipeline('collection', {full: true, ifExists: true}, requiredId, ifExists, busyCall, (collectionId, {full}) => async dispatch => {
   const collectionDetail = await fetch(makeUrl('api', `collection/${collectionId}`)).then(data => data.json())
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: collectionDetail.manifests.map(manifestBuildKey).map(manifestBuildLabel)})
   collectionDetail.manifests = collectionDetail.manifests.map(manifest => manifest.id)
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionBuildLabel(collectionBuildKey(collectionDetail))})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['collection'], itemOrItems: collectionBuildLabel(collectionBuildKey(collectionDetail)), exists: true})
   if (full) {
     collectionDetail.manifests.forEach(manifestId => dispatch(getManifest(manifestId)))
   }
-}))
+})
 
 export const updateCollection = buildUpdater(MODEL['collection'], ['notes', 'tags', 'values'], id => makeUrl('api', `collection/${id}`), getCollection)
 
@@ -465,14 +487,14 @@ function manifestBuildLabel(manifest) {
   return {...manifest, _extra}
 }
 
-export const getManifest = requiredId(busyCall('manifest', manifestId => async dispatch => {
+export const getManifest = modelPipeline('manifest', {ifExists: true}, requiredId, ifExists, busyCall, manifestId => async dispatch => {
   const manifestDetail = await fetch(makeUrl('api', `manifest/${manifestId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestBuildKey(manifestDetail))})
-}))
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestBuildLabel(manifestBuildKey(manifestDetail)), exists: true})
+})
 
 export const updateManifest = buildUpdater(MODEL['manifest'], ['notes', 'tags', 'values'], id => makeUrl('api', `manifest/${id}`), getManifest)
 
-export const getManifestStructures = requiredId(busyCall('manifest', manifestId => async dispatch => {
+export const getManifestStructures = modelPipeline('manifest', requiredId, busyCall, manifestId => async dispatch => {
   const ranges = []
   const rangesWithCanvases = []
   const allCanvases = []
@@ -506,7 +528,7 @@ export const getManifestStructures = requiredId(busyCall('manifest', manifestId 
     rangesWithCanvases,
   }
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['manifest'], itemOrItems: manifestDetail})
-}))
+})
 
 function rangeBuildKey(range) {
   const {externalId} = range
@@ -518,12 +540,12 @@ function rangeBuildKey(range) {
   }
 }
 
-export const getRange = requiredId(busyCall('range', rangeId => async dispatch => {
+export const getRange = modelPipeline('range', {ifExists: true}, requiredId, ifExists, busyCall, rangeId => async dispatch => {
   const rangeDetail = await fetch(makeUrl('api', `range/${rangeId}`)).then(data => data.json())
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeDetail.structures})
   //rangeDetail.ranges = rangeDetail.ranges.map(range => range.id)
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeBuildKey(rangeDetail)})
-}))
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: rangeBuildKey(rangeDetail), exists: true})
+})
 
 export const updateRange = buildUpdater(MODEL['range'], ['notes', 'reverse', 'fovAngle', 'fovDepth', 'fovOrientation', 'tags', 'values'], id => makeUrl('api', `range/${id}`), rangeId => dispatch => {
   dispatch(getRange(rangeId))
@@ -547,7 +569,7 @@ export const iiifLocalCache = service => {
   }
   return service
 }
-export const getRangePoints = requiredId(busyCall('range', rangeId => async (dispatch, getState) => {
+export const getRangePoints = modelPipeline('range', requiredId, busyCall, rangeId => async (dispatch, getState) => {
   let pickedId = getState().iiif.getIn([MODEL['picked'], 'canvas', 'value'])
 
   const canvasPoints = await fetch(makeUrl('api', `range/${rangeId}/canvasPoints`)).then(data => data.json())
@@ -583,14 +605,14 @@ export const getRangePoints = requiredId(busyCall('range', rangeId => async (dis
 
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range'], itemOrItems: {id: rangeId, canvases: canvases.map(canvas => canvas.id)}})
   dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvases})
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range_points'], itemOrItems: {id: rangeId, points: pointsMap}})
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['range_points'], itemOrItems: {id: rangeId, points: pointsMap, exists: true}})
   if (!!pickedId && !canvasPoints.find(canvasPoint => pickedId === canvasPoint.id)) {
     pickedId = null
   }
   if (!!!pickedId && canvases.length) {
     dispatch(pick('canvas', canvases[0].id))
   }
-}))
+})
 
 export const setRangePoint = (rangeId, canvasId, {sourceId, priority, point}) => dispatch => busyCallWrapper('canvas', canvasId, dispatch, async () => {
   try {
@@ -640,10 +662,10 @@ function canvasBuildKey(canvas) {
   }
 }
 
-export const getCanvas = requiredId(busyCall('canvas', canvasId => async dispatch => {
+export const getCanvas = modelPipeline('canvas', {ifExists: true}, requiredId, ifExists, busyCall, canvasId => async dispatch => {
   const canvasDetail = await fetch(makeUrl('api', `canvas/${canvasId}`)).then(data => data.json())
-  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasBuildKey(canvasDetail)})
-}))
+  dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['canvas'], itemOrItems: canvasBuildKey(canvasDetail), exists: true})
+})
 
 export const updateCanvas = buildUpdater(MODEL['canvas'], ['notes', 'exclude', 'hole', 'tags', 'values'], id => makeUrl('api', `canvas/${id}`), id => async dispatch => {
   dispatch(getCanvas(id))

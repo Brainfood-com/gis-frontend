@@ -295,9 +295,9 @@ export const showBuilding = id => async (dispatch, getState) => {
     manifestIdSet.add(manifestId)
     parentsByRange.set(rangeId, fromJS({collectionId, manifestId}))
   })
-  rangeIdSeq.forEach(rangeId => dispatch(getRange(rangeId)))
-  manifestIdSet.forEach(manifestId => dispatch(getManifest(manifestId)))
-  collectionIdSet.forEach(collectionId => dispatch(getCollection(collectionId, {full: false})))
+  rangeIdSeq.forEach(rangeId => dispatch(getRange(rangeId, {ifExists: false})))
+  manifestIdSet.forEach(manifestId => dispatch(getManifest(manifestId, {ifExists: false})))
+  collectionIdSet.forEach(collectionId => dispatch(getCollection(collectionId, {full: false, ifExists: false})))
 
   //dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['building_canvases'], itemOrItems: {id, canvasesByRange: canvasesByRange}})
 
