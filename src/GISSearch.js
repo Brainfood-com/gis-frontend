@@ -192,10 +192,14 @@ const pick = (...picked) => Component => {
         case 'addresses':
           result.addresses = search.get('addresses')
           break
+        case 'building':
+          const {buildingId} = props
+          result.building = search.getIn(['buildings', buildingId])
+          result.isSelected = buildingId === search.get('requestCurrentBuilding')
+          break
         case 'buildings':
           result.buildings = search.get('buildings')
           result.buildingStats = search.get('buildingStats')
-          result.requestCurrentBuilding = search.get('requestCurrentBuilding')
           break
         case 'currentBuilding':
           const requestCurrentBuilding = result.requestCurrentBuilding = search.get('requestCurrentBuilding')
@@ -472,7 +476,7 @@ const MapBuildingShape = ImmutablePropTypes.mapContains({
 })
 const MapBuildingsShape = ImmutablePropTypes.mapOf(MapBuildingShape, PropTypes.number)
 
-const MapBuilding = class MapBuilding extends React.Component {
+const MapBuilding = flow(pick('building'))(class MapBuilding extends React.Component {
   static propTypes = {
     isSelected: PropTypes.bool,
     building: MapBuildingShape,
@@ -483,8 +487,8 @@ const MapBuilding = class MapBuilding extends React.Component {
   }
 
   handleOnClick = event => {
-    const {building, showBuilding} = this.props
-    showBuilding(building.get('buildingId'))
+    const {buildingId, showBuilding} = this.props
+    showBuilding(buildingId)
   }
 
   renderMarker() {
@@ -503,6 +507,7 @@ const MapBuilding = class MapBuilding extends React.Component {
 
   render() {
     const {isSelected, building, rangeChoropleth, canvasChoropleth, doneChoropleth} = this.props
+    if (!building) return <div/>
     const geojson = building.get('geojson')
     const rangeIds = building.get('rangeIds')
     const claimedCount = building.get('claimedCount')
@@ -517,7 +522,7 @@ const MapBuilding = class MapBuilding extends React.Component {
       <GISGeoJSON data={geojson} style={buildingStyle} onClick={this.handleOnClick}/>
     </FeatureGroup>
   }
-}
+})
 
 const StatShape = ImmutablePropTypes.mapContains({
   min: PropTypes.number.isRequired,
@@ -534,7 +539,6 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
       placedCount: StatShape.isRequired,
     }).isRequired,
     showBuilding: PropTypes.func.isRequired,
-    requestCurrentBuilding: PropTypes.number,
   }
 
   state = {}
@@ -567,15 +571,14 @@ export const MapBuildings = flow(withStyles(resultBuildingsStyles), pick('buildi
   doneChoropleth = value => this.state.doneChoropleth(value)
 
   render() {
-    const {className, classes, buildings, buildingStats, requestCurrentBuilding} = this.props
+    const {className, classes, buildings, buildingStats} = this.props
 
     return <FeatureGroup>
-      {buildings && buildings.map((building, key, index) => <MapBuilding key={`${building.get('buildingId') === requestCurrentBuilding}:${building.get('buildingId')}`} building={building}
+      {buildings && buildings.map((building, key, index) => <MapBuilding key={building.get('buildingId')} buildingId={building.get('buildingId')}
         rangeChoropleth={this.rangeChoropleth}
         canvasChoropleth={this.canvasChoropleth}
         doneChoropleth={this.doneChoropleth}
         showBuilding={this.handleShowBuilding}
-        isSelected={building.get('buildingId') === requestCurrentBuilding}
         />).toIndexedSeq()}
     </FeatureGroup>
   }
