@@ -648,7 +648,7 @@ export const CurrentBuildingShape = ImmutablePropTypes.mapContains({
 })
 
 
-const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest', 'range', 'canvas'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
+const CurrentBuildingRange = flow(iiifPickedById({wrapBusy: false}, 'collection', 'manifest', 'range', 'canvas'), withStyles(currentBuildingRangeStyles))(class CurrentBuildingRange extends React.Component {
   static propTypes = {
     onItemPicked: PropTypes.func.isRequired,
     collection: CollectionShape,
@@ -674,13 +674,13 @@ const CurrentBuildingRange = flow(iiifPickedById('collection', 'manifest', 'rang
   }
 
   render() {
-    const {className, classes, onItemPicked, collection, manifest, range, rangeId, canvas, buildingCanvas, currentBuilding, collectionId, manifestId} = this.props
+    const {className, classes, onItemPicked, collection, manifest, range, rangeId, canvas, buildingCanvas, currentBuilding, collectionId, manifestId, busyRef} = this.props
     const canvasPoint = buildingCanvas.get('point')
     return <div className={classnames(classes.root, className)} key={rangeId}>
       <div className={classes.titlePane} onClick={this.handleOnClick}>
-        <CollectionTitle collection={collection}/>
-        <ManifestTitle manifest={manifest}/>
-        <RangeTitle range={range}/>
+        <BusyPane isBusy={busyRef.collection > 0}><CollectionTitle collection={collection}/></BusyPane>
+        <BusyPane isBusy={busyRef.manifest > 0}><ManifestTitle manifest={manifest}/></BusyPane>
+        <BusyPane isBusy={busyRef.range > 0}><RangeTitle range={range}/></BusyPane>
       </div>
       <CanvasCardRO className={classes.card} collection={collection} manifest={manifest} range={range} canvas={buildingCanvas} canvasPoint={canvasPoint} onItemPicked={this.handleOnItemPicked}/>
     </div>
@@ -722,7 +722,6 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
     const parentsByRange = currentBuilding.get('parentsByRange')
     const primaryCanvasByRange = currentBuilding.get('primaryCanvasByRange')
     return <div className={classnames(classes.root, className)}>
-      <BusyPane isBusy={isBusy}>
         <IconButton onClick={this.handleOnClose}><CloseIcon/></IconButton>
         <Taxdata taxdata={taxdata}/>
         {ranges.map(rangeId => {
@@ -731,7 +730,6 @@ export const CurrentBuildingInfo = flow(withStyles(currentBuildingInfoStyles), p
           const buildingCanvas = buildingCanvases.get(primaryCanvasId)
           return <CurrentBuildingRange key={rangeId} onItemPicked={this.handleRangeSelection} currentBuilding={currentBuilding} collectionId={collectionId} manifestId={manifestId} rangeId={rangeId} canvasId={primaryCanvasId} buildingCanvas={buildingCanvas} />
         })}
-      </BusyPane>
     </div>
   }
 })

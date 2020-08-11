@@ -13,11 +13,14 @@ function wrapWildcardImport(wildcardImport, name) {
 }
 
 export const byId = (...names) => Component => {
+  const {wrapBusy = true} = (typeof names[0] === 'object' ? names.shift() : {})
+
   function mapDispatchToProps(dispatch, props) {
     return {}
   }
   function mapStateToProps(store, props) {
     const {iiif} = store
+    const busyRef = {}
     let busy = 0
     const result = names.reduce((result, name) => {
       switch (name) {
@@ -33,15 +36,21 @@ export const byId = (...names) => Component => {
           const id = props[name + 'Id']
           result[name] = iiif.getIn([iiifRedux.MODEL[name], id])
           const itemStatus = iiif.getIn(['status', iiifRedux.MODEL[name], id], iiifRedux.defaultItemStatusValue)
-          busy += itemStatus.get('busy')
+          busy += busyRef[name] = itemStatus.get('busy')
           break
       }
       return result
     }, {})
     result.isBusy = busy > 0
+    if (!wrapBusy) {
+      result.busyRef = busyRef
+    }
     return result
   }
 
+  if (!wrapBusy) {
+    return connectHelper({mapStateToProps, mapDispatchToProps})(Component)
+  }
   return connectHelper({mapStateToProps, mapDispatchToProps})(class BusyWrapper extends React.Component {
     render() {
       const {isBusy, ...props} = this.props
