@@ -77,8 +77,16 @@ const geoserverUtil = new GeoServerUtil({
   },
 })
 const baseLayers = [
-  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile', checked: true},
+  {name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', type: 'tile', checked: false},
   {name: 'Wikimedia', url: 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', type: 'tile', checked: false},
+  {
+    name: 'CyclOSM',
+    url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+    type: 'tile',
+    checked: true,
+    maxZoom: 20,
+    attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> | Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }
 ]
 
 const overlayLayers = [
@@ -147,13 +155,13 @@ function renderLayer(Control, layerDefOrig) {
   switch (type) {
     case 'tile':
       layer = <TileLayer
-        attribution='foo'
+        attribution={layerDef.attribution || 'foo'}
         url={url}
       />
       break
     case 'geotile':
       layer = <TileLayer
-        attribution='foo'
+        attribution={layerDef.attribution || 'foo'}
         url={`${geoserverUtil.servers[server].serverDef.url}/gwc/service/tms/1.0.0/${layers}@EPSG:900913@png/{z}/{x}/{-y}.png`}
       />
       break
@@ -163,7 +171,7 @@ function renderLayer(Control, layerDefOrig) {
       break
     case 'wms':
       layer = <DelayLeafletLogin server={geoserverUtil.servers[server]}><WMSTileLayer
-        attribution='foo'
+        attribution={layerDef.attribution || 'foo'}
         layers={layers}
         transparent={true}
         opacity={0.5}
