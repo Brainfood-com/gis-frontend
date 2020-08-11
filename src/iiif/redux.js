@@ -265,18 +265,20 @@ export const pickMany = toPick => async (dispatch, getState) => {
       if (id === currentId) {
         continue
       }
-      await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: id}})
+      dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: id}})
       outstandingFetchers.splice(-1, 0, ...modelTypeToFetchers[modelType].map(handler => handler(id)))
     } else if (needsUnset) {
       if (currentId !== undefined || currentId !== null) {
-        await dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: null}})
+        dispatch({type: 'redux-iiif', actionType: ACTION.set, modelType: MODEL['picked'], itemOrItems: {id: modelType, value: null}})
         ReactGA.event({category: 'iiif-fetch-' + modelType, action: 'unset'})
       }
       // TODO: unset items from redux
     }
   }
   const pickedCanvasId = getModelId('canvas')
-  await Promise.all(outstandingFetchers.map(dispatch))
+  if (outstandingFetchers.length) {
+    await Promise.all(outstandingFetchers.map(dispatch))
+  }
   const currentCanvasId = getModelId('canvas')
   // check if we have been asked to change the canvas, and then make
   // certain nothing else has changed it in the interim
